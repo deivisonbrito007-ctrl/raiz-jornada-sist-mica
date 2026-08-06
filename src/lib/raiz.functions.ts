@@ -7,7 +7,11 @@ export const getMeuContexto = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const [perfil, papeis, pacotes] = await Promise.all([
-      supabase.from("profiles").select("id, nome, email, created_at").eq("id", userId).maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("id, nome, email, created_at, meta_semanal")
+        .eq("id", userId)
+        .maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
       supabase
         .from("clientes_pacotes")
@@ -166,6 +170,20 @@ export const marcarProgresso = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const definirMetaSemanal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ meta: z.number().int().min(1).max(14) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ meta_semanal: data.meta })
+      .eq("id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true, meta: data.meta };
+  });
+
 
 export const salvarDiario = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

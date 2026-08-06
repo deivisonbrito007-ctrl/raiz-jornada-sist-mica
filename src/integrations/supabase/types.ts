@@ -256,18 +256,21 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          meta_semanal: number
           nome: string
         }
         Insert: {
           created_at?: string
           email?: string
           id: string
+          meta_semanal?: number
           nome?: string
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
+          meta_semanal?: number
           nome?: string
         }
         Relationships: []

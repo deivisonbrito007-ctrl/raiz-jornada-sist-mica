@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS meta_semanal integer NOT NULL DEFAULT 3;
