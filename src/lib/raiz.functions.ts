@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { auditarResultado, negarAcesso, registrarAcessoNegado } from "./auditoria-acesso";
 
 export const getMeuContexto = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -182,15 +183,27 @@ export const getConteudo = createServerFn({ method: "GET" })
       .eq("id", data.conteudoId)
       .maybeSingle();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      registrarAcessoNegado(
+        { acao: "getConteudo", userId, tabela: "conteudos", recurso: data.conteudoId },
+        error,
+      );
+      throw new Error(error.message);
+    }
     if (!conteudo) return { conteudo: null, url: null, status: "nao_iniciado" as const };
 
     let url: string | null = null;
     if (conteudo.storage_path) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const signed = await supabaseAdmin.storage
-        .from("midias")
-        .createSignedUrl(conteudo.storage_path, 60 * 60);
+      const signed = auditarResultado(
+        await supabaseAdmin.storage.from("midias").createSignedUrl(conteudo.storage_path, 60 * 60),
+        {
+          acao: "getConteudo:signedUrl",
+          userId,
+          tabela: "storage.midias",
+          recurso: conteudo.storage_path,
+        },
+      );
       url = signed.data?.signedUrl ?? null;
     }
 
@@ -312,7 +325,7 @@ export const adminResumo = createServerFn({ method: "GET" })
       _user_id: userId,
       _role: "terapeuta",
     });
-    if (!ehTerapeuta) throw new Error("Acesso restrito");
+    if (!ehTerapeuta) negarAcesso({ acao: "adminResumo", userId, tabela: "user_roles" });
 
     const [papeis, perfis, conteudos, liberacoes, progresso, pacotes, vinculos, eixos] =
       await Promise.all([
@@ -417,7 +430,14 @@ export const adminGetCliente = createServerFn({ method: "GET" })
       _user_id: userId,
       _role: "terapeuta",
     });
-    if (!ehTerapeuta) throw new Error("Acesso restrito");
+    if (!ehTerapeuta) {
+      negarAcesso({
+        acao: "adminGetCliente",
+        userId,
+        clienteAlvo: data.clienteId,
+        tabela: "profiles",
+      });
+    }
 
     const [perfil, eixos, conteudos, liberacoes, progresso, diario, vinculos, pacotes] =
       await Promise.all([
@@ -480,7 +500,14 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
       _user_id: userId,
       _role: "terapeuta",
     });
-    if (!ehTerapeuta) throw new Error("Acesso restrito");
+    if (!ehTerapeuta) {
+      negarAcesso({
+        acao: "adminDefinirLiberacao",
+        userId,
+        clienteAlvo: data.clienteId,
+        tabela: "liberacoes",
+      });
+    }
 
     const alvo = supabase
       .from("liberacoes")
