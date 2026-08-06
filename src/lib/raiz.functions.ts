@@ -39,6 +39,12 @@ export const getMinhaBiblioteca = createServerFn({ method: "GET" })
     const feitos = new Set(
       (progresso.data ?? []).filter((p) => p.status === "concluido").map((p) => p.conteudo_id),
     );
+    const conclusaoPorConteudo = new Map<string, string>();
+    for (const p of progresso.data ?? []) {
+      if (p.status === "concluido" && p.concluido_em) {
+        conclusaoPorConteudo.set(p.conteudo_id, p.concluido_em);
+      }
+    }
 
     const eixosResult = (eixos.data ?? []).map((eixo) => {
       const doEixo = (conteudos.data ?? []).filter((c) => c.eixo_id === eixo.id);
@@ -53,6 +59,9 @@ export const getMinhaBiblioteca = createServerFn({ method: "GET" })
         liberado,
         total: doEixo.length,
         concluidos: doEixo.filter((c) => feitos.has(c.id)).length,
+        datasConclusao: doEixo
+          .map((c) => conclusaoPorConteudo.get(c.id))
+          .filter((d): d is string => Boolean(d)),
       };
     });
 
