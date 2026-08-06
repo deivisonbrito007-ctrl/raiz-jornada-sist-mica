@@ -132,7 +132,9 @@ function AdminClientes() {
               </div>
             </div>
           </Link>
-        ))}
+          );
+        })}
+
         {!isLoading && clientes.length === 0 && (
           <p className="rounded-3xl border border-dashed border-border p-6 text-sm text-muted-foreground">
             Nenhum cliente encontrado. Convide sua cliente a criar uma conta em /auth.
