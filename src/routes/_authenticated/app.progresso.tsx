@@ -11,7 +11,6 @@ import {
   listarDiario,
 } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { gerarRelatorioPdf } from "@/lib/raiz-relatorio";
 import { LembreteRetorno } from "@/components/lembrete-retorno";
 import { MapaCalor, NIVEIS_MAPA_CALOR } from "@/components/mapa-calor";
@@ -69,7 +68,6 @@ function Progresso() {
     .sort((a, b) => b.streak - a.streak || b.concluidos - a.concluidos);
   const maiorStreakEixo = sequenciasPorEixo[0];
   const maximoStreak = Math.max(1, ...sequenciasPorEixo.map((e) => e.streak));
-  const niveis = ["bg-secondary", "bg-salvia/25", "bg-salvia/50", "bg-salvia/75", "bg-floresta"];
   const anelMeta = 2 * Math.PI * 34;
   const proximaPratica = (data?.praticas ?? []).find((p) => p.status !== "concluido") ?? null;
   const lembrete = avaliarLembrete(datasConclusao, streak);
@@ -331,7 +329,7 @@ function Progresso() {
           </span>
           <span className="flex items-center gap-2">
             <span className="text-[10px] text-muted-foreground">menos</span>
-            {niveis.map((classe) => (
+            {NIVEIS_MAPA_CALOR.map((classe) => (
               <span key={classe} className={`h-3 w-3 rounded-[4px] ${classe}`} />
             ))}
             <span className="text-[10px] text-muted-foreground">mais</span>
