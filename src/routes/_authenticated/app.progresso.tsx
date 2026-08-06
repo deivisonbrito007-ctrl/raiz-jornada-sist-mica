@@ -66,6 +66,20 @@ function Progresso() {
         Progresso não é pressa. É o que você já foi capaz de olhar.
       </p>
 
+      <button
+        type="button"
+        onClick={baixarRelatorio}
+        disabled={gerando || isLoading}
+        className="mt-5 inline-flex items-center gap-2 rounded-full bg-floresta px-5 py-3 text-sm text-floresta-foreground transition hover:bg-floresta/90 disabled:opacity-60"
+      >
+        {gerando ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+        {gerando ? "Gerando relatório..." : "Baixar relatório em PDF"}
+      </button>
+      <p className="mt-2 text-xs text-muted-foreground">
+        Inclui seu progresso por eixo e suas entradas do diário, para compartilhar com quem acompanha você.
+      </p>
+
+
       {isLoading && <Skeleton className="mt-7 h-40 rounded-3xl" />}
 
       <div className="mt-7 rounded-3xl bg-floresta p-7 text-floresta-foreground">
