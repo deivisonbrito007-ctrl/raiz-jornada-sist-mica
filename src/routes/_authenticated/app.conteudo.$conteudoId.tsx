@@ -78,13 +78,22 @@ function Player() {
 
   return (
     <div>
-      <Link
-        to={conteudo ? "/app/eixo/$eixoId" : "/app"}
-        params={conteudo ? { eixoId: conteudo.eixo_id } : undefined}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-floresta"
-      >
-        <ArrowLeft className="h-4 w-4" /> Voltar à trilha
-      </Link>
+      {conteudo ? (
+        <Link
+          to="/app/eixo/$eixoId"
+          params={{ eixoId: conteudo.eixo_id }}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-floresta"
+        >
+          <ArrowLeft className="h-4 w-4" /> Voltar à trilha
+        </Link>
+      ) : (
+        <Link
+          to="/app"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-floresta"
+        >
+          <ArrowLeft className="h-4 w-4" /> Voltar à trilha
+        </Link>
+      )}
 
       {isLoading && <Skeleton className="mt-6 h-64 rounded-3xl" />}
 
