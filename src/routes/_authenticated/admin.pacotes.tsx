@@ -91,7 +91,10 @@ function AdminPacotes() {
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         {(data?.pacotes ?? []).map((pacote) => (
-          <article key={pacote.id} className="rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
+          <article
+            key={pacote.id}
+            className="rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]"
+          >
             <div className="flex items-start justify-between gap-3">
               <h2 className="text-xl text-floresta">{pacote.nome}</h2>
               <span className="shrink-0 rounded-full bg-secondary px-3 py-1 text-[11px] text-floresta">
@@ -193,7 +196,10 @@ function AdminPacotes() {
                 <p className="text-sm text-floresta">Eixos incluídos</p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
                   {(data?.eixos ?? []).map((eixo) => (
-                    <label key={eixo.id} className="flex items-center gap-2 text-sm text-foreground">
+                    <label
+                      key={eixo.id}
+                      className="flex items-center gap-2 text-sm text-foreground"
+                    >
                       <Checkbox
                         checked={form.eixosIncluidos.includes(eixo.id)}
                         onCheckedChange={(marcado) =>

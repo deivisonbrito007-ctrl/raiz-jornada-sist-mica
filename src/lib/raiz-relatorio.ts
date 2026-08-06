@@ -185,6 +185,8 @@ export function gerarRelatorioPdf(dados: DadosRelatorio) {
   const slug = (dados.nome || "cliente")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
   doc.save(`raiz-relatorio-${slug || "cliente"}.pdf`);
 }

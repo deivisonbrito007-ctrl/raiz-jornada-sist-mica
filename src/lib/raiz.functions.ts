@@ -34,9 +34,18 @@ export const getMinhaBiblioteca = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const [eixos, conteudos, liberacoes, progresso] = await Promise.all([
       supabase.from("eixos").select("id, nome, descricao, icone, ordem").order("ordem"),
-      supabase.from("conteudos").select("id, eixo_id, tipo, titulo, duracao_segundos, ordem").order("ordem"),
-      supabase.from("liberacoes").select("eixo_id, conteudo_id, status, liberar_em").eq("cliente_id", userId),
-      supabase.from("progresso").select("conteudo_id, status, concluido_em").eq("cliente_id", userId),
+      supabase
+        .from("conteudos")
+        .select("id, eixo_id, tipo, titulo, duracao_segundos, ordem")
+        .order("ordem"),
+      supabase
+        .from("liberacoes")
+        .select("eixo_id, conteudo_id, status, liberar_em")
+        .eq("cliente_id", userId),
+      supabase
+        .from("progresso")
+        .select("conteudo_id, status, concluido_em")
+        .eq("cliente_id", userId),
     ]);
 
     const libs = liberacoes.data ?? [];
@@ -137,7 +146,11 @@ export const getEixoTrilha = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const [eixo, conteudos, progresso] = await Promise.all([
-      supabase.from("eixos").select("id, nome, descricao, icone").eq("id", data.eixoId).maybeSingle(),
+      supabase
+        .from("eixos")
+        .select("id, nome, descricao, icone")
+        .eq("id", data.eixoId)
+        .maybeSingle(),
       supabase
         .from("conteudos")
         .select("id, tipo, titulo, descricao, duracao_segundos, ordem")
@@ -163,7 +176,9 @@ export const getConteudo = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data: conteudo, error } = await supabase
       .from("conteudos")
-      .select("id, eixo_id, tipo, titulo, descricao, corpo_texto, storage_path, duracao_segundos, eixos(nome)")
+      .select(
+        "id, eixo_id, tipo, titulo, descricao, corpo_texto, storage_path, duracao_segundos, eixos(nome)",
+      )
       .eq("id", data.conteudoId)
       .maybeSingle();
 
@@ -228,12 +243,14 @@ export const definirMetaSemanal = createServerFn({ method: "POST" })
     return { ok: true, meta: data.meta };
   });
 
-
 export const salvarDiario = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z
-      .object({ texto: z.string().min(1).max(8000), conteudoId: z.string().uuid().nullable().optional() })
+      .object({
+        texto: z.string().min(1).max(8000),
+        conteudoId: z.string().uuid().nullable().optional(),
+      })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -277,7 +294,11 @@ export const marcarNotificacoesLidas = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    await supabase.from("notificacoes").update({ lida: true }).eq("cliente_id", userId).eq("lida", false);
+    await supabase
+      .from("notificacoes")
+      .update({ lida: true })
+      .eq("cliente_id", userId)
+      .eq("lida", false);
     return { ok: true };
   });
 
@@ -300,8 +321,12 @@ export const adminResumo = createServerFn({ method: "GET" })
         supabase.from("conteudos").select("id, eixo_id, titulo, tipo, ordem"),
         supabase.from("liberacoes").select("cliente_id, eixo_id, conteudo_id, status, liberar_em"),
         supabase.from("progresso").select("cliente_id, conteudo_id, status, updated_at"),
-        supabase.from("pacotes").select("id, nome, descricao, tipo_cobranca, preco_centavos, eixos_incluidos"),
-        supabase.from("clientes_pacotes").select("id, cliente_id, pacote_id, status_pagamento, created_at"),
+        supabase
+          .from("pacotes")
+          .select("id, nome, descricao, tipo_cobranca, preco_centavos, eixos_incluidos"),
+        supabase
+          .from("clientes_pacotes")
+          .select("id, cliente_id, pacote_id, status_pagamento, created_at"),
         supabase.from("eixos").select("id, nome, ordem").order("ordem"),
       ]);
 
@@ -326,7 +351,10 @@ export const adminResumo = createServerFn({ method: "GET" })
           ),
         );
         const concluidos = progs.filter(
-          (pr) => pr.cliente_id === p.id && pr.status === "concluido" && liberados.some((c) => c.id === pr.conteudo_id),
+          (pr) =>
+            pr.cliente_id === p.id &&
+            pr.status === "concluido" &&
+            liberados.some((c) => c.id === pr.conteudo_id),
         ).length;
         const datasConclusao = progs
           .filter((pr) => pr.cliente_id === p.id && pr.status === "concluido")
@@ -341,7 +369,10 @@ export const adminResumo = createServerFn({ method: "GET" })
           liberados.some(
             (c) =>
               c.eixo_id === e.id &&
-              !progs.some((pr) => pr.cliente_id === p.id && pr.conteudo_id === c.id && pr.status === "concluido"),
+              !progs.some(
+                (pr) =>
+                  pr.cliente_id === p.id && pr.conteudo_id === c.id && pr.status === "concluido",
+              ),
           ),
         );
         const vinculo = (vinculos.data ?? []).find((v) => v.cliente_id === p.id);
@@ -349,18 +380,20 @@ export const adminResumo = createServerFn({ method: "GET" })
           ...p,
           totalLiberado: liberados.length,
           concluidos,
-          percentual: liberados.length === 0 ? 0 : Math.round((concluidos / liberados.length) * 100),
+          percentual:
+            liberados.length === 0 ? 0 : Math.round((concluidos / liberados.length) * 100),
           eixoAtual: eixoAtual?.nome ?? null,
           ultimaAtividade: ultima ?? null,
           pacote: (pacotes.data ?? []).find((pk) => pk.id === vinculo?.pacote_id)?.nome ?? null,
           statusPagamento: vinculo?.status_pagamento ?? null,
           datasConclusao,
-
         };
       });
 
     const media =
-      clientes.length === 0 ? 0 : Math.round(clientes.reduce((a, c) => a + c.percentual, 0) / clientes.length);
+      clientes.length === 0
+        ? 0
+        : Math.round(clientes.reduce((a, c) => a + c.percentual, 0) / clientes.length);
 
     return {
       clientes,
@@ -386,20 +419,34 @@ export const adminGetCliente = createServerFn({ method: "GET" })
     });
     if (!ehTerapeuta) throw new Error("Acesso restrito");
 
-    const [perfil, eixos, conteudos, liberacoes, progresso, diario, vinculos, pacotes] = await Promise.all([
-      supabase.from("profiles").select("id, nome, email, created_at").eq("id", data.clienteId).maybeSingle(),
-      supabase.from("eixos").select("id, nome, icone, ordem").order("ordem"),
-      supabase.from("conteudos").select("id, eixo_id, titulo, tipo, ordem").order("ordem"),
-      supabase.from("liberacoes").select("id, eixo_id, conteudo_id, status, liberado_em, liberar_em").eq("cliente_id", data.clienteId),
-      supabase.from("progresso").select("conteudo_id, status, concluido_em, updated_at").eq("cliente_id", data.clienteId),
-      supabase
-        .from("diario")
-        .select("id, texto, created_at, conteudos(titulo)")
-        .eq("cliente_id", data.clienteId)
-        .order("created_at", { ascending: false }),
-      supabase.from("clientes_pacotes").select("id, pacote_id, status_pagamento").eq("cliente_id", data.clienteId),
-      supabase.from("pacotes").select("id, nome, eixos_incluidos"),
-    ]);
+    const [perfil, eixos, conteudos, liberacoes, progresso, diario, vinculos, pacotes] =
+      await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, nome, email, created_at")
+          .eq("id", data.clienteId)
+          .maybeSingle(),
+        supabase.from("eixos").select("id, nome, icone, ordem").order("ordem"),
+        supabase.from("conteudos").select("id, eixo_id, titulo, tipo, ordem").order("ordem"),
+        supabase
+          .from("liberacoes")
+          .select("id, eixo_id, conteudo_id, status, liberado_em, liberar_em")
+          .eq("cliente_id", data.clienteId),
+        supabase
+          .from("progresso")
+          .select("conteudo_id, status, concluido_em, updated_at")
+          .eq("cliente_id", data.clienteId),
+        supabase
+          .from("diario")
+          .select("id, texto, created_at, conteudos(titulo)")
+          .eq("cliente_id", data.clienteId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("clientes_pacotes")
+          .select("id, pacote_id, status_pagamento")
+          .eq("cliente_id", data.clienteId),
+        supabase.from("pacotes").select("id, nome, eixos_incluidos"),
+      ]);
 
     return {
       perfil: perfil.data,
@@ -459,7 +506,7 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
     } else {
       const { error } = await supabase.from("liberacoes").insert({
         cliente_id: data.clienteId,
-        eixo_id: data.conteudoId ? null : data.eixoId ?? null,
+        eixo_id: data.conteudoId ? null : (data.eixoId ?? null),
         conteudo_id: data.conteudoId ?? null,
         status: "liberado",
         liberar_em: data.liberarEm ?? null,
@@ -541,7 +588,12 @@ export const adminSalvarEixo = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const payload = { nome: data.nome, descricao: data.descricao, icone: data.icone, ordem: data.ordem };
+    const payload = {
+      nome: data.nome,
+      descricao: data.descricao,
+      icone: data.icone,
+      ordem: data.ordem,
+    };
     const query = data.id
       ? context.supabase.from("eixos").update(payload).eq("id", data.id)
       : context.supabase.from("eixos").insert(payload);
@@ -557,7 +609,9 @@ export const adminListarConteudos = createServerFn({ method: "GET" })
       context.supabase.from("eixos").select("id, nome, descricao, icone, ordem").order("ordem"),
       context.supabase
         .from("conteudos")
-        .select("id, eixo_id, tipo, titulo, descricao, corpo_texto, storage_path, duracao_segundos, ordem")
+        .select(
+          "id, eixo_id, tipo, titulo, descricao, corpo_texto, storage_path, duracao_segundos, ordem",
+        )
         .order("ordem"),
     ]);
     return { eixos: eixos.data ?? [], conteudos: conteudos.data ?? [] };

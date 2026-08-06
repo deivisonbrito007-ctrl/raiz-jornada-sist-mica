@@ -107,7 +107,9 @@ function Landing() {
                 <div key={p.titulo} className="border-t border-ocre/40 pt-6">
                   <p.icone className="h-6 w-6 text-ocre" />
                   <h3 className="mt-4 text-xl text-floresta-foreground">{p.titulo}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-floresta-foreground/75">{p.texto}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-floresta-foreground/75">
+                    {p.texto}
+                  </p>
                 </div>
               ))}
             </div>

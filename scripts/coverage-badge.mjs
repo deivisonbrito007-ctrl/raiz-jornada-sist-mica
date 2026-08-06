@@ -15,8 +15,7 @@ try {
   process.exit(1);
 }
 
-const color =
-  pct >= 90 ? "#2f6f4e" : pct >= 75 ? "#5c8a5c" : pct >= 50 ? "#c9922b" : "#a8503a";
+const color = pct >= 90 ? "#2f6f4e" : pct >= 75 ? "#5c8a5c" : pct >= 50 ? "#c9922b" : "#a8503a";
 
 const label = "coverage";
 const value = `${pct}%`;

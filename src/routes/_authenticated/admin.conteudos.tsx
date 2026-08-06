@@ -76,7 +76,8 @@ function AdminConteudos() {
         if (tipoFiltro !== "todos" && c.tipo !== tipoFiltro) return false;
         if (statusFiltro === "com_midia" && !c.storage_path) return false;
         if (statusFiltro === "sem_midia" && c.storage_path) return false;
-        if (termo && !`${c.titulo} ${c.descricao ?? ""}`.toLowerCase().includes(termo)) return false;
+        if (termo && !`${c.titulo} ${c.descricao ?? ""}`.toLowerCase().includes(termo))
+          return false;
         return true;
       }),
     [data?.conteudos, eixoFiltro, tipoFiltro, statusFiltro, termo],
@@ -222,69 +223,74 @@ function AdminConteudos() {
           .filter((eixo) => eixoFiltro === "todos" || eixo.id === eixoFiltro)
           .filter((eixo) => !filtrando || conteudosFiltrados.some((c) => c.eixo_id === eixo.id))
           .map((eixo) => {
-          const conteudos = conteudosFiltrados.filter((c) => c.eixo_id === eixo.id);
-          return (
-            <section key={eixo.id} className="rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
-              <h2 className="text-xl text-floresta">{eixo.nome}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{eixo.descricao}</p>
-              <ul className="mt-4 space-y-2">
-                {conteudos.map((conteudo) => (
-                  <li
-                    key={conteudo.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-secondary px-4 py-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-floresta">{conteudo.titulo}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {TIPO_LABEL[conteudo.tipo] ?? conteudo.tipo} ·{" "}
-                        {formatarDuracao(conteudo.duracao_segundos)} · ordem {conteudo.ordem}
-                        {conteudo.storage_path ? " · mídia enviada" : ""}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-full border-floresta/20 text-floresta"
-                        onClick={() =>
-                          setForm({
-                            id: conteudo.id,
-                            eixoId: conteudo.eixo_id,
-                            tipo: conteudo.tipo as Tipo,
-                            titulo: conteudo.titulo,
-                            descricao: conteudo.descricao ?? "",
-                            corpoTexto: conteudo.corpo_texto ?? "",
-                            storagePath: conteudo.storage_path ?? "",
-                            duracaoSegundos: conteudo.duracao_segundos ?? 0,
-                            ordem: conteudo.ordem ?? 0,
-                          })
-                        }
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="rounded-full text-destructive"
-                        onClick={async () => {
-                          await apagar({ data: { id: conteudo.id } });
-                          recarregar();
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-                {conteudos.length === 0 && (
-                  <li className="text-xs text-muted-foreground">
-                    {filtrando ? "Nenhuma prática com esses filtros." : "Nenhuma prática ainda."}
-                  </li>
-                )}
-              </ul>
-            </section>
-          );
-        })}
+            const conteudos = conteudosFiltrados.filter((c) => c.eixo_id === eixo.id);
+            return (
+              <section
+                key={eixo.id}
+                className="rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]"
+              >
+                <h2 className="text-xl text-floresta">{eixo.nome}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{eixo.descricao}</p>
+                <ul className="mt-4 space-y-2">
+                  {conteudos.map((conteudo) => (
+                    <li
+                      key={conteudo.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-secondary px-4 py-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-floresta">
+                          {conteudo.titulo}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {TIPO_LABEL[conteudo.tipo] ?? conteudo.tipo} ·{" "}
+                          {formatarDuracao(conteudo.duracao_segundos)} · ordem {conteudo.ordem}
+                          {conteudo.storage_path ? " · mídia enviada" : ""}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-full border-floresta/20 text-floresta"
+                          onClick={() =>
+                            setForm({
+                              id: conteudo.id,
+                              eixoId: conteudo.eixo_id,
+                              tipo: conteudo.tipo as Tipo,
+                              titulo: conteudo.titulo,
+                              descricao: conteudo.descricao ?? "",
+                              corpoTexto: conteudo.corpo_texto ?? "",
+                              storagePath: conteudo.storage_path ?? "",
+                              duracaoSegundos: conteudo.duracao_segundos ?? 0,
+                              ordem: conteudo.ordem ?? 0,
+                            })
+                          }
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-full text-destructive"
+                          onClick={async () => {
+                            await apagar({ data: { id: conteudo.id } });
+                            recarregar();
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                  {conteudos.length === 0 && (
+                    <li className="text-xs text-muted-foreground">
+                      {filtrando ? "Nenhuma prática com esses filtros." : "Nenhuma prática ainda."}
+                    </li>
+                  )}
+                </ul>
+              </section>
+            );
+          })}
       </div>
 
       <Dialog open={Boolean(form)} onOpenChange={(aberto) => !aberto && setForm(null)}>

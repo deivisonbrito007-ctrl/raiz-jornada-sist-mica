@@ -97,7 +97,11 @@ function AuthPage() {
           <RaizLogo className="h-24" />
         </Link>
         <h1 className="text-center text-3xl text-floresta">
-          {confirmeEmail ? "Confirme seu e-mail" : cadastro ? "Criar sua conta" : "Bem-vindo de volta"}
+          {confirmeEmail
+            ? "Confirme seu e-mail"
+            : cadastro
+              ? "Criar sua conta"
+              : "Bem-vindo de volta"}
         </h1>
         <p className="mt-3 text-center text-sm leading-relaxed text-muted-foreground">
           {confirmeEmail
@@ -106,7 +110,10 @@ function AuthPage() {
         </p>
 
         {!confirmeEmail && (
-          <form onSubmit={enviar} className="mt-9 space-y-5 rounded-3xl bg-card p-7 shadow-[var(--shadow-organico)]">
+          <form
+            onSubmit={enviar}
+            className="mt-9 space-y-5 rounded-3xl bg-card p-7 shadow-[var(--shadow-organico)]"
+          >
             {cadastro && (
               <div className="space-y-2">
                 <Label htmlFor="nome">Como podemos te chamar?</Label>

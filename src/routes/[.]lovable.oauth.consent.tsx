@@ -29,7 +29,7 @@ function oauthApi(): OAuthApi {
 export const Route = createFileRoute("/.lovable/oauth/consent")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
-    authorization_id: typeof s['authorization_id'] === "string" ? s['authorization_id'] : "",
+    authorization_id: typeof s["authorization_id"] === "string" ? s["authorization_id"] : "",
   }),
   beforeLoad: async ({ search, location }) => {
     if (!search.authorization_id) throw new Error("authorization_id ausente");
@@ -88,8 +88,8 @@ function Consentimento() {
       <div className="rounded-3xl bg-card p-7 shadow-[var(--shadow-organico)]">
         <h1 className="text-2xl text-floresta">Conectar {nomeCliente} à sua conta</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          Ao aprovar, {nomeCliente} poderá ver suas práticas liberadas, seu progresso e seu diário, e
-          registrar novas entradas em seu nome.
+          Ao aprovar, {nomeCliente} poderá ver suas práticas liberadas, seu progresso e seu diário,
+          e registrar novas entradas em seu nome.
         </p>
         {erro && (
           <p role="alert" className="mt-4 text-sm text-terracota">

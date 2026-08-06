@@ -5,7 +5,7 @@ import listarDiario from "./tools/listar-diario";
 import criarEntradaDiario from "./tools/criar-entrada-diario";
 import meuProgresso from "./tools/meu-progresso";
 
-const projectRef = import.meta.env['VITE_SUPABASE_PROJECT_ID'] ?? "project-ref-unset";
+const projectRef = import.meta.env["VITE_SUPABASE_PROJECT_ID"] ?? "project-ref-unset";
 
 export default defineMcp({
   name: "raiz-jornada-sistemica",
@@ -17,7 +17,11 @@ export default defineMcp({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",
   }),
-  tools: [minhaBiblioteca, meuProgresso, marcarPratica, listarDiario, criarEntradaDiario] as unknown as Parameters<
-    typeof defineMcp
-  >[0]["tools"],
+  tools: [
+    minhaBiblioteca,
+    meuProgresso,
+    marcarPratica,
+    listarDiario,
+    criarEntradaDiario,
+  ] as unknown as Parameters<typeof defineMcp>[0]["tools"],
 });
