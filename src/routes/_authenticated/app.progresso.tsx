@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Flame, Sprout } from "lucide-react";
-import { getMinhaBiblioteca } from "@/lib/raiz.functions";
+import { Flame, Sprout, Target, Check, Minus, Plus } from "lucide-react";
+import { getMinhaBiblioteca, getMeuContexto, definirMetaSemanal } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   calcularStreak,
   linhaDoTempoSemanal,
   mapaCalorDiario,
+  avaliarMetaSemanal,
   DIAS_SEMANA_CURTO,
 } from "@/lib/raiz-format";
 
@@ -17,9 +18,19 @@ export const Route = createFileRoute("/_authenticated/app/progresso")({
 
 function Progresso() {
   const fetchBiblioteca = useServerFn(getMinhaBiblioteca);
+  const fetchContexto = useServerFn(getMeuContexto);
+  const salvarMeta = useServerFn(definirMetaSemanal);
+  const queryClient = useQueryClient();
+
   const { data, isLoading } = useQuery({
     queryKey: ["biblioteca"],
     queryFn: () => fetchBiblioteca(),
+  });
+  const { data: contexto } = useQuery({ queryKey: ["contexto"], queryFn: () => fetchContexto() });
+
+  const mutarMeta = useMutation({
+    mutationFn: (meta: number) => salvarMeta({ data: { meta } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contexto"] }),
   });
 
   const eixos = (data?.eixos ?? []).filter((e) => e.liberado);
@@ -32,6 +43,8 @@ function Progresso() {
   const semanas = linhaDoTempoSemanal(datasConclusao, 8);
   const maximoSemana = Math.max(1, ...semanas.map((s) => s.total));
   const colunas = mapaCalorDiario(datasConclusao, 12);
+  const metaAtual = contexto?.perfil?.meta_semanal ?? 3;
+  const meta = avaliarMetaSemanal(datasConclusao, mutarMeta.variables ?? metaAtual);
   const sequenciasPorEixo = eixos
     .map((eixo) => ({
       id: eixo.id,
@@ -43,6 +56,7 @@ function Progresso() {
   const maiorStreakEixo = sequenciasPorEixo[0];
   const maximoStreak = Math.max(1, ...sequenciasPorEixo.map((e) => e.streak));
   const niveis = ["bg-secondary", "bg-salvia/25", "bg-salvia/50", "bg-salvia/75", "bg-floresta"];
+  const anelMeta = 2 * Math.PI * 34;
 
 
   return (
