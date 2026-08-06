@@ -102,5 +102,3 @@ export function linhaDoTempoSemanal(datas: string[], semanas = 8): SemanaLinhaDo
     };
   });
 }
-  return streak;
-}
