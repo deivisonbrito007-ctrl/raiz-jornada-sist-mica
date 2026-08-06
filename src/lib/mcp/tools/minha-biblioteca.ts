@@ -15,9 +15,18 @@ export default defineTool({
 
     const [eixos, conteudos, liberacoes, progresso] = await Promise.all([
       supabase.from("eixos").select("id, nome, descricao, ordem").order("ordem"),
-      supabase.from("conteudos").select("id, eixo_id, tipo, titulo, duracao_segundos, ordem").order("ordem"),
-      supabase.from("liberacoes").select("eixo_id, conteudo_id, status, liberar_em").eq("cliente_id", userId),
-      supabase.from("progresso").select("conteudo_id, status, concluido_em").eq("cliente_id", userId),
+      supabase
+        .from("conteudos")
+        .select("id, eixo_id, tipo, titulo, duracao_segundos, ordem")
+        .order("ordem"),
+      supabase
+        .from("liberacoes")
+        .select("eixo_id, conteudo_id, status, liberar_em")
+        .eq("cliente_id", userId),
+      supabase
+        .from("progresso")
+        .select("conteudo_id, status, concluido_em")
+        .eq("cliente_id", userId),
     ]);
 
     const erro = eixos.error ?? conteudos.error ?? liberacoes.error ?? progresso.error;

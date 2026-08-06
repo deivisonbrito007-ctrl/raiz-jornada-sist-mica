@@ -75,7 +75,9 @@ function AppLayout() {
                     <li key={n.id} className="rounded-xl bg-secondary p-3">
                       <p className="text-sm font-medium text-floresta">{n.titulo}</p>
                       <p className="text-xs text-muted-foreground">{n.mensagem}</p>
-                      <p className="mt-1 text-[11px] text-muted-foreground">{formatarData(n.created_at)}</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        {formatarData(n.created_at)}
+                      </p>
                     </li>
                   ))}
                 </ul>

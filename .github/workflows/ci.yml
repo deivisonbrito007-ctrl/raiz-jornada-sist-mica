@@ -9,6 +9,8 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Set up Bun
@@ -17,5 +19,24 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Run lint
         run: bun run lint
-      - name: Run tests
-        run: bun run test
+      - name: Run tests with coverage
+        run: bun run test:coverage
+      - name: Generate coverage badge
+        run: bun run coverage:badge
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+      - name: Commit coverage badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          if [ -n "$(git status --porcelain .github/badges/coverage.svg)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/badges/coverage.svg
+            git commit -m "chore: update coverage badge [skip ci]"
+            git push
+          else
+            echo "Badge inalterado."
+          fi

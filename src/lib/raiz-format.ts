@@ -63,7 +63,6 @@ export function calcularStreak(datas: string[]) {
   return streak;
 }
 
-
 function inicioDaSemana(data: Date) {
   const inicio = new Date(data);
   inicio.setDate(data.getDate() - ((data.getDay() + 6) % 7));

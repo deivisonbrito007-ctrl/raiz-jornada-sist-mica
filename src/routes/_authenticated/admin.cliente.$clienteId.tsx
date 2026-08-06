@@ -49,7 +49,9 @@ function AdminCliente() {
     (data?.liberacoes ?? []).find(
       (l) =>
         l.status === "liberado" &&
-        (conteudoId ? l.conteudo_id === conteudoId : l.eixo_id === eixoId && l.conteudo_id === null),
+        (conteudoId
+          ? l.conteudo_id === conteudoId
+          : l.eixo_id === eixoId && l.conteudo_id === null),
     );
 
   const agendamento = (eixoId: string | null, conteudoId: string | null) => {
@@ -129,7 +131,10 @@ function AdminCliente() {
                   value={vinculo.status_pagamento}
                   onValueChange={async (valor) => {
                     await atualizarPagamento({
-                      data: { id: vinculo.id, statusPagamento: valor as "pendente" | "pago" | "cancelado" },
+                      data: {
+                        id: vinculo.id,
+                        statusPagamento: valor as "pendente" | "pago" | "cancelado",
+                      },
                     });
                     recarregar();
                   }}
@@ -285,7 +290,10 @@ function AdminCliente() {
                 </p>
               )}
               {data.diario.map((entrada) => (
-                <article key={entrada.id} className="rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)]">
+                <article
+                  key={entrada.id}
+                  className="rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)]"
+                >
                   <p className="text-xs text-salvia">
                     {formatarData(entrada.created_at)}
                     {entrada.conteudos?.titulo ? ` · ${entrada.conteudos.titulo}` : ""}

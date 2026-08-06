@@ -32,7 +32,9 @@ function Trilha() {
       {data?.eixo && (
         <>
           <h1 className="mt-5 text-3xl text-floresta">{data.eixo.nome}</h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{data.eixo.descricao}</p>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            {data.eixo.descricao}
+          </p>
 
           <ol className="mt-8 space-y-3">
             {data.conteudos.map((conteudo, indice) => (

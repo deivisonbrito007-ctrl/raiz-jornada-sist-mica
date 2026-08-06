@@ -25,7 +25,6 @@ import {
   TIPO_LABEL,
 } from "@/lib/raiz-format";
 
-
 export const Route = createFileRoute("/_authenticated/app/progresso")({
   component: Progresso,
 });
@@ -97,9 +96,6 @@ function Progresso() {
     }
   };
 
-
-
-
   return (
     <div>
       <h1 className="text-3xl text-floresta">Seu caminho</h1>
@@ -117,9 +113,9 @@ function Progresso() {
         {gerando ? "Gerando relatório..." : "Baixar relatório em PDF"}
       </button>
       <p className="mt-2 text-xs text-muted-foreground">
-        Inclui seu progresso por eixo e suas entradas do diário, para compartilhar com quem acompanha você.
+        Inclui seu progresso por eixo e suas entradas do diário, para compartilhar com quem
+        acompanha você.
       </p>
-
 
       {isLoading && <Skeleton className="mt-7 h-40 rounded-3xl" />}
 
@@ -173,7 +169,14 @@ function Progresso() {
         <div className="flex items-start gap-5">
           <div className="relative shrink-0">
             <svg viewBox="0 0 80 80" className="h-20 w-20 -rotate-90">
-              <circle cx="40" cy="40" r="34" fill="none" strokeWidth="8" className="stroke-secondary" />
+              <circle
+                cx="40"
+                cy="40"
+                r="34"
+                fill="none"
+                strokeWidth="8"
+                className="stroke-secondary"
+              />
               <circle
                 cx="40"
                 cy="40"
@@ -241,7 +244,6 @@ function Progresso() {
         </div>
       </section>
 
-
       <section className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
         <h2 className="text-lg text-floresta">Linha do tempo semanal</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -271,7 +273,6 @@ function Progresso() {
         </div>
       </section>
 
-
       <section className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
         <h2 className="text-lg text-floresta">Sequência por eixo</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -296,7 +297,9 @@ function Progresso() {
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary">
                 <div
                   className={`h-full rounded-full ${
-                    eixo.id === maiorStreakEixo?.id && eixo.streak > 0 ? "bg-terracota" : "bg-salvia"
+                    eixo.id === maiorStreakEixo?.id && eixo.streak > 0
+                      ? "bg-terracota"
+                      : "bg-salvia"
                   }`}
                   style={{ width: `${eixo.streak ? (eixo.streak / maximoStreak) * 100 : 0}%` }}
                 />
@@ -310,7 +313,6 @@ function Progresso() {
           )}
         </div>
       </section>
-
 
       <section className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
         <h2 className="text-lg text-floresta">Calendário de prática</h2>
@@ -405,9 +407,7 @@ function Progresso() {
             <span className="text-[10px] text-muted-foreground">mais</span>
           </span>
         </div>
-
       </section>
-
 
       <div className="mt-8 space-y-3">
         {eixos.map((eixo) => (

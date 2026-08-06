@@ -17,7 +17,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { calcularStreak, formatarData, formatarDuracao, TIPO_LABEL } from "@/lib/raiz-format";
 import { LembreteRetorno } from "@/components/lembrete-retorno";
 
-
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Biblioteca,
 });
@@ -27,7 +26,8 @@ function Icone({ nome, className }: { nome: string; className?: string }) {
     .split("-")
     .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
     .join("");
-  const Componente = (icones as unknown as Record<string, icones.LucideIcon>)[chave] ?? icones.Sprout;
+  const Componente =
+    (icones as unknown as Record<string, icones.LucideIcon>)[chave] ?? icones.Sprout;
   return <Componente className={className} />;
 }
 
@@ -35,7 +35,10 @@ function Biblioteca() {
   const fetchBiblioteca = useServerFn(getMinhaBiblioteca);
   const fetchContexto = useServerFn(getMeuContexto);
   const { data: contexto } = useQuery({ queryKey: ["contexto"], queryFn: () => fetchContexto() });
-  const { data, isLoading } = useQuery({ queryKey: ["biblioteca"], queryFn: () => fetchBiblioteca() });
+  const { data, isLoading } = useQuery({
+    queryKey: ["biblioteca"],
+    queryFn: () => fetchBiblioteca(),
+  });
 
   const primeiroNome = (contexto?.perfil?.nome || "").split(" ")[0];
 
@@ -205,59 +208,58 @@ function Biblioteca() {
           )}
         </div>
       ) : (
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        {eixosVisiveis.map((eixo) =>
-          eixo.liberado ? (
-            <Link
-              key={eixo.id}
-              to="/app/eixo/$eixoId"
-              params={{ eixoId: eixo.id }}
-              className="group rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)] transition-transform hover:-translate-y-0.5"
-            >
-              <div className="flex items-start justify-between">
-                <span className="rounded-2xl bg-secondary p-3 text-floresta">
-                  <Icone nome={eixo.icone} className="h-5 w-5" />
-                </span>
-                <span className="text-xs font-medium text-salvia">
-                  {eixo.concluidos}/{eixo.total} concluídos
-                </span>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          {eixosVisiveis.map((eixo) =>
+            eixo.liberado ? (
+              <Link
+                key={eixo.id}
+                to="/app/eixo/$eixoId"
+                params={{ eixoId: eixo.id }}
+                className="group rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)] transition-transform hover:-translate-y-0.5"
+              >
+                <div className="flex items-start justify-between">
+                  <span className="rounded-2xl bg-secondary p-3 text-floresta">
+                    <Icone nome={eixo.icone} className="h-5 w-5" />
+                  </span>
+                  <span className="text-xs font-medium text-salvia">
+                    {eixo.concluidos}/{eixo.total} concluídos
+                  </span>
+                </div>
+                <h2 className="mt-4 text-xl text-floresta">{eixo.nome}</h2>
+                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{eixo.descricao}</p>
+                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-secondary">
+                  <div
+                    className="h-full rounded-full bg-salvia transition-all"
+                    style={{ width: `${eixo.total ? (eixo.concluidos / eixo.total) * 100 : 0}%` }}
+                  />
+                </div>
+              </Link>
+            ) : (
+              <div
+                key={eixo.id}
+                className="rounded-3xl border border-dashed border-border bg-secondary/40 p-5"
+              >
+                <div className="flex items-start justify-between">
+                  <span className="rounded-2xl bg-secondary p-3 text-muted-foreground">
+                    <Icone nome={eixo.icone} className="h-5 w-5" />
+                  </span>
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <h2 className="mt-4 text-xl text-muted-foreground">{eixo.nome}</h2>
+                <p className="mt-1 text-sm text-muted-foreground/80">
+                  {eixo.abreEm
+                    ? `Abre em ${formatarData(eixo.abreEm)}.`
+                    : "Este eixo será liberado quando for o momento do seu processo."}
+                </p>
               </div>
-              <h2 className="mt-4 text-xl text-floresta">{eixo.nome}</h2>
-              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{eixo.descricao}</p>
-              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-secondary">
-                <div
-                  className="h-full rounded-full bg-salvia transition-all"
-                  style={{ width: `${eixo.total ? (eixo.concluidos / eixo.total) * 100 : 0}%` }}
-                />
-              </div>
-            </Link>
-          ) : (
-            <div
-              key={eixo.id}
-              className="rounded-3xl border border-dashed border-border bg-secondary/40 p-5"
-            >
-              <div className="flex items-start justify-between">
-                <span className="rounded-2xl bg-secondary p-3 text-muted-foreground">
-                  <Icone nome={eixo.icone} className="h-5 w-5" />
-                </span>
-                <Lock className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <h2 className="mt-4 text-xl text-muted-foreground">{eixo.nome}</h2>
-              <p className="mt-1 text-sm text-muted-foreground/80">
-                {eixo.abreEm
-                  ? `Abre em ${formatarData(eixo.abreEm)}.`
-                  : "Este eixo será liberado quando for o momento do seu processo."}
-              </p>
-
-            </div>
-          ),
-        )}
-        {eixosVisiveis.length === 0 && !isLoading && (
-          <p className="rounded-2xl bg-secondary/50 p-6 text-center text-sm text-muted-foreground sm:col-span-2">
-            Nenhum eixo encontrado.
-          </p>
-        )}
-      </div>
+            ),
+          )}
+          {eixosVisiveis.length === 0 && !isLoading && (
+            <p className="rounded-2xl bg-secondary/50 p-6 text-center text-sm text-muted-foreground sm:col-span-2">
+              Nenhum eixo encontrado.
+            </p>
+          )}
+        </div>
       )}
     </div>
   );
