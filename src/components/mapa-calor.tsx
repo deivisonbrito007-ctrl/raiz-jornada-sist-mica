@@ -38,51 +38,60 @@ export function MapaCalor({ colunas }: { colunas: ColunaMapaCalor[] }) {
                 const classes = `h-4 w-4 rounded-[5px] ${
                   dia.futuro ? "bg-secondary/40" : NIVEIS_MAPA_CALOR[dia.nivel]
                 } ${dia.hoje ? "ring-2 ring-terracota/60" : ""}`;
-                if (dia.futuro || dia.total === 0) {
-                  return (
-                    <span
-                      key={dia.data}
-                      title={dia.futuro ? dia.label : `${dia.label} — nenhuma prática`}
-                      className={classes}
-                    />
-                  );
+                if (dia.futuro) {
+                  return <span key={dia.data} title={dia.label} className={classes} />;
                 }
+                const vazio = dia.total === 0;
+                const nome = vazio
+                  ? `${dia.label} — nenhuma prática`
+                  : `${dia.label} — ${dia.total} prática${dia.total === 1 ? "" : "s"}`;
                 return (
                   <Popover key={dia.data}>
                     <PopoverTrigger asChild>
                       <button
                         type="button"
-                        aria-label={`${dia.label} — ${dia.total} prática${dia.total === 1 ? "" : "s"}`}
+                        title={nome}
+                        aria-label={nome}
                         className={`${classes} transition hover:ring-2 hover:ring-floresta/40`}
                       />
                     </PopoverTrigger>
                     <PopoverContent align="center" className="w-64 rounded-2xl p-4">
                       <p className="text-sm text-floresta">{dia.label}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        {dia.total} prática{dia.total === 1 ? "" : "s"}
-                        {dia.totalSegundos > 0
-                          ? ` · ${formatarDuracao(dia.totalSegundos)} registrados`
-                          : ""}
+                        {vazio
+                          ? "0 prática · 0 min registrados"
+                          : `${dia.total} prática${dia.total === 1 ? "" : "s"}${
+                              dia.totalSegundos > 0
+                                ? ` · ${formatarDuracao(dia.totalSegundos)} registrados`
+                                : " · 0 min registrados"
+                            }`}
                       </p>
-                      <ul className="mt-3 space-y-2">
-                        {dia.itens.map((item, indice) => (
-                          <li key={`${item.titulo}-${indice}`} className="text-xs">
-                            <span className="text-foreground">{item.titulo}</span>
-                            <span className="block text-muted-foreground">
-                              {item.eixoNome}
-                              {item.eixoNome && " · "}
-                              {TIPO_LABEL[item.tipo] ?? item.tipo}
-                              {item.duracaoSegundos
-                                ? ` · ${formatarDuracao(item.duracaoSegundos)}`
-                                : ""}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
+                      {vazio ? (
+                        <p className="mt-3 text-xs text-foreground">
+                          Nenhuma prática registrada neste dia. Todo recomeço é válido.
+                        </p>
+                      ) : (
+                        <ul className="mt-3 space-y-2">
+                          {dia.itens.map((item, indice) => (
+                            <li key={`${item.titulo}-${indice}`} className="text-xs">
+                              <span className="text-foreground">{item.titulo}</span>
+                              <span className="block text-muted-foreground">
+                                {item.eixoNome}
+                                {item.eixoNome && " · "}
+                                {TIPO_LABEL[item.tipo] ?? item.tipo}
+                                {item.duracaoSegundos
+                                  ? ` · ${formatarDuracao(item.duracaoSegundos)}`
+                                  : ""}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </PopoverContent>
                   </Popover>
                 );
               })}
+
             </div>
           ))}
         </div>
