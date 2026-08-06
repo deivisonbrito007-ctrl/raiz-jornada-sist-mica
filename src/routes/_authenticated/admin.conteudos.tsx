@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, Upload } from "lucide-react";
+import { Plus, Search, Trash2, Upload } from "lucide-react";
 import {
   adminApagarConteudo,
   adminListarConteudos,
@@ -60,6 +60,27 @@ function AdminConteudos() {
 
   const { data } = useQuery({ queryKey: ["admin-conteudos"], queryFn: () => fetchTudo() });
   const [form, setForm] = useState<Formulario | null>(null);
+  const [busca, setBusca] = useState("");
+  const [eixoFiltro, setEixoFiltro] = useState("todos");
+  const [tipoFiltro, setTipoFiltro] = useState("todos");
+  const [statusFiltro, setStatusFiltro] = useState("todos");
+
+  const termo = busca.trim().toLowerCase();
+  const filtrando =
+    termo !== "" || eixoFiltro !== "todos" || tipoFiltro !== "todos" || statusFiltro !== "todos";
+
+  const conteudosFiltrados = useMemo(
+    () =>
+      (data?.conteudos ?? []).filter((c) => {
+        if (eixoFiltro !== "todos" && c.eixo_id !== eixoFiltro) return false;
+        if (tipoFiltro !== "todos" && c.tipo !== tipoFiltro) return false;
+        if (statusFiltro === "com_midia" && !c.storage_path) return false;
+        if (statusFiltro === "sem_midia" && c.storage_path) return false;
+        if (termo && !`${c.titulo} ${c.descricao ?? ""}`.toLowerCase().includes(termo)) return false;
+        return true;
+      }),
+    [data?.conteudos, eixoFiltro, tipoFiltro, statusFiltro, termo],
+  );
   const [enviando, setEnviando] = useState(false);
   const [subindo, setSubindo] = useState(false);
 
@@ -132,9 +153,76 @@ function AdminConteudos() {
         </Button>
       </div>
 
-      <div className="mt-8 space-y-6">
-        {(data?.eixos ?? []).map((eixo) => {
-          const conteudos = (data?.conteudos ?? []).filter((c) => c.eixo_id === eixo.id);
+      <div className="mt-8 space-y-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar prática por título ou descrição"
+            className="rounded-full pl-11"
+          />
+        </div>
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Select value={eixoFiltro} onValueChange={setEixoFiltro}>
+            <SelectTrigger className="rounded-full">
+              <SelectValue placeholder="Eixo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os eixos</SelectItem>
+              {(data?.eixos ?? []).map((e) => (
+                <SelectItem key={e.id} value={e.id}>
+                  {e.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={tipoFiltro} onValueChange={setTipoFiltro}>
+            <SelectTrigger className="rounded-full">
+              <SelectValue placeholder="Tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os tipos</SelectItem>
+              {Object.entries(TIPO_LABEL).map(([valor, label]) => (
+                <SelectItem key={valor} value={valor}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFiltro} onValueChange={setStatusFiltro}>
+            <SelectTrigger className="rounded-full">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os status</SelectItem>
+              <SelectItem value="com_midia">Com mídia enviada</SelectItem>
+              <SelectItem value="sem_midia">Sem mídia</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {filtrando && (
+          <button
+            type="button"
+            onClick={() => {
+              setBusca("");
+              setEixoFiltro("todos");
+              setTipoFiltro("todos");
+              setStatusFiltro("todos");
+            }}
+            className="text-xs font-medium text-terracota underline"
+          >
+            Limpar filtros
+          </button>
+        )}
+      </div>
+
+      <div className="mt-6 space-y-6">
+        {(data?.eixos ?? [])
+          .filter((eixo) => eixoFiltro === "todos" || eixo.id === eixoFiltro)
+          .filter((eixo) => !filtrando || conteudosFiltrados.some((c) => c.eixo_id === eixo.id))
+          .map((eixo) => {
+          const conteudos = conteudosFiltrados.filter((c) => c.eixo_id === eixo.id);
           return (
             <section key={eixo.id} className="rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
               <h2 className="text-xl text-floresta">{eixo.nome}</h2>
@@ -189,7 +277,9 @@ function AdminConteudos() {
                   </li>
                 ))}
                 {conteudos.length === 0 && (
-                  <li className="text-xs text-muted-foreground">Nenhuma prática ainda.</li>
+                  <li className="text-xs text-muted-foreground">
+                    {filtrando ? "Nenhuma prática com esses filtros." : "Nenhuma prática ainda."}
+                  </li>
                 )}
               </ul>
             </section>
