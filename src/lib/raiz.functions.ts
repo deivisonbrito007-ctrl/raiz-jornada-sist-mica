@@ -309,6 +309,8 @@ export const adminResumo = createServerFn({ method: "GET" })
           ultimaAtividade: ultima ?? null,
           pacote: (pacotes.data ?? []).find((pk) => pk.id === vinculo?.pacote_id)?.nome ?? null,
           statusPagamento: vinculo?.status_pagamento ?? null,
+          datasConclusao,
+
         };
       });
 
