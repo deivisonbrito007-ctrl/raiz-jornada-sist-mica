@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://cehcyazapztwpaizdeak.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "raiz-jornada-sistemica",
+      "version": "0.1.0",
+      "title": "Raiz: Jornada Sistêmica"
+    },
+    "tools": [
+      {
+        "name": "minha_biblioteca",
+        "title": "Minha biblioteca",
+        "description": "Lista os eixos liberados para a pessoa autenticada e as práticas de cada eixo, com status de conclusão.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "meu_progresso",
+        "title": "Meu progresso",
+        "description": "Resume o progresso da pessoa autenticada: práticas concluídas, sequência de semanas, meta semanal e tempo sem praticar.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "marcar_pratica",
+        "title": "Marcar prática",
+        "description": "Atualiza o status de uma prática (nao_iniciado, em_andamento ou concluido) para a pessoa autenticada.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "conteudoId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID da prática (conteúdo)."
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "nao_iniciado",
+                "em_andamento",
+                "concluido"
+              ],
+              "description": "Novo status da prática."
+            }
+          },
+          "required": [
+            "conteudoId",
+            "status"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "listar_diario",
+        "title": "Listar diário",
+        "description": "Lista as entradas mais recentes do diário privado da pessoa autenticada.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limite": {
+              "type": "integer",
+              "description": "Quantidade de entradas a retornar (máximo 50)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "criar_entrada_diario",
+        "title": "Criar entrada no diário",
+        "description": "Cria uma nova entrada no diário privado da pessoa autenticada.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "texto": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Texto da reflexão."
+            },
+            "conteudoId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID da prática relacionada, quando a reflexão vier de uma prática."
+            }
+          },
+          "required": [
+            "texto"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
