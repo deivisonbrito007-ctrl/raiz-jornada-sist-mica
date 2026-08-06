@@ -65,13 +65,33 @@ describe("MapaCalor", () => {
 
     expect(screen.getByRole("button", { name: rotulo(1, 2) })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: rotulo(3, 1) })).toBeInTheDocument();
-    expect(screen.getAllByRole("button")).toHaveLength(2);
 
     const d = new Date(HOJE);
     d.setDate(d.getDate() - 2);
     const vazio = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
     expect(document.querySelector(`[title="${vazio} — nenhuma prática"]`)).toBeTruthy();
   });
+
+  it("abre o popover de um dia sem prática com estado vazio e tempo total zero", async () => {
+    const user = userEvent.setup();
+    renderMapa();
+
+    const d = new Date(HOJE);
+    d.setDate(d.getDate() - 2);
+    const label = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+
+    await user.click(screen.getByRole("button", { name: `${label} — nenhuma prática` }));
+
+    const popover = await screen.findByRole("dialog");
+    expect(within(popover).getByText(label)).toBeInTheDocument();
+    expect(within(popover).getByText("0 prática · 0 min registrados")).toBeInTheDocument();
+    expect(
+      within(popover).getByText(/Nenhuma prática registrada neste dia/),
+    ).toBeInTheDocument();
+    expect(within(popover).queryAllByRole("listitem")).toHaveLength(0);
+    expect(within(popover).queryByText("Carta ao pai")).not.toBeInTheDocument();
+  });
+
 
   it("abre o popover do dia e lista as práticas concluídas com tempo total", async () => {
     const user = userEvent.setup();

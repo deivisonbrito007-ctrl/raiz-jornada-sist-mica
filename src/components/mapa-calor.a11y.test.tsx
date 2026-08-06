@@ -64,7 +64,7 @@ describe("MapaCalor — acessibilidade", () => {
     renderMapa();
 
     const dias = screen.getAllByRole("button");
-    expect(dias).toHaveLength(2);
+    expect(dias.length).toBeGreaterThan(2);
 
     for (const dia of dias) {
       expect(dia).toHaveAccessibleName();
@@ -74,20 +74,19 @@ describe("MapaCalor — acessibilidade", () => {
     }
   });
 
-  it("mantém dias sem prática fora da ordem de tabulação", async () => {
+  it("permite navegar pelos dias com Tab, incluindo os dias sem prática", async () => {
     const user = userEvent.setup();
     renderMapa();
 
-    const primeiro = screen.getByRole("button", { name: rotulo(3, 1) });
-    const segundo = screen.getByRole("button", { name: rotulo(1, 2) });
+    const dias = screen.getAllByRole("button");
 
     await user.tab();
-    expect(primeiro).toHaveFocus();
+    expect(dias[0]).toHaveFocus();
 
-    // O próximo Tab pula os dias vazios (spans) e vai direto para o outro dia com prática.
     await user.tab();
-    expect(segundo).toHaveFocus();
+    expect(dias[1]).toHaveFocus();
   });
+
 
   it("abre o popover pelo teclado com Enter e devolve o foco ao fechar com Escape", async () => {
     const user = userEvent.setup();
