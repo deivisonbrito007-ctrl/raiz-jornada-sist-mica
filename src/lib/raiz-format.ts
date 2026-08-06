@@ -102,3 +102,62 @@ export function linhaDoTempoSemanal(datas: string[], semanas = 8): SemanaLinhaDo
     };
   });
 }
+
+export type DiaMapaCalor = {
+  data: string;
+  label: string;
+  total: number;
+  nivel: 0 | 1 | 2 | 3 | 4;
+  futuro: boolean;
+  hoje: boolean;
+};
+
+export type ColunaMapaCalor = {
+  inicio: string;
+  labelMes: string;
+  dias: DiaMapaCalor[];
+};
+
+export const DIAS_SEMANA_CURTO = ["S", "T", "Q", "Q", "S", "S", "D"];
+
+export function mapaCalorDiario(datas: string[], semanas = 12): ColunaMapaCalor[] {
+  const umDia = 24 * 60 * 60 * 1000;
+  const contagem = new Map<number, number>();
+  for (const iso of datas) {
+    const d = new Date(iso);
+    d.setHours(0, 0, 0, 0);
+    contagem.set(d.getTime(), (contagem.get(d.getTime()) ?? 0) + 1);
+  }
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const inicioAtual = inicioDaSemana(hoje).getTime();
+
+  return Array.from({ length: semanas }, (_, indice) => {
+    const inicioSemana = inicioAtual - (semanas - 1 - indice) * 7 * umDia;
+    const dias = Array.from({ length: 7 }, (_, dia) => {
+      const chave = inicioSemana + dia * umDia;
+      const data = new Date(chave);
+      const total = contagem.get(chave) ?? 0;
+      const nivel: DiaMapaCalor["nivel"] =
+        total === 0 ? 0 : total === 1 ? 1 : total === 2 ? 2 : total <= 4 ? 3 : 4;
+      return {
+        data: data.toISOString(),
+        label: data.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+        total,
+        nivel,
+        futuro: chave > hoje.getTime(),
+        hoje: chave === hoje.getTime(),
+      };
+    });
+    const primeiro = new Date(inicioSemana);
+    return {
+      inicio: primeiro.toISOString(),
+      labelMes:
+        primeiro.getDate() <= 7
+          ? primeiro.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")
+          : "",
+      dias,
+    };
+  });
+}
