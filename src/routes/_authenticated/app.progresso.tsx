@@ -350,13 +350,23 @@ function Progresso() {
             </div>
           </div>
         </div>
-        <div className="mt-5 flex items-center justify-end gap-2">
-          <span className="text-[10px] text-muted-foreground">menos</span>
-          {niveis.map((classe) => (
-            <span key={classe} className={`h-3 w-3 rounded-[4px] ${classe}`} />
-          ))}
-          <span className="text-[10px] text-muted-foreground">mais</span>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <span className="text-xs text-muted-foreground">
+            {lembrete.diasSemPratica === null
+              ? "Nenhum dia marcado ainda."
+              : lembrete.diasSemPratica === 0
+                ? "Hoje já está marcado no mapa."
+                : `${lembrete.diasSemPratica} dia${lembrete.diasSemPratica === 1 ? "" : "s"} desde o último quadrado preenchido.`}
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground">menos</span>
+            {niveis.map((classe) => (
+              <span key={classe} className={`h-3 w-3 rounded-[4px] ${classe}`} />
+            ))}
+            <span className="text-[10px] text-muted-foreground">mais</span>
+          </span>
         </div>
+
       </section>
 
 
