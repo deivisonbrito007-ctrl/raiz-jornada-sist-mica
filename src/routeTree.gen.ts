@@ -15,6 +15,9 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedEntradaRouteImport } from './routes/_authenticated/entrada'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedAppDiarioRouteImport } from './routes/_authenticated/app.diario'
+import { Route as AuthenticatedAppConteudoConteudoIdRouteImport } from './routes/_authenticated/app.conteudo.$conteudoId'
+import { Route as AuthenticatedAppEixoEixoIdRouteImport } from './routes/_authenticated/app.eixo.$eixoId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -45,19 +48,42 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppDiarioRoute = AuthenticatedAppDiarioRouteImport.update({
+  id: '/diario',
+  path: '/diario',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppConteudoConteudoIdRoute =
+  AuthenticatedAppConteudoConteudoIdRouteImport.update({
+    id: '/conteudo/$conteudoId',
+    path: '/conteudo/$conteudoId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppEixoEixoIdRoute =
+  AuthenticatedAppEixoEixoIdRouteImport.update({
+    id: '/eixo/$eixoId',
+    path: '/eixo/$eixoId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/entrada': typeof AuthenticatedEntradaRoute
+  '/app/diario': typeof AuthenticatedAppDiarioRoute
   '/app/': typeof AuthenticatedAppIndexRoute
+  '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
+  '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/entrada': typeof AuthenticatedEntradaRoute
+  '/app/diario': typeof AuthenticatedAppDiarioRoute
   '/app': typeof AuthenticatedAppIndexRoute
+  '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
+  '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -66,13 +92,31 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/entrada': typeof AuthenticatedEntradaRoute
+  '/_authenticated/app/diario': typeof AuthenticatedAppDiarioRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
+  '/_authenticated/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/app' | '/entrada' | '/app/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/app'
+    | '/entrada'
+    | '/app/diario'
+    | '/app/'
+    | '/app/conteudo/$conteudoId'
+    | '/app/eixo/$eixoId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/entrada' | '/app'
+  to:
+    | '/'
+    | '/auth'
+    | '/entrada'
+    | '/app/diario'
+    | '/app'
+    | '/app/conteudo/$conteudoId'
+    | '/app/eixo/$eixoId'
   id:
     | '__root__'
     | '/'
@@ -80,7 +124,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/app'
     | '/_authenticated/entrada'
+    | '/_authenticated/app/diario'
     | '/_authenticated/app/'
+    | '/_authenticated/app/conteudo/$conteudoId'
+    | '/_authenticated/app/eixo/$eixoId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -133,15 +180,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/diario': {
+      id: '/_authenticated/app/diario'
+      path: '/diario'
+      fullPath: '/app/diario'
+      preLoaderRoute: typeof AuthenticatedAppDiarioRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/conteudo/$conteudoId': {
+      id: '/_authenticated/app/conteudo/$conteudoId'
+      path: '/conteudo/$conteudoId'
+      fullPath: '/app/conteudo/$conteudoId'
+      preLoaderRoute: typeof AuthenticatedAppConteudoConteudoIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/eixo/$eixoId': {
+      id: '/_authenticated/app/eixo/$eixoId'
+      path: '/eixo/$eixoId'
+      fullPath: '/app/eixo/$eixoId'
+      preLoaderRoute: typeof AuthenticatedAppEixoEixoIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
   }
 }
 
 interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppDiarioRoute: typeof AuthenticatedAppDiarioRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppConteudoConteudoIdRoute: typeof AuthenticatedAppConteudoConteudoIdRoute
+  AuthenticatedAppEixoEixoIdRoute: typeof AuthenticatedAppEixoEixoIdRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppDiarioRoute: AuthenticatedAppDiarioRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppConteudoConteudoIdRoute:
+    AuthenticatedAppConteudoConteudoIdRoute,
+  AuthenticatedAppEixoEixoIdRoute: AuthenticatedAppEixoEixoIdRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =
