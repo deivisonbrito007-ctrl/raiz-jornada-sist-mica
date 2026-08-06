@@ -84,8 +84,11 @@ function Biblioteca() {
               </div>
               <h2 className="mt-4 text-xl text-muted-foreground">{eixo.nome}</h2>
               <p className="mt-1 text-sm text-muted-foreground/80">
-                Este eixo será liberado quando for o momento do seu processo.
+                {eixo.abreEm
+                  ? `Abre em ${formatarData(eixo.abreEm)}.`
+                  : "Este eixo será liberado quando for o momento do seu processo."}
               </p>
+
             </div>
           ),
         )}
