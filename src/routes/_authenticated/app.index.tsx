@@ -5,6 +5,8 @@ import { Lock } from "lucide-react";
 import * as icones from "lucide-react";
 import { getMeuContexto, getMinhaBiblioteca } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatarData } from "@/lib/raiz-format";
+
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Biblioteca,
@@ -84,8 +86,11 @@ function Biblioteca() {
               </div>
               <h2 className="mt-4 text-xl text-muted-foreground">{eixo.nome}</h2>
               <p className="mt-1 text-sm text-muted-foreground/80">
-                Este eixo será liberado quando for o momento do seu processo.
+                {eixo.abreEm
+                  ? `Abre em ${formatarData(eixo.abreEm)}.`
+                  : "Este eixo será liberado quando for o momento do seu processo."}
               </p>
+
             </div>
           ),
         )}

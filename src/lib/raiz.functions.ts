@@ -35,7 +35,7 @@ export const getMinhaBiblioteca = createServerFn({ method: "GET" })
     const [eixos, conteudos, liberacoes, progresso] = await Promise.all([
       supabase.from("eixos").select("id, nome, descricao, icone, ordem").order("ordem"),
       supabase.from("conteudos").select("id, eixo_id, tipo, titulo, duracao_segundos, ordem").order("ordem"),
-      supabase.from("liberacoes").select("eixo_id, conteudo_id, status").eq("cliente_id", userId),
+      supabase.from("liberacoes").select("eixo_id, conteudo_id, status, liberar_em").eq("cliente_id", userId),
       supabase.from("progresso").select("conteudo_id, status, concluido_em").eq("cliente_id", userId),
     ]);
 
@@ -52,15 +52,26 @@ export const getMinhaBiblioteca = createServerFn({ method: "GET" })
 
     const eixosResult = (eixos.data ?? []).map((eixo) => {
       const doEixo = (conteudos.data ?? []).filter((c) => c.eixo_id === eixo.id);
-      const liberado = libs.some(
+      const agora = Date.now();
+      const doEixoLibs = libs.filter(
         (l) =>
           l.status === "liberado" &&
           ((l.eixo_id === eixo.id && l.conteudo_id === null) ||
             doEixo.some((c) => c.id === l.conteudo_id)),
       );
+      const liberado = doEixoLibs.some(
+        (l) => !l.liberar_em || new Date(l.liberar_em).getTime() <= agora,
+      );
+      const abreEm = liberado
+        ? null
+        : (doEixoLibs
+            .map((l) => l.liberar_em)
+            .filter((d): d is string => Boolean(d))
+            .sort()[0] ?? null);
       return {
         ...eixo,
         liberado,
+        abreEm,
         total: doEixo.length,
         concluidos: doEixo.filter((c) => feitos.has(c.id)).length,
         datasConclusao: doEixo
@@ -254,7 +265,7 @@ export const adminResumo = createServerFn({ method: "GET" })
         supabase.from("user_roles").select("user_id, role"),
         supabase.from("profiles").select("id, nome, email, created_at").order("created_at"),
         supabase.from("conteudos").select("id, eixo_id, titulo, tipo, ordem"),
-        supabase.from("liberacoes").select("cliente_id, eixo_id, conteudo_id, status"),
+        supabase.from("liberacoes").select("cliente_id, eixo_id, conteudo_id, status, liberar_em"),
         supabase.from("progresso").select("cliente_id, conteudo_id, status, updated_at"),
         supabase.from("pacotes").select("id, nome, descricao, tipo_cobranca, preco_centavos, eixos_incluidos"),
         supabase.from("clientes_pacotes").select("id, cliente_id, pacote_id, status_pagamento, created_at"),
@@ -277,6 +288,7 @@ export const adminResumo = createServerFn({ method: "GET" })
             (l) =>
               l.cliente_id === p.id &&
               l.status === "liberado" &&
+              (!l.liberar_em || new Date(l.liberar_em) <= new Date()) &&
               ((l.eixo_id === c.eixo_id && l.conteudo_id === null) || l.conteudo_id === c.id),
           ),
         );
@@ -345,7 +357,7 @@ export const adminGetCliente = createServerFn({ method: "GET" })
       supabase.from("profiles").select("id, nome, email, created_at").eq("id", data.clienteId).maybeSingle(),
       supabase.from("eixos").select("id, nome, icone, ordem").order("ordem"),
       supabase.from("conteudos").select("id, eixo_id, titulo, tipo, ordem").order("ordem"),
-      supabase.from("liberacoes").select("id, eixo_id, conteudo_id, status, liberado_em").eq("cliente_id", data.clienteId),
+      supabase.from("liberacoes").select("id, eixo_id, conteudo_id, status, liberado_em, liberar_em").eq("cliente_id", data.clienteId),
       supabase.from("progresso").select("conteudo_id, status, concluido_em, updated_at").eq("cliente_id", data.clienteId),
       supabase
         .from("diario")
@@ -377,6 +389,7 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
         eixoId: z.string().uuid().nullable().optional(),
         conteudoId: z.string().uuid().nullable().optional(),
         liberar: z.boolean(),
+        liberarEm: z.string().datetime().nullable().optional(),
         titulo: z.string().max(200).optional(),
       })
       .parse(input),
@@ -402,16 +415,27 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
     }
 
     if (existente.data) {
-      await supabase.from("liberacoes").update({ status: "liberado", liberado_em: new Date().toISOString() }).eq("id", existente.data.id);
+      await supabase
+        .from("liberacoes")
+        .update({
+          status: "liberado",
+          liberado_em: new Date().toISOString(),
+          liberar_em: data.liberarEm ?? null,
+        })
+        .eq("id", existente.data.id);
     } else {
       const { error } = await supabase.from("liberacoes").insert({
         cliente_id: data.clienteId,
         eixo_id: data.conteudoId ? null : data.eixoId ?? null,
         conteudo_id: data.conteudoId ?? null,
         status: "liberado",
+        liberar_em: data.liberarEm ?? null,
       });
       if (error) throw new Error(error.message);
     }
+
+    const agendadoParaFuturo = Boolean(data.liberarEm && new Date(data.liberarEm) > new Date());
+    if (agendadoParaFuturo) return { ok: true, agendado: true };
 
     await supabase.from("notificacoes").insert({
       cliente_id: data.clienteId,

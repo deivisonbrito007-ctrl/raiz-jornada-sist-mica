@@ -159,6 +159,7 @@ export type Database = {
           eixo_id: string | null
           id: string
           liberado_em: string
+          liberar_em: string | null
           status: Database["public"]["Enums"]["liberacao_status"]
         }
         Insert: {
@@ -167,6 +168,7 @@ export type Database = {
           eixo_id?: string | null
           id?: string
           liberado_em?: string
+          liberar_em?: string | null
           status?: Database["public"]["Enums"]["liberacao_status"]
         }
         Update: {
@@ -175,6 +177,7 @@ export type Database = {
           eixo_id?: string | null
           id?: string
           liberado_em?: string
+          liberar_em?: string | null
           status?: Database["public"]["Enums"]["liberacao_status"]
         }
         Relationships: [

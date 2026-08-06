@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.conteudo_liberado(uuid, uuid, uuid) FROM PUBLIC, anon, authenticated;
