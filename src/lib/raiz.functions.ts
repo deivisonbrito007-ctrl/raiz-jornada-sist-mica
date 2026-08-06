@@ -80,12 +80,32 @@ export const getMinhaBiblioteca = createServerFn({ method: "GET" })
       };
     });
 
+    const statusPorConteudo = new Map<string, string>();
+    for (const p of progresso.data ?? []) statusPorConteudo.set(p.conteudo_id, p.status);
+
+    const praticas = eixosResult
+      .filter((e) => e.liberado)
+      .flatMap((eixo) =>
+        (conteudos.data ?? [])
+          .filter((c) => c.eixo_id === eixo.id)
+          .map((c) => ({
+            id: c.id,
+            eixoId: eixo.id,
+            eixoNome: eixo.nome,
+            tipo: c.tipo,
+            titulo: c.titulo,
+            duracaoSegundos: c.duracao_segundos,
+            status: statusPorConteudo.get(c.id) ?? "nao_iniciado",
+          })),
+      );
+
     const totalLiberado = eixosResult.filter((e) => e.liberado);
     const totalItens = totalLiberado.reduce((acc, e) => acc + e.total, 0);
     const totalConcluidos = totalLiberado.reduce((acc, e) => acc + e.concluidos, 0);
 
     return {
       eixos: eixosResult,
+      praticas,
       resumo: {
         totalItens,
         totalConcluidos,
