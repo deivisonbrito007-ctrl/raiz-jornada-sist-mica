@@ -59,7 +59,10 @@ export function calcularStreak(datas: string[]) {
   while (semanas.has(cursor)) {
     streak += 1;
     cursor -= umaSemana;
+  }
+  return streak;
 }
+
 
 function inicioDaSemana(data: Date) {
   const inicio = new Date(data);
