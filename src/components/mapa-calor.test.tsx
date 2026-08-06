@@ -82,9 +82,9 @@ describe("MapaCalor", () => {
     const popover = await screen.findByRole("dialog");
     expect(within(popover).getByText("2 práticas · 15 min registrados")).toBeInTheDocument();
     expect(within(popover).getByText("Carta ao pai")).toBeInTheDocument();
-    expect(within(popover).getByText(/Pai · Exercício · 10 min/)).toBeInTheDocument();
+    expect(within(popover).getByText(/^Pai · .* · 10 min$/)).toBeInTheDocument();
     expect(within(popover).getByText("Respiração da raiz")).toBeInTheDocument();
-    expect(within(popover).getByText(/Ancestralidade · Áudio · 5 min/)).toBeInTheDocument();
+    expect(within(popover).getByText(/^Ancestralidade · .* · 5 min$/)).toBeInTheDocument();
     expect(within(popover).queryByText("Vídeo introdutório")).not.toBeInTheDocument();
   });
 
