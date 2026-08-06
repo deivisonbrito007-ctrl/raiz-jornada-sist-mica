@@ -182,6 +182,9 @@ export function gerarRelatorioPdf(dados: DadosRelatorio) {
     doc.text(`Raiz · página ${i} de ${paginas}`, MARGEM, ALTURA - 24);
   }
 
-  const slug = (dados.nome || "cliente").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const slug = (dados.nome || "cliente")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   doc.save(`raiz-relatorio-${slug || "cliente"}.pdf`);
 }
