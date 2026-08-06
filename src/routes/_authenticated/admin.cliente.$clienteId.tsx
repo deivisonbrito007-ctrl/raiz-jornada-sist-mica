@@ -45,16 +45,31 @@ function AdminCliente() {
     queryClient.invalidateQueries({ queryKey: ["admin-resumo"] });
   }
 
-  const liberado = (eixoId: string | null, conteudoId: string | null) =>
-    (data?.liberacoes ?? []).some(
+  const registro = (eixoId: string | null, conteudoId: string | null) =>
+    (data?.liberacoes ?? []).find(
       (l) =>
         l.status === "liberado" &&
         (conteudoId ? l.conteudo_id === conteudoId : l.eixo_id === eixoId && l.conteudo_id === null),
     );
 
+  const agendamento = (eixoId: string | null, conteudoId: string | null) => {
+    const reg = registro(eixoId, conteudoId);
+    if (!reg?.liberar_em) return null;
+    return new Date(reg.liberar_em) > new Date() ? reg.liberar_em : null;
+  };
+
+  const liberado = (eixoId: string | null, conteudoId: string | null) => {
+    const reg = registro(eixoId, conteudoId);
+    return Boolean(reg) && !agendamento(eixoId, conteudoId);
+  };
+
+  const marcado = (eixoId: string | null, conteudoId: string | null) =>
+    Boolean(registro(eixoId, conteudoId));
+
   async function alternar(
     args: { eixoId?: string | null; conteudoId?: string | null; titulo: string },
     liberar: boolean,
+    liberarEm?: string | null,
   ) {
     try {
       await definirLiberacao({
@@ -64,10 +79,17 @@ function AdminCliente() {
           conteudoId: args.conteudoId ?? null,
           liberar,
           titulo: args.titulo,
+          liberarEm: liberarEm ?? null,
         },
       });
       recarregar();
-      toast.success(liberar ? "Liberado para a cliente" : "Acesso recolhido");
+      toast.success(
+        !liberar
+          ? "Acesso recolhido"
+          : liberarEm
+            ? `Agendado para ${formatarData(liberarEm)}`
+            : "Liberado para a cliente",
+      );
     } catch (erro) {
       toast.error(erro instanceof Error ? erro.message : "Não foi possível salvar");
     }
