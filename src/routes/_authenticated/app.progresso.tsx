@@ -1,9 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Flame, Sprout, Target, Check, Minus, Plus } from "lucide-react";
-import { getMinhaBiblioteca, getMeuContexto, definirMetaSemanal } from "@/lib/raiz.functions";
+import { Flame, Sprout, Target, Check, Minus, Plus, FileDown, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  getMinhaBiblioteca,
+  getMeuContexto,
+  definirMetaSemanal,
+  listarDiario,
+} from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { gerarRelatorioPdf } from "@/lib/raiz-relatorio";
 import {
   calcularStreak,
   linhaDoTempoSemanal,
@@ -11,6 +19,7 @@ import {
   avaliarMetaSemanal,
   DIAS_SEMANA_CURTO,
 } from "@/lib/raiz-format";
+
 
 export const Route = createFileRoute("/_authenticated/app/progresso")({
   component: Progresso,
