@@ -99,6 +99,79 @@ function Progresso() {
       </div>
 
       <section className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
+        <div className="flex items-start gap-5">
+          <div className="relative shrink-0">
+            <svg viewBox="0 0 80 80" className="h-20 w-20 -rotate-90">
+              <circle cx="40" cy="40" r="34" fill="none" strokeWidth="8" className="stroke-secondary" />
+              <circle
+                cx="40"
+                cy="40"
+                r="34"
+                fill="none"
+                strokeWidth="8"
+                strokeLinecap="round"
+                className={meta.alcancada ? "stroke-ocre" : "stroke-salvia"}
+                strokeDasharray={anelMeta}
+                strokeDashoffset={anelMeta * (1 - meta.percentual / 100)}
+                style={{ transition: "stroke-dashoffset 500ms ease" }}
+              />
+            </svg>
+            <span className="absolute inset-0 flex flex-col items-center justify-center">
+              {meta.alcancada ? (
+                <Check className="h-6 w-6 text-ocre" />
+              ) : (
+                <span className="font-display text-xl text-floresta">{meta.percentual}%</span>
+              )}
+            </span>
+          </div>
+          <div className="min-w-0">
+            <h2 className="flex items-center gap-2 text-lg text-floresta">
+              <Target className="h-4 w-4 text-salvia" />
+              Meta desta semana
+            </h2>
+            <p className="mt-1 font-display text-2xl text-floresta">
+              {meta.concluidasSemana}
+              <span className="text-base text-muted-foreground">/{meta.meta} práticas</span>
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{meta.mensagem}</p>
+            <p className="mt-2 text-xs text-salvia">
+              {meta.tendencia === "acima"
+                ? `Acima da semana passada (${meta.concluidasSemanaAnterior}).`
+                : meta.tendencia === "igual"
+                  ? `No mesmo ritmo da semana passada (${meta.concluidasSemanaAnterior}).`
+                  : `Semana passada você concluiu ${meta.concluidasSemanaAnterior}.`}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 flex items-center justify-between gap-3 rounded-2xl bg-secondary px-4 py-3">
+          <span className="text-xs text-muted-foreground">Ajustar minha meta semanal</span>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              aria-label="Diminuir meta"
+              disabled={meta.meta <= 1 || mutarMeta.isPending}
+              onClick={() => mutarMeta.mutate(meta.meta - 1)}
+              className="rounded-full bg-card p-2 text-floresta shadow-sm disabled:opacity-40"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <span className="w-6 text-center font-display text-lg text-floresta">{meta.meta}</span>
+            <button
+              type="button"
+              aria-label="Aumentar meta"
+              disabled={meta.meta >= 14 || mutarMeta.isPending}
+              onClick={() => mutarMeta.mutate(meta.meta + 1)}
+              className="rounded-full bg-card p-2 text-floresta shadow-sm disabled:opacity-40"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+
+      <section className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
         <h2 className="text-lg text-floresta">Linha do tempo semanal</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Últimas 8 semanas — cada barra mostra quantas práticas você concluiu.
