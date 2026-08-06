@@ -229,6 +229,7 @@ export const marcarProgresso = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    await garantirConteudoLiberado(supabase, userId, data.conteudoId, "marcarProgresso");
     const { error } = await supabase.from("progresso").upsert(
       {
         cliente_id: userId,
