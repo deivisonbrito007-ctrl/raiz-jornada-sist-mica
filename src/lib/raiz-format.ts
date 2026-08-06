@@ -223,3 +223,101 @@ export function avaliarMetaSemanal(datas: string[], meta: number): MetaSemanal {
     tendencia,
   };
 }
+
+export type Lembrete = {
+  diasSemPratica: number | null;
+  ultimaPratica: string | null;
+  nivel: "sem_historico" | "em_ritmo" | "esfriando" | "pausa" | "longa_pausa";
+  ativo: boolean;
+  titulo: string;
+  mensagem: string;
+  acao: string;
+};
+
+/**
+ * Avalia quanto tempo faz que a pessoa não conclui uma prática e devolve
+ * um lembrete acolhedor para retomar o ritmo, considerando a sequência
+ * de semanas já construída.
+ */
+export function avaliarLembrete(datas: string[], streakSemanas = 0): Lembrete {
+  if (datas.length === 0) {
+    return {
+      diasSemPratica: null,
+      ultimaPratica: null,
+      nivel: "sem_historico",
+      ativo: true,
+      titulo: "Sua primeira prática",
+      mensagem:
+        "Você ainda não concluiu nenhuma prática. Comece pelo que estiver aberto para você — o primeiro passo é o mais curto.",
+      acao: "Começar agora",
+    };
+  }
+
+  const ordenadas = [...datas].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  const ultima = ordenadas[0]!;
+  const hoje = new Date();
+  const inicioHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()).getTime();
+  const ultimaData = new Date(ultima);
+  const inicioUltima = new Date(
+    ultimaData.getFullYear(),
+    ultimaData.getMonth(),
+    ultimaData.getDate(),
+  ).getTime();
+  const dias = Math.max(0, Math.round((inicioHoje - inicioUltima) / (24 * 60 * 60 * 1000)));
+
+  const contexto =
+    streakSemanas > 1
+      ? ` Você já sustentou ${streakSemanas} semanas seguidas — vale proteger isso.`
+      : "";
+
+  if (dias <= 2) {
+    return {
+      diasSemPratica: dias,
+      ultimaPratica: ultima,
+      nivel: "em_ritmo",
+      ativo: false,
+      titulo: "Você está em ritmo",
+      mensagem:
+        dias === 0
+          ? "Você praticou hoje. Deixe o que foi olhado assentar."
+          : `Sua última prática foi há ${dias} dia${dias === 1 ? "" : "s"}. O ritmo está preservado.`,
+      acao: "Continuar",
+    };
+  }
+
+  if (dias <= 5) {
+    return {
+      diasSemPratica: dias,
+      ultimaPratica: ultima,
+      nivel: "esfriando",
+      ativo: true,
+      titulo: `${dias} dias sem praticar`,
+      mensagem: `O ritmo começou a esfriar.${contexto || " Uma prática curta hoje já recoloca você no caminho."}`,
+      acao: "Retomar hoje",
+    };
+  }
+
+  if (dias <= 13) {
+    return {
+      diasSemPratica: dias,
+      ultimaPratica: ultima,
+      nivel: "pausa",
+      ativo: true,
+      titulo: `Faz ${dias} dias`,
+      mensagem: `Você está em pausa e sua sequência de semanas pode se interromper.${contexto} Volte com algo leve, sem cobrança.`,
+      acao: "Voltar ao ritmo",
+    };
+  }
+
+  const semanas = Math.floor(dias / 7);
+  return {
+    diasSemPratica: dias,
+    ultimaPratica: ultima,
+    nivel: "longa_pausa",
+    ativo: true,
+    titulo: `Há ${semanas} semana${semanas === 1 ? "" : "s"} sem prática`,
+    mensagem:
+      "Pausas longas fazem parte do processo. Retomar não é começar de novo — é continuar de onde o corpo permitiu parar.",
+    acao: "Recomeçar com calma",
+  };
+}

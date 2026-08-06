@@ -12,12 +12,14 @@ import {
 } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { gerarRelatorioPdf } from "@/lib/raiz-relatorio";
+import { LembreteRetorno } from "@/components/lembrete-retorno";
 import {
   calcularStreak,
   linhaDoTempoSemanal,
   mapaCalorDiario,
   avaliarMetaSemanal,
   DIAS_SEMANA_CURTO,
+  avaliarLembrete,
 } from "@/lib/raiz-format";
 
 
@@ -66,6 +68,8 @@ function Progresso() {
   const maximoStreak = Math.max(1, ...sequenciasPorEixo.map((e) => e.streak));
   const niveis = ["bg-secondary", "bg-salvia/25", "bg-salvia/50", "bg-salvia/75", "bg-floresta"];
   const anelMeta = 2 * Math.PI * 34;
+  const proximaPratica = (data?.praticas ?? []).find((p) => p.status !== "concluido") ?? null;
+  const lembrete = avaliarLembrete(datasConclusao, streak);
 
   const fetchDiario = useServerFn(listarDiario);
   const [gerando, setGerando] = useState(false);
@@ -145,6 +149,22 @@ function Progresso() {
           </p>
         </div>
       </div>
+
+      {!isLoading && (
+        <LembreteRetorno
+          datas={datasConclusao}
+          streakSemanas={streak}
+          sugestao={
+            proximaPratica
+              ? {
+                  id: proximaPratica.id,
+                  titulo: proximaPratica.titulo,
+                  eixoNome: proximaPratica.eixoNome,
+                }
+              : null
+          }
+        />
+      )}
 
       <section className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
         <div className="flex items-start gap-5">
@@ -330,13 +350,23 @@ function Progresso() {
             </div>
           </div>
         </div>
-        <div className="mt-5 flex items-center justify-end gap-2">
-          <span className="text-[10px] text-muted-foreground">menos</span>
-          {niveis.map((classe) => (
-            <span key={classe} className={`h-3 w-3 rounded-[4px] ${classe}`} />
-          ))}
-          <span className="text-[10px] text-muted-foreground">mais</span>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <span className="text-xs text-muted-foreground">
+            {lembrete.diasSemPratica === null
+              ? "Nenhum dia marcado ainda."
+              : lembrete.diasSemPratica === 0
+                ? "Hoje já está marcado no mapa."
+                : `${lembrete.diasSemPratica} dia${lembrete.diasSemPratica === 1 ? "" : "s"} desde o último quadrado preenchido.`}
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground">menos</span>
+            {niveis.map((classe) => (
+              <span key={classe} className={`h-3 w-3 rounded-[4px] ${classe}`} />
+            ))}
+            <span className="text-[10px] text-muted-foreground">mais</span>
+          </span>
         </div>
+
       </section>
 
 
