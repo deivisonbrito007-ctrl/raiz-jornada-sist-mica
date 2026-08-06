@@ -4,7 +4,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { Flame } from "lucide-react";
 import { getMinhaBiblioteca } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
-import { calcularStreak, linhaDoTempoSemanal } from "@/lib/raiz-format";
+import {
+  calcularStreak,
+  linhaDoTempoSemanal,
+  mapaCalorDiario,
+  DIAS_SEMANA_CURTO,
+} from "@/lib/raiz-format";
 
 export const Route = createFileRoute("/_authenticated/app/progresso")({
   component: Progresso,
@@ -26,6 +31,8 @@ function Progresso() {
   const streak = calcularStreak(datasConclusao);
   const semanas = linhaDoTempoSemanal(datasConclusao, 8);
   const maximoSemana = Math.max(1, ...semanas.map((s) => s.total));
+  const colunas = mapaCalorDiario(datasConclusao, 12);
+  const niveis = ["bg-secondary", "bg-salvia/25", "bg-salvia/50", "bg-salvia/75", "bg-floresta"];
 
 
   return (
@@ -93,6 +100,57 @@ function Progresso() {
               </span>
             </div>
           ))}
+        </div>
+      </section>
+
+
+      <section className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
+        <h2 className="text-lg text-floresta">Calendário de prática</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Últimas 12 semanas — cada quadrado é um dia. Quanto mais escuro, mais práticas concluídas.
+        </p>
+        <div className="mt-6 overflow-x-auto">
+          <div className="flex gap-2">
+            <div className="flex flex-col gap-1 pt-4">
+              {DIAS_SEMANA_CURTO.map((dia, indice) => (
+                <span
+                  key={indice}
+                  className="flex h-4 items-center text-[9px] leading-none text-muted-foreground"
+                >
+                  {dia}
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-1">
+              {colunas.map((coluna) => (
+                <div key={coluna.inicio} className="flex flex-col gap-1">
+                  <span className="h-4 text-[9px] leading-4 text-muted-foreground">
+                    {coluna.labelMes}
+                  </span>
+                  {coluna.dias.map((dia) => (
+                    <span
+                      key={dia.data}
+                      title={
+                        dia.futuro
+                          ? dia.label
+                          : `${dia.label} — ${dia.total} prática${dia.total === 1 ? "" : "s"}`
+                      }
+                      className={`h-4 w-4 rounded-[5px] ${
+                        dia.futuro ? "bg-secondary/40" : niveis[dia.nivel]
+                      } ${dia.hoje ? "ring-2 ring-terracota/60" : ""}`}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <span className="text-[10px] text-muted-foreground">menos</span>
+          {niveis.map((classe) => (
+            <span key={classe} className={`h-3 w-3 rounded-[4px] ${classe}`} />
+          ))}
+          <span className="text-[10px] text-muted-foreground">mais</span>
         </div>
       </section>
 
