@@ -67,6 +67,31 @@ function Progresso() {
   const niveis = ["bg-secondary", "bg-salvia/25", "bg-salvia/50", "bg-salvia/75", "bg-floresta"];
   const anelMeta = 2 * Math.PI * 34;
 
+  const fetchDiario = useServerFn(listarDiario);
+  const [gerando, setGerando] = useState(false);
+
+  const baixarRelatorio = async () => {
+    setGerando(true);
+    try {
+      const diario = await fetchDiario();
+      gerarRelatorioPdf({
+        nome: contexto?.perfil?.nome ?? "",
+        email: contexto?.perfil?.email ?? "",
+        metaSemanal: metaAtual,
+        eixos: data?.eixos ?? [],
+        datasConclusao,
+        diario: diario ?? [],
+      });
+      toast.success("Relatório gerado. Verifique seus downloads.");
+    } catch {
+      toast.error("Não foi possível gerar o relatório agora.");
+    } finally {
+      setGerando(false);
+    }
+  };
+
+
+
 
   return (
     <div>
