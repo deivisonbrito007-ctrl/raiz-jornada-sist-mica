@@ -6,6 +6,17 @@ export const TIPO_LABEL: Record<string, string> = {
   tarefa: "Tarefa da semana",
 };
 
+export const PAGAMENTO_LABEL: Record<string, string> = {
+  pendente: "Pagamento pendente",
+  pago: "Pago",
+  cancelado: "Cancelado",
+};
+
+export const COBRANCA_LABEL: Record<string, string> = {
+  pagamento_unico: "Pagamento único",
+  assinatura: "Assinatura",
+};
+
 export function formatarDuracao(segundos: number) {
   if (!segundos) return "—";
   const min = Math.floor(segundos / 60);
