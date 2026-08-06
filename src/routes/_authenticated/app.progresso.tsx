@@ -19,10 +19,7 @@ import {
   linhaDoTempoSemanal,
   mapaCalorDiario,
   avaliarMetaSemanal,
-  DIAS_SEMANA_CURTO,
   avaliarLembrete,
-  formatarDuracao,
-  TIPO_LABEL,
 } from "@/lib/raiz-format";
 
 export const Route = createFileRoute("/_authenticated/app/progresso")({
