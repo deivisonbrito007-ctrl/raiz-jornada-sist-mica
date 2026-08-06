@@ -167,9 +167,9 @@ export function mapaCalorDiario(
       const total = contagem.get(chave) ?? 0;
       const nivel: DiaMapaCalor["nivel"] =
         total === 0 ? 0 : total === 1 ? 1 : total === 2 ? 2 : total <= 4 ? 3 : 4;
-      const itens = (itensPorDia.get(chave) ?? []).sort((a, b) =>
-        a.concluidoEm.localeCompare(b.concluidoEm),
-      );
+      const itens = (itensPorDia.get(chave) ?? [])
+        .slice()
+        .sort((a, b) => new Date(a.concluidoEm).getTime() - new Date(b.concluidoEm).getTime());
       return {
         data: data.toISOString(),
         label: data.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
