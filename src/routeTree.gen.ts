@@ -17,6 +17,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/ap
 import { Route as AuthenticatedEntradaRouteImport } from './routes/_authenticated/entrada'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminConteudosRouteImport } from './routes/_authenticated/admin.conteudos'
+import { Route as AuthenticatedAdminPacotesRouteImport } from './routes/_authenticated/admin.pacotes'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppDiarioRouteImport } from './routes/_authenticated/app.diario'
 import { Route as AuthenticatedAppPerfilRouteImport } from './routes/_authenticated/app.perfil'
@@ -63,6 +64,12 @@ const AuthenticatedAdminConteudosRoute =
   AuthenticatedAdminConteudosRouteImport.update({
     id: '/conteudos',
     path: '/conteudos',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminPacotesRoute =
+  AuthenticatedAdminPacotesRouteImport.update({
+    id: '/pacotes',
+    path: '/pacotes',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
@@ -112,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/entrada': typeof AuthenticatedEntradaRoute
   '/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
+  '/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/progresso': typeof AuthenticatedAppProgressoRoute
@@ -126,6 +134,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/entrada': typeof AuthenticatedEntradaRoute
   '/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
+  '/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/progresso': typeof AuthenticatedAppProgressoRoute
@@ -144,6 +153,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/entrada': typeof AuthenticatedEntradaRoute
   '/_authenticated/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
+  '/_authenticated/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
   '/_authenticated/app/diario': typeof AuthenticatedAppDiarioRoute
   '/_authenticated/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/_authenticated/app/progresso': typeof AuthenticatedAppProgressoRoute
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/entrada'
     | '/admin/conteudos'
+    | '/admin/pacotes'
     | '/app/diario'
     | '/app/perfil'
     | '/app/progresso'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/entrada'
     | '/admin/conteudos'
+    | '/admin/pacotes'
     | '/app/diario'
     | '/app/perfil'
     | '/app/progresso'
@@ -193,6 +205,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/entrada'
     | '/_authenticated/admin/conteudos'
+    | '/_authenticated/admin/pacotes'
     | '/_authenticated/app/diario'
     | '/_authenticated/app/perfil'
     | '/_authenticated/app/progresso'
@@ -267,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminConteudosRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/pacotes': {
+      id: '/_authenticated/admin/pacotes'
+      path: '/pacotes'
+      fullPath: '/admin/pacotes'
+      preLoaderRoute: typeof AuthenticatedAdminPacotesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/app/': {
       id: '/_authenticated/app/'
       path: '/'
@@ -321,12 +341,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminConteudosRoute: typeof AuthenticatedAdminConteudosRoute
+  AuthenticatedAdminPacotesRoute: typeof AuthenticatedAdminPacotesRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminClienteClienteIdRoute: typeof AuthenticatedAdminClienteClienteIdRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminConteudosRoute: AuthenticatedAdminConteudosRoute,
+  AuthenticatedAdminPacotesRoute: AuthenticatedAdminPacotesRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminClienteClienteIdRoute:
     AuthenticatedAdminClienteClienteIdRoute,
