@@ -288,6 +288,7 @@ export const adminResumo = createServerFn({ method: "GET" })
             (l) =>
               l.cliente_id === p.id &&
               l.status === "liberado" &&
+              (!l.liberar_em || new Date(l.liberar_em) <= new Date()) &&
               ((l.eixo_id === c.eixo_id && l.conteudo_id === null) || l.conteudo_id === c.id),
           ),
         );
