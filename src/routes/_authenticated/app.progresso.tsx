@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Flame } from "lucide-react";
 import { getMinhaBiblioteca } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { calcularStreak, linhaDoTempoSemanal } from "@/lib/raiz-format";
 
 export const Route = createFileRoute("/_authenticated/app/progresso")({
   component: Progresso,
@@ -19,6 +21,12 @@ function Progresso() {
   const total = eixos.reduce((soma, e) => soma + e.total, 0);
   const feitos = eixos.reduce((soma, e) => soma + e.concluidos, 0);
   const percentual = total ? Math.round((feitos / total) * 100) : 0;
+
+  const datasConclusao = data?.resumo.datasConclusao ?? [];
+  const streak = calcularStreak(datasConclusao);
+  const semanas = linhaDoTempoSemanal(datasConclusao, 8);
+  const maximoSemana = Math.max(1, ...semanas.map((s) => s.total));
+
 
   return (
     <div>
