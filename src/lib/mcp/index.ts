@@ -17,5 +17,7 @@ export default defineMcp({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",
   }),
-  tools: [minhaBiblioteca, meuProgresso, marcarPratica, listarDiario, criarEntradaDiario],
+  tools: [minhaBiblioteca, meuProgresso, marcarPratica, listarDiario, criarEntradaDiario] as unknown as Parameters<
+    typeof defineMcp
+  >[0]["tools"],
 });
