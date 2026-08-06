@@ -16,10 +16,12 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedEntradaRouteImport } from './routes/_authenticated/entrada'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminConteudosRouteImport } from './routes/_authenticated/admin.conteudos'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppDiarioRouteImport } from './routes/_authenticated/app.diario'
 import { Route as AuthenticatedAppPerfilRouteImport } from './routes/_authenticated/app.perfil'
 import { Route as AuthenticatedAppProgressoRouteImport } from './routes/_authenticated/app.progresso'
+import { Route as AuthenticatedAdminClienteClienteIdRouteImport } from './routes/_authenticated/admin.cliente.$clienteId'
 import { Route as AuthenticatedAppConteudoConteudoIdRouteImport } from './routes/_authenticated/app.conteudo.$conteudoId'
 import { Route as AuthenticatedAppEixoEixoIdRouteImport } from './routes/_authenticated/app.eixo.$eixoId'
 
@@ -57,6 +59,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminConteudosRoute =
+  AuthenticatedAdminConteudosRouteImport.update({
+    id: '/conteudos',
+    path: '/conteudos',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -78,6 +86,12 @@ const AuthenticatedAppProgressoRoute =
     path: '/progresso',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAdminClienteClienteIdRoute =
+  AuthenticatedAdminClienteClienteIdRouteImport.update({
+    id: '/cliente/$clienteId',
+    path: '/cliente/$clienteId',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAppConteudoConteudoIdRoute =
   AuthenticatedAppConteudoConteudoIdRouteImport.update({
     id: '/conteudo/$conteudoId',
@@ -97,11 +111,13 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/entrada': typeof AuthenticatedEntradaRoute
+  '/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/progresso': typeof AuthenticatedAppProgressoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
+  '/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
   '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
 }
@@ -109,11 +125,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/entrada': typeof AuthenticatedEntradaRoute
+  '/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/progresso': typeof AuthenticatedAppProgressoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
+  '/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
   '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
 }
@@ -125,11 +143,13 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/entrada': typeof AuthenticatedEntradaRoute
+  '/_authenticated/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
   '/_authenticated/app/diario': typeof AuthenticatedAppDiarioRoute
   '/_authenticated/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/_authenticated/app/progresso': typeof AuthenticatedAppProgressoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
   '/_authenticated/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/_authenticated/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
 }
@@ -141,11 +161,13 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/entrada'
+    | '/admin/conteudos'
     | '/app/diario'
     | '/app/perfil'
     | '/app/progresso'
     | '/admin/'
     | '/app/'
+    | '/admin/cliente/$clienteId'
     | '/app/conteudo/$conteudoId'
     | '/app/eixo/$eixoId'
   fileRoutesByTo: FileRoutesByTo
@@ -153,11 +175,13 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/entrada'
+    | '/admin/conteudos'
     | '/app/diario'
     | '/app/perfil'
     | '/app/progresso'
     | '/admin'
     | '/app'
+    | '/admin/cliente/$clienteId'
     | '/app/conteudo/$conteudoId'
     | '/app/eixo/$eixoId'
   id:
@@ -168,11 +192,13 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/app'
     | '/_authenticated/entrada'
+    | '/_authenticated/admin/conteudos'
     | '/_authenticated/app/diario'
     | '/_authenticated/app/perfil'
     | '/_authenticated/app/progresso'
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
+    | '/_authenticated/admin/cliente/$clienteId'
     | '/_authenticated/app/conteudo/$conteudoId'
     | '/_authenticated/app/eixo/$eixoId'
   fileRoutesById: FileRoutesById
@@ -234,6 +260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/conteudos': {
+      id: '/_authenticated/admin/conteudos'
+      path: '/conteudos'
+      fullPath: '/admin/conteudos'
+      preLoaderRoute: typeof AuthenticatedAdminConteudosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/app/': {
       id: '/_authenticated/app/'
       path: '/'
@@ -262,6 +295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppProgressoRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/admin/cliente/$clienteId': {
+      id: '/_authenticated/admin/cliente/$clienteId'
+      path: '/cliente/$clienteId'
+      fullPath: '/admin/cliente/$clienteId'
+      preLoaderRoute: typeof AuthenticatedAdminClienteClienteIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/app/conteudo/$conteudoId': {
       id: '/_authenticated/app/conteudo/$conteudoId'
       path: '/conteudo/$conteudoId'
@@ -280,11 +320,16 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminConteudosRoute: typeof AuthenticatedAdminConteudosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminClienteClienteIdRoute: typeof AuthenticatedAdminClienteClienteIdRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminConteudosRoute: AuthenticatedAdminConteudosRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminClienteClienteIdRoute:
+    AuthenticatedAdminClienteClienteIdRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
