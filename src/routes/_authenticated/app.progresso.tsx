@@ -51,6 +51,52 @@ function Progresso() {
         </p>
       </div>
 
+      <div className="mt-4 flex items-center gap-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
+        <span className="rounded-2xl bg-terracota/10 p-3 text-terracota">
+          <Flame className="h-6 w-6" />
+        </span>
+        <div>
+          <p className="font-display text-3xl text-floresta">
+            {streak} <span className="text-base">semana{streak === 1 ? "" : "s"}</span>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {streak === 0
+              ? "Sua sequência começa na primeira prática concluída desta semana."
+              : "Sequência de semanas seguidas com pelo menos uma prática concluída."}
+          </p>
+        </div>
+      </div>
+
+      <section className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
+        <h2 className="text-lg text-floresta">Linha do tempo semanal</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Últimas 8 semanas — cada barra mostra quantas práticas você concluiu.
+        </p>
+        <div className="mt-6 flex items-end justify-between gap-2">
+          {semanas.map((semana) => (
+            <div key={semana.inicio} className="flex flex-1 flex-col items-center gap-2">
+              <span className="text-[11px] font-medium text-salvia">{semana.total || ""}</span>
+              <div className="flex h-24 w-full items-end">
+                <div
+                  className={`w-full rounded-t-xl transition-all ${
+                    semana.ativa ? "bg-salvia" : "bg-secondary"
+                  } ${semana.atual ? "ring-2 ring-terracota/50" : ""}`}
+                  style={{
+                    height: semana.total ? `${(semana.total / maximoSemana) * 100}%` : "6px",
+                  }}
+                />
+              </div>
+              <span
+                className={`text-[10px] ${semana.atual ? "font-semibold text-terracota" : "text-muted-foreground"}`}
+              >
+                {semana.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+
       <div className="mt-8 space-y-3">
         {eixos.map((eixo) => (
           <div key={eixo.id} className="rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)]">
