@@ -10,7 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: z.object({ modo: z.enum(["entrar", "cadastro"]).optional() }),
+  validateSearch: z.object({
+    modo: z.enum(["entrar", "cadastro"]).optional(),
+    next: z.string().optional(),
+  }),
   head: () => ({
     meta: [
       { title: "Entrar no Raiz" },
@@ -24,7 +27,8 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
-  const { modo } = Route.useSearch();
+  const { modo, next } = Route.useSearch();
+  const destinoSeguro = next && /^\/[^/\\]/.test(next) ? next : null;
   const navigate = useNavigate();
   const [cadastro, setCadastro] = useState(modo === "cadastro");
   const [nome, setNome] = useState("");
@@ -36,9 +40,14 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/entrada", replace: true });
+      if (!data.session) return;
+      if (destinoSeguro) {
+        window.location.replace(destinoSeguro);
+        return;
+      }
+      navigate({ to: "/entrada", replace: true });
     });
-  }, [navigate]);
+  }, [navigate, destinoSeguro]);
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -49,7 +58,9 @@ function AuthPage() {
           email,
           password: senha,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: destinoSeguro
+              ? `${window.location.origin}${destinoSeguro}`
+              : window.location.origin,
             data: { nome, papel: souTerapeuta ? "terapeuta" : "cliente" },
           },
         });
@@ -58,10 +69,18 @@ function AuthPage() {
           setConfirmeEmail(true);
           return;
         }
+        if (destinoSeguro) {
+          window.location.replace(destinoSeguro);
+          return;
+        }
         navigate({ to: "/entrada", replace: true });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
         if (error) throw error;
+        if (destinoSeguro) {
+          window.location.replace(destinoSeguro);
+          return;
+        }
         navigate({ to: "/entrada", replace: true });
       }
     } catch (erro) {
