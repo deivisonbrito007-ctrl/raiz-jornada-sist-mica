@@ -114,6 +114,15 @@ jobs:
         run: bun run test:coverage
       - name: Generate coverage badge
         run: bun run coverage:badge
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: raiz-coverage
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
@@ -121,6 +130,7 @@ jobs:
           name: coverage-report
           path: coverage/
           if-no-files-found: ignore
+
       - name: Commit coverage badge
         if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |

@@ -1,6 +1,8 @@
 # Raiz: Jornada Sistêmica
 
 ![Coverage](./.github/badges/coverage.svg)
+[![codecov](https://codecov.io/gh/OWNER/REPO/branch/main/graph/badge.svg)](https://codecov.io/gh/OWNER/REPO)
+
 
 Prompt para o Lovable — App "Raiz" (acompanhamento terapêutico sistêmico)
 

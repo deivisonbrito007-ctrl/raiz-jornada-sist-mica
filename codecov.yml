@@ -1,0 +1,32 @@
+coverage:
+  precision: 2
+  round: down
+  range: "50...90"
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        informational: false
+    patch:
+      default:
+        target: 70%
+        threshold: 0%
+        informational: true
+
+comment:
+  layout: "header, diff, flags, files, footer"
+  behavior: default
+  require_changes: false
+
+ignore:
+  - "src/routeTree.gen.ts"
+  - "src/integrations/**"
+  - "src/components/ui/**"
+  - "src/test/**"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "scripts/**"
+
+github_checks:
+  annotations: true
