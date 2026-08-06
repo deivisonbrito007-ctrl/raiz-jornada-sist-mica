@@ -5,6 +5,8 @@ import { Lock } from "lucide-react";
 import * as icones from "lucide-react";
 import { getMeuContexto, getMinhaBiblioteca } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatarData } from "@/lib/raiz-format";
+
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Biblioteca,
