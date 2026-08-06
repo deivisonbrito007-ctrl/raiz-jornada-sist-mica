@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminAtualizarPagamento,
@@ -179,7 +179,8 @@ function AdminCliente() {
           <section className="mt-6">
             <h2 className="text-xl text-floresta">Liberação de conteúdo</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Libere o eixo inteiro ou apenas práticas específicas. A cliente recebe um aviso.
+              Libere o eixo inteiro ou apenas práticas específicas — agora ou em uma data futura. A
+              cliente recebe o aviso quando o conteúdo abrir.
             </p>
 
             <div className="mt-5 space-y-4">
@@ -195,17 +196,30 @@ function AdminCliente() {
                         <h3 className="text-lg text-floresta">{eixo.nome}</h3>
                         <p className="text-xs text-muted-foreground">
                           {conteudos.length} prática(s)
+                          {agendamento(eixo.id, null)
+                            ? ` · abre em ${formatarData(agendamento(eixo.id, null))}`
+                            : liberado(eixo.id, null)
+                              ? " · liberado"
+                              : ""}
                         </p>
                       </div>
-                      <label className="flex items-center gap-2 text-xs text-salvia">
-                        Eixo completo
-                        <Switch
-                          checked={liberado(eixo.id, null)}
-                          onCheckedChange={(v) =>
-                            alternar({ eixoId: eixo.id, titulo: eixo.nome }, v)
+                      <div className="flex flex-col items-end gap-2">
+                        <label className="flex items-center gap-2 text-xs text-salvia">
+                          Eixo completo
+                          <Switch
+                            checked={marcado(eixo.id, null)}
+                            onCheckedChange={(v) =>
+                              alternar({ eixoId: eixo.id, titulo: eixo.nome }, v)
+                            }
+                          />
+                        </label>
+                        <Agendador
+                          agendadoPara={agendamento(eixo.id, null)}
+                          onAgendar={(quando) =>
+                            alternar({ eixoId: eixo.id, titulo: eixo.nome }, true, quando)
                           }
                         />
-                      </label>
+                      </div>
                     </div>
 
                     <ul className="mt-4 space-y-2">
@@ -227,13 +241,27 @@ function AdminCliente() {
                                   : "não iniciado"}
                             </p>
                           </div>
-                          <Switch
-                            checked={liberado(null, conteudo.id) || liberado(eixo.id, null)}
-                            disabled={liberado(eixo.id, null)}
-                            onCheckedChange={(v) =>
-                              alternar({ conteudoId: conteudo.id, titulo: conteudo.titulo }, v)
-                            }
-                          />
+                          <div className="flex flex-col items-end gap-2">
+                            <Switch
+                              checked={marcado(null, conteudo.id) || marcado(eixo.id, null)}
+                              disabled={marcado(eixo.id, null)}
+                              onCheckedChange={(v) =>
+                                alternar({ conteudoId: conteudo.id, titulo: conteudo.titulo }, v)
+                              }
+                            />
+                            {!marcado(eixo.id, null) && (
+                              <Agendador
+                                agendadoPara={agendamento(null, conteudo.id)}
+                                onAgendar={(quando) =>
+                                  alternar(
+                                    { conteudoId: conteudo.id, titulo: conteudo.titulo },
+                                    true,
+                                    quando,
+                                  )
+                                }
+                              />
+                            )}
+                          </div>
                         </li>
                       ))}
                       {conteudos.length === 0 && (
@@ -271,6 +299,84 @@ function AdminCliente() {
           </section>
         </>
       )}
+    </div>
+  );
+}
+
+function Agendador({
+  agendadoPara,
+  onAgendar,
+}: {
+  agendadoPara: string | null;
+  onAgendar: (quando: string | null) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const [valor, setValor] = useState("");
+
+  if (agendadoPara && !aberto) {
+    return (
+      <div className="flex items-center gap-2 text-[11px] text-terracota">
+        <CalendarClock className="h-3.5 w-3.5" />
+        <span>Abre em {formatarData(agendadoPara)}</span>
+        <button
+          type="button"
+          onClick={() => onAgendar(null)}
+          className="underline hover:text-floresta"
+        >
+          liberar agora
+        </button>
+        <button
+          type="button"
+          onClick={() => setAberto(true)}
+          className="underline hover:text-floresta"
+        >
+          mudar data
+        </button>
+      </div>
+    );
+  }
+
+  if (!aberto) {
+    return (
+      <button
+        type="button"
+        onClick={() => setAberto(true)}
+        className="flex items-center gap-1.5 text-[11px] text-muted-foreground underline hover:text-floresta"
+      >
+        <CalendarClock className="h-3.5 w-3.5" /> Programar data
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="datetime-local"
+        value={valor}
+        onChange={(e) => setValor(e.target.value)}
+        className="rounded-full border border-border bg-card px-3 py-1 text-[11px] text-floresta"
+      />
+      <Button
+        size="sm"
+        disabled={!valor}
+        onClick={() => {
+          const data = new Date(valor);
+          if (Number.isNaN(data.getTime())) return;
+          onAgendar(data.toISOString());
+          setAberto(false);
+          setValor("");
+        }}
+        className="h-7 rounded-full bg-terracota px-3 text-[11px] text-terracota-foreground hover:bg-terracota/90"
+      >
+        Agendar
+      </Button>
+      <button
+        type="button"
+        onClick={() => setAberto(false)}
+        className="text-[11px] text-muted-foreground underline"
+      >
+        cancelar
+      </button>
     </div>
   );
 }
