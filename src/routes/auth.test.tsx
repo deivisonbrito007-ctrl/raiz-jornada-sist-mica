@@ -5,10 +5,11 @@ import userEvent from "@testing-library/user-event";
 const navigate = vi.fn();
 const search: { modo?: "entrar" | "cadastro"; next?: string } = {};
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const auth = {
-  getSession: vi.fn(async () => ({ data: { session: null } })),
-  signInWithPassword: vi.fn(async () => ({ error: null })),
-  signUp: vi.fn(async () => ({ data: { session: null }, error: null })),
+  getSession: vi.fn<() => Promise<any>>(),
+  signInWithPassword: vi.fn<(args: any) => Promise<any>>(),
+  signUp: vi.fn<(args: any) => Promise<any>>(),
 };
 
 const toastError = vi.fn();
@@ -26,7 +27,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth } }));
 vi.mock("sonner", () => ({ toast: { error: toastError, success: vi.fn() } }));
 
 const { Route } = await import("./auth");
-const AuthPage = Route.component as () => React.ReactElement;
+const AuthPage = (Route as unknown as { component: () => React.ReactElement }).component;
 
 async function preencher(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText("E-mail"), "maria@raiz.app");
@@ -82,7 +83,7 @@ describe("fluxo de login /auth", () => {
     await user.click(screen.getByRole("button", { name: "Criar conta" }));
 
     await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
-    expect(auth.signUp.mock.calls[0][0].options.data).toEqual({ nome: "Maria", papel: "cliente" });
+    expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({ nome: "Maria", papel: "cliente" });
     expect(await screen.findByRole("heading", { name: "Confirme seu e-mail" })).toBeInTheDocument();
     expect(navigate).not.toHaveBeenCalled();
   });
@@ -99,7 +100,7 @@ describe("fluxo de login /auth", () => {
     await user.click(screen.getByRole("button", { name: "Criar conta" }));
 
     await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
-    expect(auth.signUp.mock.calls[0][0].options.data).toEqual({ nome: "Ana", papel: "terapeuta" });
+    expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({ nome: "Ana", papel: "terapeuta" });
     expect(navigate).toHaveBeenCalledWith({ to: "/entrada", replace: true });
   });
 
