@@ -22,6 +22,11 @@ BASE_URL = os.environ.get("E2E_BASE_URL", "http://localhost:8080")
 SCREENSHOTS = Path(__file__).parent / "screenshots"
 SCREENSHOTS.mkdir(parents=True, exist_ok=True)
 
+MESES_CURTOS = [
+    "jan", "fev", "mar", "abr", "mai", "jun",
+    "jul", "ago", "set", "out", "nov", "dez",
+]
+
 
 def env_from_dotenv(name: str) -> str:
     if os.environ.get(name):
@@ -110,10 +115,14 @@ async def main() -> None:
         await page.screenshot(path=str(SCREENSHOTS / "1_progresso.png"))
 
         for dia, dados in sorted(esperado.items()):
-            data_br = datetime.strptime(dia, "%Y-%m-%d").strftime("%d/%m/%Y")
+            d = datetime.strptime(dia, "%Y-%m-%d")
+            data_br = f"{d.day:02d} de {MESES_CURTOS[d.month - 1]}"
             plural = "" if dados["total"] == 1 else "s"
             botao = page.get_by_role(
-                "button", name=f"{data_br} — {dados['total']} prática{plural}", exact=False
+                "button",
+                name=re.compile(
+                    rf"{data_br}\.? — {dados['total']} prática{plural}$"
+                ),
             )
             if await botao.count() == 0:
                 falhas.append(f"{data_br}: quadrado do dia não encontrado no heatmap")
