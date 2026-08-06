@@ -5,7 +5,7 @@ import { MapaCalor } from "./mapa-calor";
 import { mapaCalorDiario, type ConclusaoDetalhe } from "@/lib/raiz-format";
 
 const AGORA = new Date("2026-08-06T12:00:00.000Z");
-const TZ_ORIGINAL = process.env.TZ;
+const TZ_ORIGINAL = process.env['TZ'];
 
 const FUSOS = [
   "UTC",
@@ -17,7 +17,7 @@ const FUSOS = [
 ];
 
 function usarFuso(tz: string) {
-  process.env.TZ = tz;
+  process.env['TZ'] = tz;
 }
 
 /** ISO de um instante no horário LOCAL do fuso ativo. */
@@ -52,7 +52,7 @@ describe("MapaCalor — tempo total do dia por fuso horário", () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    process.env.TZ = TZ_ORIGINAL;
+    process.env['TZ'] = TZ_ORIGINAL;
     cleanup();
   });
 
