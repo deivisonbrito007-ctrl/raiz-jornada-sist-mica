@@ -100,7 +100,22 @@ export function MapaCalor({
                                 : " · 0 min registrados"
                             }`}
                       </p>
-                      {vazio ? (
+                      {erroDetalhes && dia.itens.length === 0 && !vazio ? (
+                        <div className="mt-3">
+                          <p role="alert" className="text-xs text-terracota">
+                            Não foi possível carregar os detalhes deste dia.
+                          </p>
+                          {onTentarNovamente && (
+                            <button
+                              type="button"
+                              onClick={onTentarNovamente}
+                              className="mt-2 text-xs text-floresta underline"
+                            >
+                              Tentar novamente
+                            </button>
+                          )}
+                        </div>
+                      ) : vazio ? (
                         <p className="mt-3 text-xs text-foreground">
                           Nenhuma prática registrada neste dia. Todo recomeço é válido.
                         </p>
