@@ -11,6 +11,7 @@ import {
   listarDiario,
 } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { gerarRelatorioPdf } from "@/lib/raiz-relatorio";
 import { LembreteRetorno } from "@/components/lembrete-retorno";
 import {
@@ -20,6 +21,8 @@ import {
   avaliarMetaSemanal,
   DIAS_SEMANA_CURTO,
   avaliarLembrete,
+  formatarDuracao,
+  TIPO_LABEL,
 } from "@/lib/raiz-format";
 
 
@@ -53,7 +56,7 @@ function Progresso() {
   const streak = calcularStreak(datasConclusao);
   const semanas = linhaDoTempoSemanal(datasConclusao, 8);
   const maximoSemana = Math.max(1, ...semanas.map((s) => s.total));
-  const colunas = mapaCalorDiario(datasConclusao, 12);
+  const colunas = mapaCalorDiario(datasConclusao, 12, data?.resumo.conclusoes ?? []);
   const metaAtual = contexto?.perfil?.meta_semanal ?? 3;
   const meta = avaliarMetaSemanal(datasConclusao, mutarMeta.variables ?? metaAtual);
   const sequenciasPorEixo = eixos
@@ -332,19 +335,55 @@ function Progresso() {
                   <span className="h-4 text-[9px] leading-4 text-muted-foreground">
                     {coluna.labelMes}
                   </span>
-                  {coluna.dias.map((dia) => (
-                    <span
-                      key={dia.data}
-                      title={
-                        dia.futuro
-                          ? dia.label
-                          : `${dia.label} — ${dia.total} prática${dia.total === 1 ? "" : "s"}`
-                      }
-                      className={`h-4 w-4 rounded-[5px] ${
-                        dia.futuro ? "bg-secondary/40" : niveis[dia.nivel]
-                      } ${dia.hoje ? "ring-2 ring-terracota/60" : ""}`}
-                    />
-                  ))}
+                  {coluna.dias.map((dia) => {
+                    const classes = `h-4 w-4 rounded-[5px] ${
+                      dia.futuro ? "bg-secondary/40" : niveis[dia.nivel]
+                    } ${dia.hoje ? "ring-2 ring-terracota/60" : ""}`;
+                    if (dia.futuro || dia.total === 0) {
+                      return (
+                        <span
+                          key={dia.data}
+                          title={dia.futuro ? dia.label : `${dia.label} — nenhuma prática`}
+                          className={classes}
+                        />
+                      );
+                    }
+                    return (
+                      <Popover key={dia.data}>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={`${dia.label} — ${dia.total} prática${dia.total === 1 ? "" : "s"}`}
+                            className={`${classes} transition hover:ring-2 hover:ring-floresta/40`}
+                          />
+                        </PopoverTrigger>
+                        <PopoverContent align="center" className="w-64 rounded-2xl p-4">
+                          <p className="text-sm text-floresta">{dia.label}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {dia.total} prática{dia.total === 1 ? "" : "s"}
+                            {dia.totalSegundos > 0
+                              ? ` · ${formatarDuracao(dia.totalSegundos)} registrados`
+                              : ""}
+                          </p>
+                          <ul className="mt-3 space-y-2">
+                            {dia.itens.map((item, indice) => (
+                              <li key={`${item.titulo}-${indice}`} className="text-xs">
+                                <span className="text-foreground">{item.titulo}</span>
+                                <span className="block text-muted-foreground">
+                                  {item.eixoNome}
+                                  {item.eixoNome && " · "}
+                                  {TIPO_LABEL[item.tipo] ?? item.tipo}
+                                  {item.duracaoSegundos
+                                    ? ` · ${formatarDuracao(item.duracaoSegundos)}`
+                                    : ""}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </PopoverContent>
+                      </Popover>
+                    );
+                  })}
                 </div>
               ))}
             </div>

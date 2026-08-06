@@ -103,6 +103,14 @@ export function linhaDoTempoSemanal(datas: string[], semanas = 8): SemanaLinhaDo
   });
 }
 
+export type ConclusaoDetalhe = {
+  titulo: string;
+  eixoNome: string;
+  tipo: string;
+  duracaoSegundos: number;
+  concluidoEm: string;
+};
+
 export type DiaMapaCalor = {
   data: string;
   label: string;
@@ -110,6 +118,8 @@ export type DiaMapaCalor = {
   nivel: 0 | 1 | 2 | 3 | 4;
   futuro: boolean;
   hoje: boolean;
+  itens: ConclusaoDetalhe[];
+  totalSegundos: number;
 };
 
 export type ColunaMapaCalor = {
@@ -120,13 +130,30 @@ export type ColunaMapaCalor = {
 
 export const DIAS_SEMANA_CURTO = ["S", "T", "Q", "Q", "S", "S", "D"];
 
-export function mapaCalorDiario(datas: string[], semanas = 12): ColunaMapaCalor[] {
+function chaveDoDia(iso: string) {
+  const d = new Date(iso);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+export function mapaCalorDiario(
+  datas: string[],
+  semanas = 12,
+  detalhes: ConclusaoDetalhe[] = [],
+): ColunaMapaCalor[] {
   const umDia = 24 * 60 * 60 * 1000;
   const contagem = new Map<number, number>();
   for (const iso of datas) {
-    const d = new Date(iso);
-    d.setHours(0, 0, 0, 0);
-    contagem.set(d.getTime(), (contagem.get(d.getTime()) ?? 0) + 1);
+    const chave = chaveDoDia(iso);
+    contagem.set(chave, (contagem.get(chave) ?? 0) + 1);
+  }
+
+  const itensPorDia = new Map<number, ConclusaoDetalhe[]>();
+  for (const item of detalhes) {
+    const chave = chaveDoDia(item.concluidoEm);
+    const lista = itensPorDia.get(chave) ?? [];
+    lista.push(item);
+    itensPorDia.set(chave, lista);
   }
 
   const hoje = new Date();
@@ -141,6 +168,9 @@ export function mapaCalorDiario(datas: string[], semanas = 12): ColunaMapaCalor[
       const total = contagem.get(chave) ?? 0;
       const nivel: DiaMapaCalor["nivel"] =
         total === 0 ? 0 : total === 1 ? 1 : total === 2 ? 2 : total <= 4 ? 3 : 4;
+      const itens = (itensPorDia.get(chave) ?? []).sort((a, b) =>
+        a.concluidoEm.localeCompare(b.concluidoEm),
+      );
       return {
         data: data.toISOString(),
         label: data.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
@@ -148,6 +178,8 @@ export function mapaCalorDiario(datas: string[], semanas = 12): ColunaMapaCalor[
         nivel,
         futuro: chave > hoje.getTime(),
         hoje: chave === hoje.getTime(),
+        itens,
+        totalSegundos: itens.reduce((acc, i) => acc + (i.duracaoSegundos ?? 0), 0),
       };
     });
     const primeiro = new Date(inicioSemana);

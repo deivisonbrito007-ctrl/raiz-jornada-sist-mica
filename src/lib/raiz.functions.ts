@@ -114,6 +114,19 @@ export const getMinhaBiblioteca = createServerFn({ method: "GET" })
         datasConclusao: (progresso.data ?? [])
           .filter((p) => p.concluido_em)
           .map((p) => p.concluido_em as string),
+        conclusoes: (progresso.data ?? [])
+          .filter((p) => p.status === "concluido" && p.concluido_em)
+          .map((p) => {
+            const conteudo = (conteudos.data ?? []).find((c) => c.id === p.conteudo_id);
+            const eixo = (eixos.data ?? []).find((e) => e.id === conteudo?.eixo_id);
+            return {
+              titulo: conteudo?.titulo ?? "Prática",
+              eixoNome: eixo?.nome ?? "",
+              tipo: conteudo?.tipo ?? "",
+              duracaoSegundos: conteudo?.duracao_segundos ?? 0,
+              concluidoEm: p.concluido_em as string,
+            };
+          }),
       },
     };
   });
