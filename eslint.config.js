@@ -12,6 +12,8 @@ export default tseslint.config(
       ".output",
       ".vinxi",
       "coverage",
+      "src/integrations/supabase/types.ts",
+      "src/routeTree.gen.ts",
       "src/routes/mcp.ts",
       "**/list-tools.ts",
       "**/invoke-tool/**",
