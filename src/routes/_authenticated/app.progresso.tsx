@@ -32,7 +32,12 @@ function Progresso() {
   const salvarMeta = useServerFn(definirMetaSemanal);
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const {
+    data,
+    isLoading,
+    error: erroBiblioteca,
+    refetch: recarregarBiblioteca,
+  } = useQuery({
     queryKey: ["biblioteca"],
     queryFn: () => fetchBiblioteca(),
   });
@@ -315,7 +320,15 @@ function Progresso() {
         <p className="mt-1 text-sm text-muted-foreground">
           Últimas 12 semanas — cada quadrado é um dia. Quanto mais escuro, mais práticas concluídas.
         </p>
-        <MapaCalor colunas={colunas} />
+        <MapaCalor
+          colunas={colunas}
+          erro={
+            erroBiblioteca
+              ? (erroBiblioteca as Error).message || "Falha na consulta ao banco de dados."
+              : null
+          }
+          onTentarNovamente={() => void recarregarBiblioteca()}
+        />
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
           <span className="text-xs text-muted-foreground">
             {lembrete.diasSemPratica === null
