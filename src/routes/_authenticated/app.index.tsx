@@ -1,11 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Lock } from "lucide-react";
+import { Lock, Search, Check, Circle } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import * as icones from "lucide-react";
 import { getMeuContexto, getMinhaBiblioteca } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatarData } from "@/lib/raiz-format";
+import { formatarData, formatarDuracao, TIPO_LABEL } from "@/lib/raiz-format";
 
 
 export const Route = createFileRoute("/_authenticated/app/")({
@@ -29,6 +38,40 @@ function Biblioteca() {
 
   const primeiroNome = (contexto?.perfil?.nome || "").split(" ")[0];
 
+  const [busca, setBusca] = useState("");
+  const [eixoFiltro, setEixoFiltro] = useState("todos");
+  const [tipoFiltro, setTipoFiltro] = useState("todos");
+  const [statusFiltro, setStatusFiltro] = useState("todos");
+
+  const termo = busca.trim().toLowerCase();
+  const filtrando =
+    termo !== "" || tipoFiltro !== "todos" || statusFiltro !== "todos" || eixoFiltro !== "todos";
+
+  const eixosVisiveis = useMemo(
+    () =>
+      (data?.eixos ?? []).filter((e) => {
+        if (eixoFiltro !== "todos" && e.id !== eixoFiltro) return false;
+        if (termo && !`${e.nome} ${e.descricao}`.toLowerCase().includes(termo)) return false;
+        return true;
+      }),
+    [data?.eixos, eixoFiltro, termo],
+  );
+
+  const praticasVisiveis = useMemo(
+    () =>
+      (data?.praticas ?? []).filter((p) => {
+        if (eixoFiltro !== "todos" && p.eixoId !== eixoFiltro) return false;
+        if (tipoFiltro !== "todos" && p.tipo !== tipoFiltro) return false;
+        if (statusFiltro === "concluido" && p.status !== "concluido") return false;
+        if (statusFiltro === "pendente" && p.status === "concluido") return false;
+        if (termo && !`${p.titulo} ${p.eixoNome}`.toLowerCase().includes(termo)) return false;
+        return true;
+      }),
+    [data?.praticas, eixoFiltro, tipoFiltro, statusFiltro, termo],
+  );
+
+  const mostrarPraticas = termo !== "" || tipoFiltro !== "todos" || statusFiltro !== "todos";
+
   return (
     <div>
       <p className="text-sm text-salvia">Que bom te ver por aqui</p>
@@ -39,6 +82,70 @@ function Biblioteca() {
         Escolha um eixo para continuar. Os eixos ainda fechados mostram o caminho que vem a seguir.
       </p>
 
+      <div className="mt-6 space-y-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar eixo ou prática"
+            className="rounded-full pl-11"
+          />
+        </div>
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Select value={eixoFiltro} onValueChange={setEixoFiltro}>
+            <SelectTrigger className="rounded-full">
+              <SelectValue placeholder="Eixo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os eixos</SelectItem>
+              {(data?.eixos ?? []).map((e) => (
+                <SelectItem key={e.id} value={e.id}>
+                  {e.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={tipoFiltro} onValueChange={setTipoFiltro}>
+            <SelectTrigger className="rounded-full">
+              <SelectValue placeholder="Tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os tipos</SelectItem>
+              {Object.entries(TIPO_LABEL).map(([valor, label]) => (
+                <SelectItem key={valor} value={valor}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFiltro} onValueChange={setStatusFiltro}>
+            <SelectTrigger className="rounded-full">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os status</SelectItem>
+              <SelectItem value="pendente">A fazer</SelectItem>
+              <SelectItem value="concluido">Concluídas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {filtrando && (
+          <button
+            type="button"
+            onClick={() => {
+              setBusca("");
+              setEixoFiltro("todos");
+              setTipoFiltro("todos");
+              setStatusFiltro("todos");
+            }}
+            className="text-xs font-medium text-terracota underline"
+          >
+            Limpar filtros
+          </button>
+        )}
+      </div>
+
       {isLoading && (
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {[0, 1, 2, 3].map((i) => (
@@ -47,8 +154,38 @@ function Biblioteca() {
         </div>
       )}
 
+      {mostrarPraticas ? (
+        <div className="mt-8 space-y-2">
+          {praticasVisiveis.map((pratica) => (
+            <Link
+              key={pratica.id}
+              to="/app/conteudo/$conteudoId"
+              params={{ conteudoId: pratica.id }}
+              className="flex items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-[var(--shadow-organico)]"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-floresta">{pratica.titulo}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {pratica.eixoNome} · {TIPO_LABEL[pratica.tipo] ?? pratica.tipo}
+                  {pratica.duracaoSegundos ? ` · ${formatarDuracao(pratica.duracaoSegundos)}` : ""}
+                </p>
+              </div>
+              {pratica.status === "concluido" ? (
+                <Check className="h-4 w-4 shrink-0 text-salvia" />
+              ) : (
+                <Circle className="h-4 w-4 shrink-0 text-muted-foreground" />
+              )}
+            </Link>
+          ))}
+          {praticasVisiveis.length === 0 && !isLoading && (
+            <p className="rounded-2xl bg-secondary/50 p-6 text-center text-sm text-muted-foreground">
+              Nenhuma prática encontrada com esses filtros.
+            </p>
+          )}
+        </div>
+      ) : (
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        {(data?.eixos ?? []).map((eixo) =>
+        {eixosVisiveis.map((eixo) =>
           eixo.liberado ? (
             <Link
               key={eixo.id}
@@ -94,7 +231,13 @@ function Biblioteca() {
             </div>
           ),
         )}
+        {eixosVisiveis.length === 0 && !isLoading && (
+          <p className="rounded-2xl bg-secondary/50 p-6 text-center text-sm text-muted-foreground sm:col-span-2">
+            Nenhum eixo encontrado.
+          </p>
+        )}
       </div>
+      )}
     </div>
   );
 }
