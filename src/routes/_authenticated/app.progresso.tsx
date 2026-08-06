@@ -1,9 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Flame, Sprout, Target, Check, Minus, Plus } from "lucide-react";
-import { getMinhaBiblioteca, getMeuContexto, definirMetaSemanal } from "@/lib/raiz.functions";
+import { Flame, Sprout, Target, Check, Minus, Plus, FileDown, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  getMinhaBiblioteca,
+  getMeuContexto,
+  definirMetaSemanal,
+  listarDiario,
+} from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { gerarRelatorioPdf } from "@/lib/raiz-relatorio";
 import {
   calcularStreak,
   linhaDoTempoSemanal,
@@ -11,6 +19,7 @@ import {
   avaliarMetaSemanal,
   DIAS_SEMANA_CURTO,
 } from "@/lib/raiz-format";
+
 
 export const Route = createFileRoute("/_authenticated/app/progresso")({
   component: Progresso,
@@ -58,6 +67,31 @@ function Progresso() {
   const niveis = ["bg-secondary", "bg-salvia/25", "bg-salvia/50", "bg-salvia/75", "bg-floresta"];
   const anelMeta = 2 * Math.PI * 34;
 
+  const fetchDiario = useServerFn(listarDiario);
+  const [gerando, setGerando] = useState(false);
+
+  const baixarRelatorio = async () => {
+    setGerando(true);
+    try {
+      const diario = await fetchDiario();
+      gerarRelatorioPdf({
+        nome: contexto?.perfil?.nome ?? "",
+        email: contexto?.perfil?.email ?? "",
+        metaSemanal: metaAtual,
+        eixos: data?.eixos ?? [],
+        datasConclusao,
+        diario: diario ?? [],
+      });
+      toast.success("Relatório gerado. Verifique seus downloads.");
+    } catch {
+      toast.error("Não foi possível gerar o relatório agora.");
+    } finally {
+      setGerando(false);
+    }
+  };
+
+
+
 
   return (
     <div>
@@ -65,6 +99,20 @@ function Progresso() {
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         Progresso não é pressa. É o que você já foi capaz de olhar.
       </p>
+
+      <button
+        type="button"
+        onClick={baixarRelatorio}
+        disabled={gerando || isLoading}
+        className="mt-5 inline-flex items-center gap-2 rounded-full bg-floresta px-5 py-3 text-sm text-floresta-foreground transition hover:bg-floresta/90 disabled:opacity-60"
+      >
+        {gerando ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+        {gerando ? "Gerando relatório..." : "Baixar relatório em PDF"}
+      </button>
+      <p className="mt-2 text-xs text-muted-foreground">
+        Inclui seu progresso por eixo e suas entradas do diário, para compartilhar com quem acompanha você.
+      </p>
+
 
       {isLoading && <Skeleton className="mt-7 h-40 rounded-3xl" />}
 
