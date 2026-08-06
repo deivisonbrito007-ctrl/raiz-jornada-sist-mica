@@ -49,7 +49,8 @@ function liberado(clienteId: string, conteudoId: string) {
   );
 }
 
-function fakeSupabase(userId: string) {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function fakeSupabase(userId: string): any {
   return {
     from(tabela: string) {
       if (tabela === "conteudos") {
