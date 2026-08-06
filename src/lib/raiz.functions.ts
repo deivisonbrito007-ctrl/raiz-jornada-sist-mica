@@ -171,6 +171,20 @@ export const marcarProgresso = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const definirMetaSemanal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ meta: z.number().int().min(1).max(14) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ meta_semanal: data.meta })
+      .eq("id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true, meta: data.meta };
+  });
+
+
 export const salvarDiario = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
