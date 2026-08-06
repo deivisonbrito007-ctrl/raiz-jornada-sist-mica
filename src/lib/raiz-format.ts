@@ -62,3 +62,43 @@ export function calcularStreak(datas: string[]) {
   }
   return streak;
 }
+
+
+function inicioDaSemana(data: Date) {
+  const inicio = new Date(data);
+  inicio.setDate(data.getDate() - ((data.getDay() + 6) % 7));
+  inicio.setHours(0, 0, 0, 0);
+  return inicio;
+}
+
+export type SemanaLinhaDoTempo = {
+  inicio: string;
+  label: string;
+  total: number;
+  ativa: boolean;
+  atual: boolean;
+};
+
+export function linhaDoTempoSemanal(datas: string[], semanas = 8): SemanaLinhaDoTempo[] {
+  const contagem = new Map<number, number>();
+  for (const iso of datas) {
+    const chave = inicioDaSemana(new Date(iso)).getTime();
+    contagem.set(chave, (contagem.get(chave) ?? 0) + 1);
+  }
+
+  const umaSemana = 7 * 24 * 60 * 60 * 1000;
+  const semanaAtual = inicioDaSemana(new Date()).getTime();
+
+  return Array.from({ length: semanas }, (_, indice) => {
+    const chave = semanaAtual - (semanas - 1 - indice) * umaSemana;
+    const inicio = new Date(chave);
+    const total = contagem.get(chave) ?? 0;
+    return {
+      inicio: inicio.toISOString(),
+      label: inicio.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+      total,
+      ativa: total > 0,
+      atual: chave === semanaAtual,
+    };
+  });
+}
