@@ -161,3 +161,65 @@ export function mapaCalorDiario(datas: string[], semanas = 12): ColunaMapaCalor[
     };
   });
 }
+
+export type MetaSemanal = {
+  meta: number;
+  concluidasSemana: number;
+  concluidasSemanaAnterior: number;
+  percentual: number;
+  restantes: number;
+  alcancada: boolean;
+  mensagem: string;
+  tendencia: "acima" | "igual" | "abaixo";
+};
+
+export function avaliarMetaSemanal(datas: string[], meta: number): MetaSemanal {
+  const umaSemana = 7 * 24 * 60 * 60 * 1000;
+  const inicioAtual = inicioDaSemana(new Date()).getTime();
+  const metaSegura = Math.max(1, meta);
+
+  let concluidasSemana = 0;
+  let concluidasSemanaAnterior = 0;
+  for (const iso of datas) {
+    const chave = inicioDaSemana(new Date(iso)).getTime();
+    if (chave === inicioAtual) concluidasSemana += 1;
+    else if (chave === inicioAtual - umaSemana) concluidasSemanaAnterior += 1;
+  }
+
+  const percentual = Math.min(100, Math.round((concluidasSemana / metaSegura) * 100));
+  const restantes = Math.max(0, metaSegura - concluidasSemana);
+  const alcancada = concluidasSemana >= metaSegura;
+
+  const tendencia: MetaSemanal["tendencia"] =
+    concluidasSemana > concluidasSemanaAnterior
+      ? "acima"
+      : concluidasSemana === concluidasSemanaAnterior
+        ? "igual"
+        : "abaixo";
+
+  let mensagem: string;
+  if (concluidasSemana === 0) {
+    mensagem = `Sua semana está em aberto. Uma prática já move o processo — faltam ${metaSegura} para a sua meta.`;
+  } else if (alcancada) {
+    const extra = concluidasSemana - metaSegura;
+    mensagem =
+      extra > 0
+        ? `Meta alcançada e ${extra} prática${extra === 1 ? "" : "s"} além. Cuidado com a pressa: descansar também é parte.`
+        : "Meta da semana alcançada. Deixe o que foi olhado assentar antes de seguir.";
+  } else if (percentual >= 60) {
+    mensagem = `Você está quase lá — falta${restantes === 1 ? "" : "m"} ${restantes} prática${restantes === 1 ? "" : "s"} para fechar a semana.`;
+  } else {
+    mensagem = `Bom começo. Falta${restantes === 1 ? "" : "m"} ${restantes} prática${restantes === 1 ? "" : "s"} para a sua meta desta semana.`;
+  }
+
+  return {
+    meta: metaSegura,
+    concluidasSemana,
+    concluidasSemanaAnterior,
+    percentual,
+    restantes,
+    alcancada,
+    mensagem,
+    tendencia,
+  };
+}
