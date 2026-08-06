@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { gerarRelatorioPdf } from "@/lib/raiz-relatorio";
 import { LembreteRetorno } from "@/components/lembrete-retorno";
+import { MapaCalor, NIVEIS_MAPA_CALOR } from "@/components/mapa-calor";
 import {
   calcularStreak,
   linhaDoTempoSemanal,
