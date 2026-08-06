@@ -5,7 +5,14 @@ import { useState } from "react";
 import { adminResumo } from "@/lib/raiz.functions";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatarData, PAGAMENTO_LABEL } from "@/lib/raiz-format";
+import {
+  formatarData,
+  PAGAMENTO_LABEL,
+  calcularStreak,
+  linhaDoTempoSemanal,
+} from "@/lib/raiz-format";
+import { Flame } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminClientes,
