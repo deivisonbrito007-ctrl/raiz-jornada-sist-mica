@@ -83,7 +83,10 @@ describe("fluxo de login /auth", () => {
     await user.click(screen.getByRole("button", { name: "Criar conta" }));
 
     await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
-    expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({ nome: "Maria", papel: "cliente" });
+    expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({
+      nome: "Maria",
+      papel: "cliente",
+    });
     expect(await screen.findByRole("heading", { name: "Confirme seu e-mail" })).toBeInTheDocument();
     expect(navigate).not.toHaveBeenCalled();
   });
@@ -100,7 +103,10 @@ describe("fluxo de login /auth", () => {
     await user.click(screen.getByRole("button", { name: "Criar conta" }));
 
     await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
-    expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({ nome: "Ana", papel: "terapeuta" });
+    expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({
+      nome: "Ana",
+      papel: "terapeuta",
+    });
     expect(navigate).toHaveBeenCalledWith({ to: "/entrada", replace: true });
   });
 
@@ -108,8 +114,6 @@ describe("fluxo de login /auth", () => {
     auth.getSession.mockResolvedValue({ data: { session: { user: { id: "1" } } } });
     render(<AuthPage />);
 
-    await waitFor(() =>
-      expect(navigate).toHaveBeenCalledWith({ to: "/entrada", replace: true }),
-    );
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith({ to: "/entrada", replace: true }));
   });
 });
