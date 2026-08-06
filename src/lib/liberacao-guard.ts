@@ -1,24 +1,10 @@
 import { negarAcesso, registrarAcessoNegado } from "./auditoria-acesso";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /** Cliente Supabase mínimo usado pela checagem (facilita testes). */
 export type ClienteLiberacao = {
-  from: (tabela: string) => {
-    select: (cols: string) => {
-      eq: (
-        coluna: string,
-        valor: string,
-      ) => {
-        maybeSingle: () => Promise<{
-          data: { id: string; eixo_id: string } | null;
-          error: { message: string } | null;
-        }>;
-      };
-    };
-  };
-  rpc: (
-    fn: "conteudo_liberado",
-    args: { _cliente_id: string; _conteudo_id: string; _eixo_id: string },
-  ) => Promise<{ data: boolean | null; error: { message: string } | null }>;
+  from: (tabela: string) => any;
+  rpc: (fn: any, args: any) => any;
 };
 
 /**
