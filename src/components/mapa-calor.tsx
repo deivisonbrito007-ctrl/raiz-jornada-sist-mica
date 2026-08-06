@@ -14,7 +14,42 @@ export const NIVEIS_MAPA_CALOR = [
   "bg-floresta",
 ];
 
-export function MapaCalor({ colunas }: { colunas: ColunaMapaCalor[] }) {
+export type MapaCalorProps = {
+  colunas: ColunaMapaCalor[];
+  /** Falha total na consulta: nenhum dado disponível. */
+  erro?: string | null;
+  /** Falha parcial: os dias carregaram, mas os detalhes de cada dia não. */
+  erroDetalhes?: boolean;
+  onTentarNovamente?: () => void;
+};
+
+export function MapaCalor({
+  colunas,
+  erro = null,
+  erroDetalhes = false,
+  onTentarNovamente,
+}: MapaCalorProps) {
+  if (erro) {
+    return (
+      <div
+        role="alert"
+        className="mt-6 rounded-2xl border border-terracota/30 bg-terracota/5 p-5 text-center"
+      >
+        <p className="text-sm text-floresta">Não foi possível carregar o calendário de prática.</p>
+        <p className="mt-1 text-xs text-muted-foreground">{erro}</p>
+        {onTentarNovamente && (
+          <button
+            type="button"
+            onClick={onTentarNovamente}
+            className="mt-4 rounded-full bg-floresta px-4 py-2 text-xs text-primary-foreground"
+          >
+            Tentar novamente
+          </button>
+        )}
+      </div>
+    );
+  }
+  return (
   return (
     <div className="mt-6 overflow-x-auto">
       <div className="flex gap-2">
