@@ -14,7 +14,8 @@ import {
 import * as icones from "lucide-react";
 import { getMeuContexto, getMinhaBiblioteca } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatarData, formatarDuracao, TIPO_LABEL } from "@/lib/raiz-format";
+import { calcularStreak, formatarData, formatarDuracao, TIPO_LABEL } from "@/lib/raiz-format";
+import { LembreteRetorno } from "@/components/lembrete-retorno";
 
 
 export const Route = createFileRoute("/_authenticated/app/")({
@@ -70,6 +71,10 @@ function Biblioteca() {
     [data?.praticas, eixoFiltro, tipoFiltro, statusFiltro, termo],
   );
 
+  const datasConclusao = data?.resumo.datasConclusao ?? [];
+  const streak = calcularStreak(datasConclusao);
+  const proximaPratica = (data?.praticas ?? []).find((p) => p.status !== "concluido") ?? null;
+
   const mostrarPraticas = termo !== "" || tipoFiltro !== "todos" || statusFiltro !== "todos";
 
   return (
@@ -81,6 +86,22 @@ function Biblioteca() {
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         Escolha um eixo para continuar. Os eixos ainda fechados mostram o caminho que vem a seguir.
       </p>
+
+      {!isLoading && (
+        <LembreteRetorno
+          datas={datasConclusao}
+          streakSemanas={streak}
+          sugestao={
+            proximaPratica
+              ? {
+                  id: proximaPratica.id,
+                  titulo: proximaPratica.titulo,
+                  eixoNome: proximaPratica.eixoNome,
+                }
+              : null
+          }
+        />
+      )}
 
       <div className="mt-6 space-y-3">
         <div className="relative">
