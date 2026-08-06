@@ -13,8 +13,9 @@ export default tseslint.config(
       ".vinxi",
       "coverage",
       "src/routes/mcp.ts",
-      "src/routes/[.mcp]/**",
-      "src/routes/[.well-known]/**",
+      "**/list-tools.ts",
+      "**/invoke-tool/**",
+      "**/oauth-protected-resource.ts",
     ],
   },
   {
