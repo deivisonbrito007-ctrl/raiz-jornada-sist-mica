@@ -59,7 +59,12 @@ function AdminClientes() {
       {isLoading && <Skeleton className="mt-6 h-48 rounded-3xl" />}
 
       <div className="mt-6 space-y-3">
-        {clientes.map((cliente) => (
+        {clientes.map((cliente) => {
+          const datas = cliente.datasConclusao ?? [];
+          const streak = calcularStreak(datas);
+          const semanas = linhaDoTempoSemanal(datas, 8);
+          const maximo = Math.max(1, ...semanas.map((s) => s.total));
+          return (
           <Link
             key={cliente.id}
             to="/admin/cliente/$clienteId"
@@ -77,11 +82,40 @@ function AdminClientes() {
               </p>
             </div>
             <div className="flex items-center gap-6">
+              <div className="text-center">
+                <div className="flex items-center gap-1 text-terracota">
+                  <Flame className="h-4 w-4" />
+                  <span className="font-display text-2xl leading-none">{streak}</span>
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {streak === 1 ? "semana" : "semanas"}
+                </p>
+              </div>
+              <div>
+                <div className="flex h-10 items-end gap-1" aria-label="Linha do tempo semanal">
+                  {semanas.map((s) => (
+                    <div
+                      key={s.inicio}
+                      title={`${s.label}: ${s.total}`}
+                      className={`w-2 rounded-full ${
+                        s.total === 0
+                          ? "bg-secondary"
+                          : s.atual
+                            ? "bg-terracota"
+                            : "bg-salvia"
+                      }`}
+                      style={{ height: `${Math.max(12, (s.total / maximo) * 100)}%` }}
+                    />
+                  ))}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">8 semanas</p>
+              </div>
               {cliente.statusPagamento && (
                 <span className="rounded-full bg-secondary px-3 py-1 text-xs text-floresta">
                   {PAGAMENTO_LABEL[cliente.statusPagamento] ?? cliente.statusPagamento}
                 </span>
               )}
+
               <div className="w-32">
                 <div className="flex justify-between text-[11px] text-muted-foreground">
                   <span>
