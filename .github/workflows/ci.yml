@@ -12,8 +12,83 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-test:
-    name: Lint, typecheck e testes
+  install:
+    name: Instalar dependências
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Cache Bun store e node_modules
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock', 'bun.lockb', 'package.json') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: bun install --frozen-lockfile
+
+  lint:
+    name: Lint
+    needs: install
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Restore dependências
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock', 'bun.lockb', 'package.json') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+      - name: Install dependencies (fallback)
+        run: bun install --frozen-lockfile
+      - name: Run lint
+        run: bun run lint
+
+  typecheck:
+    name: Typecheck
+    needs: install
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Restore dependências
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock', 'bun.lockb', 'package.json') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+      - name: Install dependencies (fallback)
+        run: bun install --frozen-lockfile
+      - name: Typecheck (TypeScript)
+        run: bun run typecheck
+
+  test:
+    name: Testes com cobertura
+    needs: install
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -24,12 +99,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
-      - name: Install dependencies
+      - name: Restore dependências
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock', 'bun.lockb', 'package.json') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+      - name: Install dependencies (fallback)
         run: bun install --frozen-lockfile
-      - name: Run lint
-        run: bun run lint
-      - name: Typecheck (TypeScript)
-        run: bun run typecheck
       - name: Run tests with coverage
         run: bun run test:coverage
       - name: Generate coverage badge
@@ -53,3 +133,17 @@ jobs:
           else
             echo "Badge inalterado."
           fi
+
+  ci:
+    name: CI verde
+    needs: [lint, typecheck, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar resultados
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "Algum job falhou."
+            exit 1
+          fi
+          echo "Lint, typecheck e testes passaram."
