@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { auditarResultado, negarAcesso, registrarAcessoNegado } from "./auditoria-acesso";
+import { garantirConteudoLiberado } from "./liberacao-guard";
 
 export const getMeuContexto = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -229,6 +230,7 @@ export const marcarProgresso = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    await garantirConteudoLiberado(supabase, userId, data.conteudoId, "marcarProgresso");
     const { error } = await supabase.from("progresso").upsert(
       {
         cliente_id: userId,
