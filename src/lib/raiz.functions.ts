@@ -283,7 +283,11 @@ export const adminResumo = createServerFn({ method: "GET" })
         const concluidos = progs.filter(
           (pr) => pr.cliente_id === p.id && pr.status === "concluido" && liberados.some((c) => c.id === pr.conteudo_id),
         ).length;
+        const datasConclusao = progs
+          .filter((pr) => pr.cliente_id === p.id && pr.status === "concluido")
+          .map((pr) => pr.updated_at);
         const ultima = progs
+
           .filter((pr) => pr.cliente_id === p.id)
           .map((pr) => pr.updated_at)
           .sort()
@@ -305,6 +309,8 @@ export const adminResumo = createServerFn({ method: "GET" })
           ultimaAtividade: ultima ?? null,
           pacote: (pacotes.data ?? []).find((pk) => pk.id === vinculo?.pacote_id)?.nome ?? null,
           statusPagamento: vinculo?.status_pagamento ?? null,
+          datasConclusao,
+
         };
       });
 
