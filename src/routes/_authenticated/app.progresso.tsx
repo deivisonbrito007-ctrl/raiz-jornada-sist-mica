@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Flame } from "lucide-react";
+import { Flame, Sprout } from "lucide-react";
 import { getMinhaBiblioteca } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -32,6 +32,16 @@ function Progresso() {
   const semanas = linhaDoTempoSemanal(datasConclusao, 8);
   const maximoSemana = Math.max(1, ...semanas.map((s) => s.total));
   const colunas = mapaCalorDiario(datasConclusao, 12);
+  const sequenciasPorEixo = eixos
+    .map((eixo) => ({
+      id: eixo.id,
+      nome: eixo.nome,
+      streak: calcularStreak(eixo.datasConclusao ?? []),
+      concluidos: eixo.concluidos,
+    }))
+    .sort((a, b) => b.streak - a.streak || b.concluidos - a.concluidos);
+  const maiorStreakEixo = sequenciasPorEixo[0];
+  const maximoStreak = Math.max(1, ...sequenciasPorEixo.map((e) => e.streak));
   const niveis = ["bg-secondary", "bg-salvia/25", "bg-salvia/50", "bg-salvia/75", "bg-floresta"];
 
 
@@ -100,6 +110,46 @@ function Progresso() {
               </span>
             </div>
           ))}
+        </div>
+      </section>
+
+
+      <section className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
+        <h2 className="text-lg text-floresta">Sequência por eixo</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {maiorStreakEixo && maiorStreakEixo.streak > 0
+            ? `Hoje, ${maiorStreakEixo.nome} é o tema em que você mantém mais consistência.`
+            : "Conclua uma prática nesta semana para começar a sequência de cada eixo."}
+        </p>
+        <div className="mt-6 space-y-4">
+          {sequenciasPorEixo.map((eixo) => (
+            <div key={eixo.id}>
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="flex items-center gap-2 text-sm text-floresta">
+                  {eixo.id === maiorStreakEixo?.id && maiorStreakEixo.streak > 0 && (
+                    <Sprout className="h-4 w-4 text-terracota" />
+                  )}
+                  {eixo.nome}
+                </span>
+                <span className="shrink-0 text-xs text-salvia">
+                  {eixo.streak} sem{eixo.streak === 1 ? "ana" : "anas"}
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary">
+                <div
+                  className={`h-full rounded-full ${
+                    eixo.id === maiorStreakEixo?.id && eixo.streak > 0 ? "bg-terracota" : "bg-salvia"
+                  }`}
+                  style={{ width: `${eixo.streak ? (eixo.streak / maximoStreak) * 100 : 0}%` }}
+                />
+              </div>
+            </div>
+          ))}
+          {!isLoading && sequenciasPorEixo.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Nenhum eixo liberado ainda para calcular sequências.
+            </p>
+          )}
         </div>
       </section>
 
