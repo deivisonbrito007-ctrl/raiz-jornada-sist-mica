@@ -94,7 +94,7 @@ function AdminConteudos() {
     if (!form) return;
     setSubindo(true);
     try {
-      const caminho = `${form.eixoId}/${Date.now()}-${arquivo.name.replace(/[^\w.\-]/g, "_")}`;
+      const caminho = `${form.eixoId}/${Date.now()}-${arquivo.name.replace(/[^\w.-]/g, "_")}`;
       const { error } = await supabase.storage.from("midias").upload(caminho, arquivo, {
         cacheControl: "3600",
         upsert: false,
