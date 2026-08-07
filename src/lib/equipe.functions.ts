@@ -6,6 +6,7 @@ import { PERMISSOES } from "./permissoes";
 import { atorAuditoria as ator, registrarAuditoria } from "./auditoria-equipe";
 
 const permissaoSchema = z.enum(PERMISSOES);
+const motivoSchema = z.string().max(300).optional();
 
 async function garantirGerenciarEquipe(
   supabase: Parameters<typeof garantirPermissao>[0],
@@ -70,6 +71,7 @@ export const equipeConvidar = createServerFn({ method: "POST" })
       .object({
         email: z.string().email().max(200),
         permissoes: z.array(permissaoSchema).min(1),
+        motivo: motivoSchema,
       })
       .parse(input),
   )
@@ -97,6 +99,7 @@ export const equipeConvidar = createServerFn({ method: "POST" })
     await registrarAuditoria(supabase, ator(context), {
       acao: "convite_criado",
       alvoTipo: "convite",
+      motivo: data.motivo,
       alvoEmail: email,
       detalhes: { permissoes: data.permissoes },
     });
@@ -105,7 +108,7 @@ export const equipeConvidar = createServerFn({ method: "POST" })
 
 export const equipeCancelarConvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ conviteId: z.string().uuid() }).parse(input))
+  .inputValidator((input) => z.object({ conviteId: z.string().uuid(), motivo: motivoSchema }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await garantirGerenciarEquipe(supabase, userId, "equipeCancelarConvite");
@@ -120,6 +123,7 @@ export const equipeCancelarConvite = createServerFn({ method: "POST" })
     await registrarAuditoria(supabase, ator(context), {
       acao: "convite_cancelado",
       alvoTipo: "convite",
+      motivo: data.motivo,
       alvoId: data.conviteId,
       alvoEmail: convite?.email ?? null,
     });
@@ -133,6 +137,7 @@ export const equipeDefinirPermissoes = createServerFn({ method: "POST" })
       .object({
         alvoId: z.string().uuid(),
         permissoes: z.array(permissaoSchema),
+        motivo: motivoSchema,
       })
       .parse(input),
   )
@@ -179,6 +184,7 @@ export const equipeDefinirPermissoes = createServerFn({ method: "POST" })
       alvoTipo: "equipe",
       alvoId: data.alvoId,
       alvoEmail: perfilAlvo?.email ?? null,
+      motivo: data.motivo,
       detalhes: {
         permissoes: data.permissoes,
         anteriores: (anteriores ?? []).map((p) => p.permissao),
@@ -189,7 +195,7 @@ export const equipeDefinirPermissoes = createServerFn({ method: "POST" })
 
 export const equipeRemover = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ alvoId: z.string().uuid() }).parse(input))
+  .inputValidator((input) => z.object({ alvoId: z.string().uuid(), motivo: motivoSchema }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await garantirGerenciarEquipe(supabase, userId, "equipeRemover");
@@ -218,6 +224,7 @@ export const equipeRemover = createServerFn({ method: "POST" })
       alvoTipo: "equipe",
       alvoId: data.alvoId,
       alvoEmail: perfilAlvo?.email ?? null,
+      motivo: data.motivo,
     });
     return { ok: true };
   });
@@ -230,7 +237,7 @@ export const equipeAuditoria = createServerFn({ method: "GET" })
 
     const { data, error } = await supabase
       .from("auditoria_equipe")
-      .select("id, acao, alvo_tipo, alvo_id, alvo_email, detalhes, ator_email, created_at")
+      .select("id, acao, alvo_tipo, alvo_id, alvo_email, motivo, detalhes, ator_email, created_at")
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw new Error(error.message);
@@ -249,6 +256,7 @@ export const equipeAuditoria = createServerFn({ method: "GET" })
           alvoTipo: r.alvo_tipo,
           alvoId: r.alvo_id,
           alvoEmail: r.alvo_email,
+          motivo: r.motivo ?? "",
           permissoes: det.permissoes ?? [],
           anteriores: det.anteriores ?? [],
           titulo: det.titulo ?? "",

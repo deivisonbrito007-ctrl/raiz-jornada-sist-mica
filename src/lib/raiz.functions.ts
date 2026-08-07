@@ -505,6 +505,7 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
         liberar: z.boolean(),
         liberarEm: z.string().datetime().nullable().optional(),
         titulo: z.string().max(200).optional(),
+        motivo: z.string().max(300).optional(),
       })
       .parse(input),
   )
@@ -525,6 +526,7 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
     const alvoAuditoria = {
       alvoTipo: "liberacao" as const,
       alvoId: data.clienteId,
+      motivo: data.motivo,
       detalhes: {
         titulo: data.titulo ?? "",
         conteudoId: data.conteudoId ?? null,
