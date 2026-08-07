@@ -37,6 +37,13 @@ function AuthPage() {
   const [souTerapeuta, setSouTerapeuta] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [confirmeEmail, setConfirmeEmail] = useState(false);
+  const [existeTerapeuta, setExisteTerapeuta] = useState(true);
+
+  useEffect(() => {
+    supabase.rpc("existe_terapeuta").then(({ data }) => {
+      setExisteTerapeuta(data !== false);
+    });
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
