@@ -198,7 +198,7 @@ describe("revogação com conteúdo já carregado em cache", () => {
     await pronto();
 
     revogar();
-    const renovar = await screen.findByRole("button", { name: /Renovar acesso/i });
+    const renovar = await screen.findByRole("button", { name: /Tentar novamente/i });
 
     fireEvent.click(renovar);
     await waitFor(() =>
