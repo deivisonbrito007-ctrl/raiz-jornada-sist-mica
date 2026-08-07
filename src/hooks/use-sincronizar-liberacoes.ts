@@ -38,6 +38,9 @@ export function useSincronizarLiberacoes(onMudanca?: () => void) {
             queryClient.invalidateQueries({ queryKey: ["biblioteca"] });
             queryClient.invalidateQueries({ queryKey: ["trilha"] });
             queryClient.invalidateQueries({ queryKey: ["conteudo"] });
+            // sequências, metas e heatmap dependem das liberações
+            queryClient.invalidateQueries({ queryKey: ["contexto"] });
+            queryClient.invalidateQueries({ queryKey: ["progresso"] });
             onMudanca?.();
           },
         )
