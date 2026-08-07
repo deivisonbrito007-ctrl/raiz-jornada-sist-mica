@@ -35,6 +35,7 @@ function Player() {
   });
 
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
+  const posicaoRef = useRef(0);
   const [tocando, setTocando] = useState(false);
   const [tempo, setTempo] = useState(0);
   const [total, setTotal] = useState(0);
@@ -43,6 +44,7 @@ function Player() {
   const [midiaExpirada, setMidiaExpirada] = useState(false);
   const [semLiberacao, setSemLiberacao] = useState(false);
   const [renovando, setRenovando] = useState(false);
+  const [emEspera, setEmEspera] = useState(false);
 
   useEffect(() => {
     setConcluido(data?.status === "concluido");
@@ -53,9 +55,24 @@ function Player() {
 
   function expirarMidia() {
     const el = mediaRef.current;
-    if (el) el.pause();
+    if (el) {
+      // guarda onde a pessoa parou para retomar depois da renovação
+      posicaoRef.current = el.currentTime || posicaoRef.current;
+      el.pause();
+    }
     setTocando(false);
     setMidiaExpirada(true);
+  }
+
+  /** Ao carregar a nova mídia, volta ao ponto salvo e fica pausado. */
+  function retomarPosicao(el: HTMLVideoElement | HTMLAudioElement) {
+    setTotal(el.duration);
+    const alvo = posicaoRef.current;
+    if (alvo > 0 && alvo < (el.duration || Infinity)) {
+      el.currentTime = alvo;
+      setTempo(alvo);
+    }
+    el.pause();
   }
 
   // O link seguro da mídia tem validade limitada: ao chegar ao fim, o player para
@@ -73,26 +90,45 @@ function Player() {
     return () => clearTimeout(timer);
   }, [data?.url, data?.urlExpiraEm]);
 
+  /** Pede uma URL assinada nova ao backend e reinicia o player se estiver liberado. */
   async function renovarMidia() {
-    if (semLiberacao || renovando) return;
+    if (renovando || emEspera) return;
     setRenovando(true);
     try {
-      const novo = await refetch();
-      if (novo.data?.url) {
+      // sempre uma chamada nova: a liberação pode ter mudado agora mesmo
+      const novo = await queryClient.fetchQuery({
+        queryKey: ["conteudo", conteudoId],
+        queryFn: () => fetchConteudo({ data: { conteudoId } }),
+        staleTime: 0,
+      });
+      if (novo?.url) {
+        setSemLiberacao(false);
         setMidiaExpirada(false);
         setTocando(false);
-        toast.success("Mídia liberada novamente. Você pode continuar.");
+        setTerminou(false);
+        toast.success("Mídia liberada novamente. Você pode continuar de onde parou.");
       } else {
         setSemLiberacao(true);
+        segurarNovaTentativa();
         toast.error("Esta prática não está mais liberada para você.");
       }
     } catch {
       setSemLiberacao(true);
+      segurarNovaTentativa();
       toast.error("Não foi possível renovar o acesso à mídia.");
     } finally {
       setRenovando(false);
+      queryClient.invalidateQueries({ queryKey: ["biblioteca"] });
+      queryClient.invalidateQueries({ queryKey: ["trilha"] });
     }
   }
+
+  /** Pequena espera entre tentativas — o botão nunca fica travado para sempre. */
+  function segurarNovaTentativa() {
+    setEmEspera(true);
+    setTimeout(() => setEmEspera(false), 5000);
+  }
+
 
   async function registrar(status: "em_andamento" | "concluido") {
     if (midiaExpirada || semLiberacao) return;
