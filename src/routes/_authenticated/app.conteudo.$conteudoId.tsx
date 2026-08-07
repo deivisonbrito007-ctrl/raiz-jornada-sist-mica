@@ -124,10 +124,16 @@ function Player() {
         staleTime: 0,
       });
       if (novo?.url) {
+        // só volta a tocar sozinho se estava tocando quando o link venceu
+        retomarAutoRef.current = tocandoAntesRef.current;
         setBloqueio(null);
         setTocando(false);
         setTerminou(false);
-        toast.success("Mídia liberada novamente. Você pode continuar de onde parou.");
+        toast.success(
+          retomarAutoRef.current
+            ? "Mídia liberada novamente. Voltando de onde você parou."
+            : "Mídia liberada novamente. Você pode continuar de onde parou.",
+        );
       } else {
         setBloqueio("revogado");
         segurarNovaTentativa();
