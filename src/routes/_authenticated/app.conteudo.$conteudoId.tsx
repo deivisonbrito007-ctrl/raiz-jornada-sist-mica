@@ -347,6 +347,7 @@ function Player() {
         setBloqueio(null);
         toast.success("Esta prática foi liberada de novo pelo seu terapeuta.");
       }
+      await reenviarProgressoLocal();
     } catch {
       /* falha de rede: o estado atual é mantido e o botão de renovar segue disponível */
     }
