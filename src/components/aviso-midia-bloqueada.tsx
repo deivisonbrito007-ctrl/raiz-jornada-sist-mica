@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { TimerOff, Lock, AlertCircle, Hourglass } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export type MotivoBloqueio = "validade" | "revogado" | "falha" | "limite";
@@ -14,6 +14,8 @@ interface Props {
   esperaAte?: number | null;
   eixoId?: string;
   onRenovar: () => void;
+  /** Esc dentro do aviso: devolve o foco para fora (ex.: link "Voltar à trilha"). */
+  onSair?: () => void;
 }
 
 /** Segundos que faltam para liberar o botão — atualiza a cada segundo. */
@@ -36,6 +38,7 @@ export function AvisoMidiaBloqueada({
   esperaAte,
   eixoId,
   onRenovar,
+  onSair,
 }: Props) {
   const segundos = useContagem(emEspera ? esperaAte : null);
 
@@ -90,19 +93,84 @@ export function AvisoMidiaBloqueada({
         ? "border-terracota/30 bg-terracota/10"
         : "border-border bg-muted/30";
 
+  const idTitulo = useId();
+  const idTexto = useId();
+  const idAjuda = useId();
+  const caixaRef = useRef<HTMLDivElement | null>(null);
+  const botaoRef = useRef<HTMLButtonElement | null>(null);
+
+  // O aviso é o único caminho possível daqui: o foco vai para ele assim que
+  // aparece, para quem usa teclado ou leitor de tela não continuar em controles
+  // do player que já não funcionam.
+  useEffect(() => {
+    const alvo = botaoRef.current?.disabled ? caixaRef.current : botaoRef.current;
+    alvo?.focus();
+  }, [motivo]);
+
+  /** Tab circula entre os controles do aviso; Esc devolve o foco para fora. */
+  const aoTeclar = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onSair?.();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const caixa = caixaRef.current;
+      if (!caixa) return;
+      const focaveis = Array.from(
+        caixa.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"),
+      ).filter((el) => el.getAttribute("aria-hidden") !== "true");
+      if (focaveis.length === 0) return;
+      const primeiro = focaveis[0]!;
+      const ultimo = focaveis[focaveis.length - 1]!;
+      const ativo = document.activeElement as HTMLElement | null;
+      if (e.shiftKey && (ativo === primeiro || ativo === caixa)) {
+        e.preventDefault();
+        ultimo.focus();
+      } else if (!e.shiftKey && ativo === ultimo) {
+        e.preventDefault();
+        primeiro.focus();
+      }
+    },
+    [onSair],
+  );
+
+  const situacao = renovando
+    ? "Estamos pedindo um novo link seguro ao servidor e conferindo se a prática segue liberada."
+    : emEspera
+      ? `Aguarde ${segundos > 0 ? `${segundos} segundos` : "um instante"} antes de tentar de novo: o botão fica em espera para evitar pedidos repetidos ao servidor. Ele volta a funcionar sozinho.`
+      : `Ao acionar “${cfg.botao}”, pedimos um link seguro novo e verificamos a liberação. Se continuar bloqueada, o botão espera alguns segundos antes de permitir outra tentativa.`;
+
   return (
-    <div className={`mt-6 rounded-3xl border p-6 ${borda}`}>
+    <div
+      ref={caixaRef}
+      role="alertdialog"
+      aria-modal="false"
+      aria-labelledby={idTitulo}
+      aria-describedby={`${idTexto} ${idAjuda}`}
+      aria-busy={renovando}
+      tabIndex={-1}
+      onKeyDown={aoTeclar}
+      className={`mt-6 rounded-3xl border p-6 outline-none focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2 ${borda}`}
+    >
       <div className="flex items-start gap-3">
         {cfg.icone}
         <div className="flex-1">
-          <h2 className="text-lg text-floresta">{cfg.titulo}</h2>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{cfg.texto}</p>
+          <h2 id={idTitulo} className="text-lg text-floresta">
+            {cfg.titulo}
+          </h2>
+          <p id={idTexto} className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+            {cfg.texto}
+          </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Button
+              ref={botaoRef}
               onClick={onRenovar}
               disabled={renovando || emEspera}
-              className="rounded-full bg-floresta px-6 text-floresta-foreground hover:bg-floresta/90"
+              aria-describedby={idAjuda}
+              className="rounded-full bg-floresta px-6 text-floresta-foreground hover:bg-floresta/90 focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2"
             >
               {renovando ? "Renovando..." : cfg.botao}
             </Button>
@@ -111,25 +179,27 @@ export function AvisoMidiaBloqueada({
               <Link
                 to="/app/eixo/$eixoId"
                 params={{ eixoId }}
-                className="inline-flex items-center rounded-full border border-floresta/20 px-6 py-2 text-sm text-floresta hover:bg-floresta/5"
+                className="inline-flex items-center rounded-full border border-floresta/20 px-6 py-2 text-sm text-floresta hover:bg-floresta/5 focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2"
               >
                 Voltar à trilha
               </Link>
             )}
           </div>
 
-          <p className="mt-3 text-xs leading-relaxed text-muted-foreground" aria-live="polite">
-            {renovando
-              ? "Estamos pedindo um novo link seguro ao servidor e conferindo se a prática segue liberada."
-              : emEspera
-                ? `Aguarde ${segundos > 0 ? `${segundos}s` : "um instante"} antes de tentar de novo: o botão fica em espera para evitar pedidos repetidos ao servidor. Ele volta a funcionar sozinho.`
-                : "Ao tocar em “" +
-                  cfg.botao +
-                  "”, pedimos um link seguro novo e verificamos a liberação. Se continuar bloqueada, o botão espera alguns segundos antes de permitir outra tentativa."}
+          <p
+            id={idAjuda}
+            className="mt-3 text-xs leading-relaxed text-muted-foreground"
+            aria-live="polite"
+          >
+            {situacao}
           </p>
 
+          <p className="mt-2 text-xs text-muted-foreground/80">
+            Pressione Esc para voltar ao início da prática.
+          </p>
         </div>
       </div>
     </div>
   );
+
 }

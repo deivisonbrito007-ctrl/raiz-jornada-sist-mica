@@ -109,7 +109,6 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  window.localStorage.clear();
   play = vi.fn(function (this: HTMLMediaElement) {
     (this as any)._paused = false;
     fireEvent.play(this);
@@ -178,7 +177,7 @@ describe("botão Renovar acesso", () => {
     await user.click(screen.getByRole("button", { name: "Renovar acesso" }));
 
     // a renovação ignora o cache e chama o servidor com o id correto
-    await waitFor(() => expect(fetchConteudo.mock.calls.length).toBeGreaterThanOrEqual(1));
+    await waitFor(() => expect(fetchConteudo).toHaveBeenCalledTimes(1));
     expect(fetchConteudo).toHaveBeenCalledWith({ data: { conteudoId: "c-1" } });
     await waitFor(() => expect(audio()?.src).toBe("https://midia/nova.mp3"));
     expect(screen.queryByRole("heading", { name: /O link seguro expirou/ })).toBeNull();

@@ -118,7 +118,6 @@ async function esperarBloqueio(titulo: string) {
 describe("player — expiração da URL assinada", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.localStorage.clear();
     play = vi.fn(function (this: HTMLMediaElement) {
       (this as any)._paused = false;
       fireEvent.play(this);
@@ -158,43 +157,21 @@ describe("player — expiração da URL assinada", () => {
     expect(screen.getByText(/O link de reprodução desta mídia tem tempo de validade/)).toBeInTheDocument();
   });
 
-  it("guarda a conclusão no aparelho enquanto o acesso está expirado e reenvia ao renovar", async () => {
+  it("bloqueia novas tentativas de progresso enquanto o acesso está expirado", async () => {
     const user = userEvent.setup();
     fetchConteudo.mockResolvedValue(resposta("https://midia/uma.mp3", 60_000));
     renderPlayer();
     await esperarPlayer();
 
-    const el = audio();
-    el.currentTime = 25;
-    fireEvent.timeUpdate(el);
-    fireEvent.error(el);
+    fireEvent.error(audio());
     await esperarBloqueio("O link seguro expirou");
 
     await user.click(screen.getByRole("button", { name: "Marcar como concluída" }));
 
-    // nada vai ao backend com o acesso bloqueado: fica guardado no aparelho
     expect(salvarProgresso).not.toHaveBeenCalled();
-    expect(toastInfo).toHaveBeenCalledWith(
-      "Guardamos sua conclusão neste aparelho. Ela será enviada quando você renovar o acesso.",
-    );
-    expect(screen.getByTestId("aviso-progresso-pendente")).toBeInTheDocument();
+    expect(toastError).toHaveBeenCalledWith("Acesso à mídia expirado. Renove antes de concluir a prática.");
+    expect(screen.getByRole("button", { name: "Marcar como concluída" })).toBeInTheDocument();
     expect(play).not.toHaveBeenCalled();
-
-    // ao renovar, o progresso guardado é reenviado sozinho
-    fetchConteudo.mockResolvedValue(resposta("https://midia/nova.mp3", 60_000));
-    await user.click(screen.getByRole("button", { name: "Renovar acesso" }));
-
-    await waitFor(() =>
-      expect(salvarProgresso).toHaveBeenCalledWith({
-        data: { conteudoId: "c-1", status: "concluido" },
-      }),
-    );
-    await waitFor(() =>
-      expect(salvarPosicaoFn).toHaveBeenCalledWith({
-        data: { conteudoId: "c-1", posicaoSegundos: 25, tocando: false },
-      }),
-    );
-    await waitFor(() => expect(screen.queryByTestId("aviso-progresso-pendente")).toBeNull());
   });
 
   it("renova o acesso, volta o player pausado e retoma a posição salva", async () => {
@@ -214,7 +191,7 @@ describe("player — expiração da URL assinada", () => {
     await user.click(screen.getByRole("button", { name: "Renovar acesso" }));
 
     await waitFor(() => expect(screen.queryByRole("heading", { name: "O link seguro expirou" })).toBeNull());
-    expect(fetchConteudo.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(fetchConteudo).toHaveBeenCalledTimes(2);
     await waitFor(() => expect(audio()?.src).toBe("https://midia/nova.mp3"));
 
     fireEvent.loadedMetadata(audio());

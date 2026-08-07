@@ -19,7 +19,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bloqueada";
 import { StatusMidiaBadge } from "@/components/status-midia";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
-import { guardarPendente, reenviarPendente, temPendente } from "@/lib/progresso-pendente";
 
 
 export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")({
@@ -46,6 +45,8 @@ function Player() {
   useSincronizarLiberacoes(() => void revalidarLiberacao());
 
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
+  /** link de saída: recebe o foco quando a pessoa pressiona Esc no aviso */
+  const voltarRef = useRef<HTMLAnchorElement | null>(null);
   const posicaoRef = useRef(0);
   /** estava tocando no instante em que o link venceu? */
   const tocandoAntesRef = useRef(false);
@@ -108,57 +109,20 @@ function Player() {
     }
   }, [data?.posicaoSegundos]);
 
-  /** existe progresso guardado no aparelho esperando envio? */
-  const [temPendencia, setTemPendencia] = useState(false);
-
-  /**
-   * Grava no backend onde a pessoa parou (no máximo uma gravação a cada 5s).
-   * Com o acesso bloqueado, o backend recusaria o registro: guardamos no
-   * aparelho e reenviamos assim que o acesso for renovado.
-   */
+  /** Grava no backend onde a pessoa parou (no máximo uma gravação a cada 5s). */
   function guardarPosicao(agora = false) {
     const el = mediaRef.current;
-    if (!el) return;
+    if (!el || bloqueioRef.current) return;
     const pos = Math.floor(el.currentTime || posicaoRef.current || 0);
     posicaoRef.current = el.currentTime || posicaoRef.current;
-    if (bloqueioRef.current) {
-      guardarPendente({ conteudoId, posicaoSegundos: pos, tocando: false });
-      setTemPendencia(true);
-      return;
-    }
     if (!agora && Math.abs(pos - ultimaSalvaRef.current) < 5) return;
     ultimaSalvaRef.current = pos;
     void Promise.resolve(
       persistirPosicao({ data: { conteudoId, posicaoSegundos: pos, tocando: !el.paused } }),
     ).catch(() => {
-      // falhou: guarda no aparelho para reenviar depois
+      // falhou: libera a próxima tentativa em vez de perder a posição
       ultimaSalvaRef.current = -1;
-      guardarPendente({ conteudoId, posicaoSegundos: pos, tocando: !el.paused });
-      setTemPendencia(true);
     });
-  }
-
-  /** Reenvia o que ficou guardado no aparelho enquanto o acesso estava bloqueado. */
-  async function reenviarProgressoLocal() {
-    if (!temPendente(conteudoId)) {
-      setTemPendencia(false);
-      return;
-    }
-    const enviado = await reenviarPendente(conteudoId, {
-      salvarPosicao: (entrada) => persistirPosicao(entrada),
-      marcarProgresso: (entrada) => salvarProgresso(entrada),
-    });
-    if (!enviado) return;
-    setTemPendencia(false);
-    if (typeof enviado.posicaoSegundos === "number") {
-      posicaoRef.current = enviado.posicaoSegundos;
-      ultimaSalvaRef.current = Math.floor(enviado.posicaoSegundos);
-    }
-    if (enviado.status === "concluido") setConcluido(true);
-    queryClient.invalidateQueries({ queryKey: ["biblioteca"] });
-    queryClient.invalidateQueries({ queryKey: ["conteudo", conteudoId] });
-    queryClient.invalidateQueries({ queryKey: ["trilha"] });
-    toast.success("Seu progresso guardado no aparelho foi enviado.");
   }
 
   /** Terminou a prática: a próxima escuta começa do início. */
@@ -171,7 +135,6 @@ function Player() {
       ultimaSalvaRef.current = -1;
     });
   }
-
 
   // Fechar a aba, minimizar o app ou sair da tela também salva o ponto atual.
   useEffect(() => {
@@ -201,17 +164,8 @@ function Player() {
       el.pause();
     }
     setTocando(false);
-    bloqueioRef.current = "validade";
     setBloqueio("validade");
-    // o backend recusaria a gravação agora: fica guardado no aparelho
-    guardarPendente({
-      conteudoId,
-      posicaoSegundos: Math.floor(posicaoRef.current || 0),
-      tocando: false,
-    });
-    setTemPendencia(true);
   }
-
 
 
   /** Ao carregar a nova mídia, volta ao ponto salvo e retoma se estava tocando. */
@@ -245,14 +199,6 @@ function Player() {
       segurarNovaTentativa((data.esperarSegundos || 5) * 1000);
     }
   }, [data?.limitado, data?.esperarSegundos]);
-
-  // Ao abrir com o acesso válido, o que ficou guardado no aparelho é enviado.
-  useEffect(() => {
-    if (!data?.url) return;
-    if (!temPendente(conteudoId)) return;
-    setTemPendencia(true);
-    void reenviarProgressoLocal();
-  }, [data?.url, conteudoId]);
 
   // O link seguro da mídia tem validade limitada: ao chegar ao fim, o player para
   // sozinho e passa a exigir uma nova liberação em vez de tentar tocar um link morto.
@@ -290,7 +236,6 @@ function Player() {
       } else if (novo?.url) {
         // só volta a tocar sozinho se estava tocando quando o link venceu
         retomarAutoRef.current = tocandoAntesRef.current;
-        bloqueioRef.current = null;
         setBloqueio(null);
         setTocando(false);
         setTerminou(false);
@@ -299,8 +244,6 @@ function Player() {
             ? "Mídia liberada novamente. Voltando de onde você parou."
             : "Mídia liberada novamente. Você pode continuar de onde parou.",
         );
-        // acesso de volta: o que ficou guardado no aparelho vai para o backend
-        await reenviarProgressoLocal();
       } else {
         setBloqueio("revogado");
         segurarNovaTentativa();
@@ -355,7 +298,6 @@ function Player() {
         setBloqueio(null);
         toast.success("Esta prática foi liberada de novo pelo seu terapeuta.");
       }
-      await reenviarProgressoLocal();
     } catch {
       /* falha de rede: o estado atual é mantido e o botão de renovar segue disponível */
     }
@@ -404,20 +346,12 @@ function Player() {
   }
 
   async function concluir() {
-    if (bloqueio === "revogado") {
-      toast.error("Esta prática não está mais liberada. Fale com seu terapeuta se quiser continuar.");
-      return;
-    }
     if (bloqueio) {
-      // link vencido: guardamos a conclusão no aparelho e enviamos ao renovar
-      guardarPendente({
-        conteudoId,
-        status: "concluido",
-        posicaoSegundos: Math.floor(posicaoRef.current || 0),
-        tocando: false,
-      });
-      setTemPendencia(true);
-      toast.info("Guardamos sua conclusão neste aparelho. Ela será enviada quando você renovar o acesso.");
+      const texto =
+        bloqueio === "revogado"
+          ? "Esta prática não está mais liberada. Fale com seu terapeuta se quiser continuar."
+          : "Acesso à mídia expirado. Renove antes de concluir a prática.";
+      toast.error(texto);
       return;
     }
     await registrar("concluido");
@@ -427,14 +361,14 @@ function Player() {
 
 
 
-
   return (
     <div>
       {conteudo ? (
         <Link
+          ref={voltarRef}
           to="/app/eixo/$eixoId"
           params={{ eixoId: conteudo.eixo_id }}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-floresta"
+          className="inline-flex items-center gap-1.5 rounded-full text-sm text-muted-foreground hover:text-floresta focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2"
         >
           <ArrowLeft className="h-4 w-4" /> Voltar à trilha
         </Link>
@@ -474,16 +408,23 @@ function Player() {
             </div>
           )}
 
-          {temPendencia && (
-            <p
-              data-testid="aviso-progresso-pendente"
-              className="mt-3 rounded-2xl bg-pergaminho px-4 py-3 text-sm text-floresta"
-            >
-              Seu progresso está guardado neste aparelho e será enviado automaticamente quando você
-              renovar o acesso.
+          {(ehMidia || bloqueio === "revogado") && (
+            <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+              {bloqueio === "revogado"
+                ? "Player indisponível: esta prática não está mais liberada."
+                : bloqueio === "limite"
+                  ? "Player pausado: muitos pedidos de link em pouco tempo. Aguarde para renovar o acesso."
+                  : bloqueio
+                    ? `Player pausado: o link seguro expirou em ${formatarDuracao(Math.floor(tempo))}. Renove o acesso para continuar.`
+                    : renovando
+                      ? "Renovando o acesso à mídia."
+                      : terminou
+                        ? "Prática concluída até o fim."
+                        : tocando
+                          ? `Reproduzindo, ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`
+                          : `Pausado em ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`}
             </p>
           )}
-
 
           {ehMidia && data?.url && !bloqueio && (
 
@@ -541,7 +482,15 @@ function Player() {
               )}
 
               <div className="mt-4 px-1">
-                <div className="h-1.5 overflow-hidden rounded-full bg-floresta-foreground/20">
+                <div
+                  className="h-1.5 overflow-hidden rounded-full bg-floresta-foreground/20"
+                  role="progressbar"
+                  aria-label="Progresso da reprodução"
+                  aria-valuemin={0}
+                  aria-valuemax={Math.floor(total) || 0}
+                  aria-valuenow={Math.floor(tempo)}
+                  aria-valuetext={`${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}`}
+                >
                   <div
                     className="h-full rounded-full bg-ocre transition-all"
                     style={{ width: `${total ? (tempo / total) * 100 : 0}%` }}
@@ -553,24 +502,29 @@ function Player() {
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-center gap-6">
+              <div
+                className="mt-4 flex items-center justify-center gap-6"
+                role="group"
+                aria-label="Controles de reprodução"
+              >
                 <button
                   onClick={() => pular(-15)}
-                  className="text-floresta-foreground/80 hover:text-ocre"
+                  className="rounded-full text-floresta-foreground/80 hover:text-ocre focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label="Voltar 15 segundos"
                 >
                   <RotateCcw className="h-6 w-6" />
                 </button>
                 <button
                   onClick={alternar}
-                  className="rounded-full bg-terracota p-4 text-terracota-foreground"
+                  className="rounded-full bg-terracota p-4 text-terracota-foreground focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label={tocando ? "Pausar" : "Reproduzir"}
+                  aria-pressed={tocando}
                 >
                   {tocando ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7" />}
                 </button>
                 <button
                   onClick={() => pular(15)}
-                  className="text-floresta-foreground/80 hover:text-ocre"
+                  className="rounded-full text-floresta-foreground/80 hover:text-ocre focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label="Avançar 15 segundos"
                 >
                   <RotateCw className="h-6 w-6" />
@@ -587,6 +541,7 @@ function Player() {
               esperaAte={esperaAte}
               eixoId={conteudo.eixo_id}
               onRenovar={renovarMidia}
+              onSair={() => voltarRef.current?.focus()}
             />
           )}
 
