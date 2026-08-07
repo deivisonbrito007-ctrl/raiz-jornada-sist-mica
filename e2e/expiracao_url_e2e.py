@@ -34,7 +34,7 @@ SCREENSHOTS = Path(__file__).parent / "screenshots"
 SCREENSHOTS.mkdir(parents=True, exist_ok=True)
 
 # validade forçada do primeiro link: tempo suficiente para dar play e ver a UI
-VALIDADE_CURTA_S = 6
+VALIDADE_CURTA_S = 30
 
 
 def env_from_dotenv(name: str) -> str:
@@ -241,7 +241,14 @@ async def main() -> None:
         )
 
         # dá play e deixa avançar um pouco antes do link vencer
-        await page.get_by_role("button", name="Reproduzir").click()
+        play = page.get_by_role("button", name="Reproduzir")
+        try:
+            await play.wait_for(timeout=20000)
+        except Exception:
+            corpo = " ".join((await page.locator("body").inner_text()).split())
+            falhas.append(f"player não apareceu para dar play; tela: {corpo[:300]}")
+            raise SystemExit("\n".join(falhas))
+        await play.click()
         await page.wait_for_timeout(1500)
         tocou = await page.evaluate(
             "!!document.querySelector('audio,video') && !document.querySelector('audio,video').paused"
