@@ -151,7 +151,13 @@ function Player() {
         queryFn: () => fetchConteudo({ data: { conteudoId } }),
         staleTime: 0,
       });
-      if (novo?.url) {
+      if (novo?.limitado) {
+        setBloqueio("limite");
+        segurarNovaTentativa((novo.esperarSegundos || 5) * 1000);
+        toast.error(
+          `Muitos pedidos de link em pouco tempo. Aguarde ${novo.esperarSegundos || 5}s e tente de novo.`,
+        );
+      } else if (novo?.url) {
         // só volta a tocar sozinho se estava tocando quando o link venceu
         retomarAutoRef.current = tocandoAntesRef.current;
         setBloqueio(null);
@@ -167,6 +173,7 @@ function Player() {
         segurarNovaTentativa();
         toast.error("Esta prática não está mais liberada para você.");
       }
+
     } catch {
       setBloqueio("falha");
       segurarNovaTentativa();
