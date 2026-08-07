@@ -11,12 +11,13 @@ import {
   RotateCcw,
   RotateCw,
   NotebookPen,
-  TimerOff,
 } from "lucide-react";
 import { getConteudo, marcarProgresso } from "@/lib/raiz.functions";
 import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bloqueada";
+
 
 export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")({
   component: Player,
@@ -41,10 +42,10 @@ function Player() {
   const [total, setTotal] = useState(0);
   const [terminou, setTerminou] = useState(false);
   const [concluido, setConcluido] = useState(false);
-  const [midiaExpirada, setMidiaExpirada] = useState(false);
-  const [semLiberacao, setSemLiberacao] = useState(false);
+  const [bloqueio, setBloqueio] = useState<MotivoBloqueio | null>(null);
   const [renovando, setRenovando] = useState(false);
   const [emEspera, setEmEspera] = useState(false);
+
 
   useEffect(() => {
     setConcluido(data?.status === "concluido");
@@ -61,8 +62,9 @@ function Player() {
       el.pause();
     }
     setTocando(false);
-    setMidiaExpirada(true);
+    setBloqueio("validade");
   }
+
 
   /** Ao carregar a nova mídia, volta ao ponto salvo e fica pausado. */
   function retomarPosicao(el: HTMLVideoElement | HTMLAudioElement) {
@@ -79,8 +81,7 @@ function Player() {
   // sozinho e passa a exigir uma nova liberação em vez de tentar tocar um link morto.
   useEffect(() => {
     if (!data?.url || !data?.urlExpiraEm) return;
-    setMidiaExpirada(false);
-    setSemLiberacao(false);
+    setBloqueio(null);
     const restante = new Date(data.urlExpiraEm).getTime() - Date.now();
     if (restante <= 0) {
       expirarMidia();
@@ -89,6 +90,7 @@ function Player() {
     const timer = setTimeout(expirarMidia, restante);
     return () => clearTimeout(timer);
   }, [data?.url, data?.urlExpiraEm]);
+
 
   /** Pede uma URL assinada nova ao backend e reinicia o player se estiver liberado. */
   async function renovarMidia() {
@@ -102,18 +104,17 @@ function Player() {
         staleTime: 0,
       });
       if (novo?.url) {
-        setSemLiberacao(false);
-        setMidiaExpirada(false);
+        setBloqueio(null);
         setTocando(false);
         setTerminou(false);
         toast.success("Mídia liberada novamente. Você pode continuar de onde parou.");
       } else {
-        setSemLiberacao(true);
+        setBloqueio("revogado");
         segurarNovaTentativa();
         toast.error("Esta prática não está mais liberada para você.");
       }
     } catch {
-      setSemLiberacao(true);
+      setBloqueio("falha");
       segurarNovaTentativa();
       toast.error("Não foi possível renovar o acesso à mídia.");
     } finally {
@@ -123,6 +124,7 @@ function Player() {
     }
   }
 
+
   /** Pequena espera entre tentativas — o botão nunca fica travado para sempre. */
   function segurarNovaTentativa() {
     setEmEspera(true);
@@ -131,7 +133,7 @@ function Player() {
 
 
   async function registrar(status: "em_andamento" | "concluido") {
-    if (midiaExpirada || semLiberacao) return;
+    if (bloqueio) return;
     await salvarProgresso({ data: { conteudoId, status } });
     queryClient.invalidateQueries({ queryKey: ["biblioteca"] });
     queryClient.invalidateQueries({ queryKey: ["conteudo", conteudoId] });
@@ -140,7 +142,7 @@ function Player() {
 
   function alternar() {
     const el = mediaRef.current;
-    if (!el || midiaExpirada || semLiberacao) return;
+    if (!el || bloqueio) return;
     if (el.paused) {
       void el.play();
       if (data?.status === "nao_iniciado") void registrar("em_andamento");
@@ -149,20 +151,26 @@ function Player() {
     }
   }
 
+
   function pular(segundos: number) {
     const el = mediaRef.current;
     if (el) el.currentTime = Math.max(0, Math.min(el.duration || 0, el.currentTime + segundos));
   }
 
   async function concluir() {
-    if (midiaExpirada || semLiberacao) {
-      toast.error("Acesso à mídia expirado. Renove antes de concluir a prática.");
+    if (bloqueio) {
+      const texto =
+        bloqueio === "revogado"
+          ? "Esta prática não está mais liberada. Fale com seu terapeuta se quiser continuar."
+          : "Acesso à mídia expirado. Renove antes de concluir a prática.";
+      toast.error(texto);
       return;
     }
     await registrar("concluido");
     setConcluido(true);
     toast.success("Prática concluída. Que tal registrar no diário?");
   }
+
 
 
   return (
@@ -194,7 +202,8 @@ function Player() {
           <h1 className="mt-1 text-3xl text-floresta">{conteudo.titulo}</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{conteudo.descricao}</p>
 
-          {ehMidia && data?.url && !midiaExpirada && (
+          {ehMidia && data?.url && !bloqueio && (
+
             <div className="mt-6 overflow-hidden rounded-3xl bg-floresta p-4">
               {conteudo.tipo === "video" ? (
                 <video
@@ -272,38 +281,22 @@ function Player() {
             </div>
           )}
 
-          {ehMidia && midiaExpirada && (
-            <div className="mt-6 rounded-3xl border border-terracota/30 bg-terracota/10 p-6">
-              <div className="flex items-start gap-3">
-                <TimerOff className="mt-0.5 h-5 w-5 shrink-0 text-terracota" />
-                <div>
-                  <h2 className="text-lg text-floresta">Acesso à mídia expirou</h2>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                    {semLiberacao
-                      ? "Esta prática não está mais liberada para você. Fale com seu terapeuta para liberar novamente — até então, a reprodução fica indisponível e nada é registrado."
-                      : "O link seguro desta mídia tem tempo de validade e acabou de encerrar. Renove o acesso para continuar de onde parou."}
-                  </p>
-                  <Button
-                    onClick={renovarMidia}
-                    disabled={renovando || emEspera}
-                    className="mt-4 rounded-full bg-floresta px-6 text-floresta-foreground hover:bg-floresta/90"
-                  >
-                    {renovando
-                      ? "Renovando..."
-                      : semLiberacao
-                        ? "Tentar novamente"
-                        : "Renovar acesso"}
-                  </Button>
-                </div>
-              </div>
-            </div>
+          {ehMidia && bloqueio && (
+            <AvisoMidiaBloqueada
+              motivo={bloqueio}
+              renovando={renovando}
+              emEspera={emEspera}
+              eixoId={conteudo.eixo_id}
+              onRenovar={renovarMidia}
+            />
           )}
 
-          {ehMidia && !data?.url && !midiaExpirada && (
+          {ehMidia && !data?.url && !bloqueio && (
             <p className="mt-6 rounded-3xl border border-dashed border-border p-6 text-sm text-muted-foreground">
               A mídia desta prática ainda não foi enviada.
             </p>
           )}
+
 
           {!ehMidia && (
             <div className="mt-6 whitespace-pre-line rounded-3xl bg-card p-6 text-[15px] leading-relaxed text-foreground shadow-[var(--shadow-organico)]">
