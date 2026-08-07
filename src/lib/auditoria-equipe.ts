@@ -3,6 +3,7 @@
 export const ACOES_AUDITORIA = [
   "convite_criado",
   "convite_cancelado",
+  "convite_permissoes_atualizadas",
   "permissoes_definidas",
   "permissoes_revogadas",
   "admin_removido",
@@ -16,6 +17,7 @@ export type AcaoAuditoria = (typeof ACOES_AUDITORIA)[number];
 export const ACAO_LABEL: Record<AcaoAuditoria, string> = {
   convite_criado: "Convite enviado",
   convite_cancelado: "Convite cancelado",
+  convite_permissoes_atualizadas: "Permissões do convite atualizadas",
   permissoes_definidas: "Permissões definidas",
   permissoes_revogadas: "Permissões revogadas",
   admin_removido: "Acesso de admin removido",

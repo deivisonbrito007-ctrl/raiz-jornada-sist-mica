@@ -30,3 +30,23 @@ export const PERMISSAO_DESCRICAO: Record<Permissao, string> = {
 export function ehPermissao(valor: string): valor is Permissao {
   return (PERMISSOES as readonly string[]).includes(valor);
 }
+
+/** Perfis prontos para acelerar a escolha de permissões no convite. */
+export const PERFIS_PERMISSAO: { id: string; nome: string; permissoes: Permissao[] }[] = [
+  { id: "acompanhamento", nome: "Acompanhamento", permissoes: ["ver_clientes"] },
+  {
+    id: "curadoria",
+    nome: "Curadoria de conteúdo",
+    permissoes: ["ver_clientes", "gerenciar_conteudos", "gerenciar_liberacoes"],
+  },
+  {
+    id: "clinico",
+    nome: "Apoio clínico",
+    permissoes: ["ver_clientes", "ver_diario", "gerenciar_liberacoes"],
+  },
+  {
+    id: "completo",
+    nome: "Coadministração total",
+    permissoes: [...PERMISSOES],
+  },
+];
