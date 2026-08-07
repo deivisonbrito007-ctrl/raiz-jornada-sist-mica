@@ -109,6 +109,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.localStorage.clear();
   play = vi.fn(function (this: HTMLMediaElement) {
     (this as any)._paused = false;
     fireEvent.play(this);
