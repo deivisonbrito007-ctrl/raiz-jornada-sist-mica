@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { mensagemPainel } from "@/lib/erro-permissao";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -103,7 +104,7 @@ function AdminConteudos() {
       setForm({ ...form, storagePath: caminho });
       toast.success("Mídia enviada");
     } catch (erro) {
-      toast.error(erro instanceof Error ? erro.message : "Falha no envio");
+      toast.error(mensagemPainel(erro));
     } finally {
       setSubindo(false);
     }
@@ -130,7 +131,7 @@ function AdminConteudos() {
       recarregar();
       toast.success("Conteúdo salvo");
     } catch (erro) {
-      toast.error(erro instanceof Error ? erro.message : "Não foi possível salvar");
+      toast.error(mensagemPainel(erro));
     } finally {
       setEnviando(false);
     }
