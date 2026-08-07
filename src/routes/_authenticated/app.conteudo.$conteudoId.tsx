@@ -328,7 +328,14 @@ function Player() {
             <div>
               <StatusMidiaBadge
                 status={
-                  bloqueio === "revogado" ? "revogada" : bloqueio ? "expirada" : "liberada"
+                  bloqueio === "revogado"
+                    ? "revogada"
+                    : bloqueio === "limite"
+                      ? "limitada"
+                      : bloqueio
+                        ? "expirada"
+                        : "liberada"
+
                 }
               />
             </div>
