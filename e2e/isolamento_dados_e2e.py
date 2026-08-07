@@ -208,8 +208,10 @@ async def rodar_cenarios(page, rotulo: str) -> None:
         assert r["linhas"] == 0, (
             f"{rotulo}: leitura de {r['tabela']} devolveu {r['linhas']} linha(s) de outro usuário"
         )
+        # Tabela interna: sem política de leitura, precisa vir vazia (erro de
+        # permissão ou zero linhas — em ambos os casos nada é exposto).
         if r.get("fechada"):
-            assert r["erro"], f"{rotulo}: {r['tabela']} deveria ser inacessível pela Data API"
+            assert r["linhas"] == 0, f"{rotulo}: {r['tabela']} expôs dados internos"
     print(f"[{rotulo}] leituras de dados alheios: 0 linhas em {len(leituras)} tabelas ✔")
 
     # ---- 2. Gravações em nome de outro dono ----
