@@ -77,6 +77,13 @@ function AdminClientes() {
 
       {isLoading && <Skeleton className="mt-6 h-48 rounded-3xl" />}
 
+      {error ? (
+        <div className="mt-6">
+          <AvisoPermissao erro={error} onTentarNovamente={() => refetch()} />
+        </div>
+      ) : null}
+
+
       <div className="mt-6 space-y-3">
         {clientes.map((cliente) => {
           const datas = cliente.datasConclusao ?? [];
