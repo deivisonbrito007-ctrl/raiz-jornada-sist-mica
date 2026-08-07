@@ -128,6 +128,17 @@ function AdminEquipe() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const mRevogar = useMutation({
+    mutationFn: (alvoId: string) => definir({ data: { alvoId, permissoes: [] } }),
+    onSuccess: () => {
+      toast.success("Permissões revogadas. O painel dessa pessoa é bloqueado na hora.");
+      setEditando(null);
+      recarregar();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   const mRemover = useMutation({
     mutationFn: (alvoId: string) => remover({ data: { alvoId } }),
     onSuccess: () => {
