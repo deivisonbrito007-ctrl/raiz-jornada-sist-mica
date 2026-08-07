@@ -42,10 +42,10 @@ function Player() {
   const [total, setTotal] = useState(0);
   const [terminou, setTerminou] = useState(false);
   const [concluido, setConcluido] = useState(false);
-  const [midiaExpirada, setMidiaExpirada] = useState(false);
-  const [semLiberacao, setSemLiberacao] = useState(false);
+  const [bloqueio, setBloqueio] = useState<MotivoBloqueio | null>(null);
   const [renovando, setRenovando] = useState(false);
   const [emEspera, setEmEspera] = useState(false);
+
 
   useEffect(() => {
     setConcluido(data?.status === "concluido");
