@@ -408,6 +408,24 @@ function Player() {
             </div>
           )}
 
+          {(ehMidia || bloqueio === "revogado") && (
+            <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+              {bloqueio === "revogado"
+                ? "Player indisponível: esta prática não está mais liberada."
+                : bloqueio === "limite"
+                  ? "Player pausado: muitos pedidos de link em pouco tempo. Aguarde para renovar o acesso."
+                  : bloqueio
+                    ? `Player pausado: o link seguro expirou em ${formatarDuracao(Math.floor(tempo))}. Renove o acesso para continuar.`
+                    : renovando
+                      ? "Renovando o acesso à mídia."
+                      : terminou
+                        ? "Prática concluída até o fim."
+                        : tocando
+                          ? `Reproduzindo, ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`
+                          : `Pausado em ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`}
+            </p>
+          )}
+
           {ehMidia && data?.url && !bloqueio && (
 
             <div className="mt-6 overflow-hidden rounded-3xl bg-floresta p-4">
