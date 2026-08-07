@@ -350,6 +350,27 @@ export type Database = {
           },
         ]
       }
+      limites_uso: {
+        Row: {
+          acao: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notificacoes: {
         Row: {
           cliente_id: string
@@ -490,6 +511,15 @@ export type Database = {
     }
     Functions: {
       aceitar_convite_equipe: { Args: { _token: string }; Returns: string }
+      consumir_limite: {
+        Args: {
+          _acao: string
+          _janela_segundos: number
+          _limite: number
+          _user_id: string
+        }
+        Returns: Json
+      }
       conteudo_liberado: {
         Args: { _cliente_id: string; _conteudo_id: string; _eixo_id: string }
         Returns: boolean
