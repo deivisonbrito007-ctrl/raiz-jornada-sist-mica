@@ -28,7 +28,7 @@ export const equipeListar = createServerFn({ method: "GET" })
       supabase
         .from("convites_equipe")
         .select("id, email, permissoes, status, created_at, token, expira_em")
-        .in_("status", ["pendente"])
+        .eq("status", "pendente")
         .order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("profiles").select("id, nome, email").order("nome"),
