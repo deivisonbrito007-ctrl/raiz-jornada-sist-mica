@@ -35,7 +35,8 @@ function ehMidiaTipo(tipo?: string) {
 
 function Player() {
   const { conteudoId } = Route.useParams();
-  const { retomar: retomarAoAbrir } = Route.useSearch();
+  // Route.useSearch pode não existir em ambientes de teste com router simulado
+  const { retomar: retomarAoAbrir } = (Route.useSearch?.() ?? {}) as { retomar?: boolean };
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fetchConteudo = useServerFn(getConteudo);
