@@ -40,8 +40,20 @@ function AdminClientes() {
     { label: "Conclusão média", valor: `${data?.metricas.conclusaoMedia ?? 0}%` },
   ];
 
+  if (perms.bloqueado("ver_clientes")) {
+    return (
+      <div>
+        <h1 className="text-3xl text-floresta">Clientes</h1>
+        <div className="mt-6">
+          <AvisoPermissao permissao="ver_clientes" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
+
       <h1 className="text-3xl text-floresta">Clientes</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Acompanhe o processo de cada pessoa e libere o próximo passo no tempo dela.
