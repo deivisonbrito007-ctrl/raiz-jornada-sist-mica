@@ -151,10 +151,12 @@ export const equipeRemover = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await garantirGerenciarEquipe(supabase, userId, "equipeRemover");
 
-    const { data: ehTerapeuta } = await supabase.rpc("has_role", {
-      _user_id: data.alvoId,
-      _role: "terapeuta",
-    });
+    const { data: ehTerapeuta } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("user_id", data.alvoId)
+      .eq("role", "terapeuta")
+      .maybeSingle();
     if (ehTerapeuta) throw new Error("A terapeuta responsável não pode ser removida.");
     if (data.alvoId === userId) throw new Error("Você não pode remover o seu próprio acesso.");
 
