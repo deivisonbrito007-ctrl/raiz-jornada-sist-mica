@@ -26,6 +26,7 @@ import {
 import { PERMISSAO_DESCRICAO, PERMISSAO_LABEL, PERMISSOES, type Permissao } from "@/lib/permissoes";
 import { formatarData } from "@/lib/raiz-format";
 import { avisarMudancaPermissoes } from "@/hooks/use-vigia-permissoes";
+import { MatrizPermissoes, type LinhaMatriz } from "@/components/matriz-permissoes";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -162,6 +163,31 @@ function AdminEquipe() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const linhasMatriz: LinhaMatriz[] = [
+    ...(data?.terapeutas ?? []).map((t) => ({
+      id: t.userId,
+      nome: t.nome,
+      email: t.email,
+      papel: "terapeuta" as const,
+      permissoes: [],
+      total: true,
+    })),
+    ...(data?.membros ?? []).map((m) => ({
+      id: m.userId,
+      nome: m.nome,
+      email: m.email,
+      papel: "admin" as const,
+      permissoes: m.permissoes,
+    })),
+    ...(data?.convites ?? []).map((c) => ({
+      id: c.id,
+      nome: "",
+      email: c.email,
+      papel: "convite" as const,
+      permissoes: c.permissoes,
+    })),
+  ];
+
   const candidato = (data?.candidatos ?? []).find(
     (c) => c.email.toLowerCase() === emailPromover.trim().toLowerCase(),
   );
@@ -177,6 +203,8 @@ function AdminEquipe() {
       </div>
 
       {isLoading && <Skeleton className="h-40 rounded-3xl" />}
+
+      {!isLoading && <MatrizPermissoes linhas={linhasMatriz} />}
 
       <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
         <h2 className="flex items-center gap-2 text-xl text-floresta">
