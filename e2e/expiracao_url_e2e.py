@@ -68,8 +68,8 @@ class Api:
         return r.json()
 
 
-# WAV de 30s em silêncio, usado só quando o acervo ainda não tem mídia enviada
-def wav_de_silencio(segundos: int = 30, taxa: int = 8000) -> str:
+# WAV longo em silêncio, usado só quando o acervo ainda não tem mídia enviada
+def wav_de_silencio(segundos: int = 300, taxa: int = 4000) -> str:
     import base64
     import struct
 
@@ -330,7 +330,8 @@ async def main() -> None:
                 "document.querySelector('audio,video')?.currentTime || 0"
             )
             print("posição após renovar:", retomou)
-            if posicao_guardada > 2 and retomou < posicao_guardada - 3:
+            terminou = await page.evaluate("document.querySelector('audio,video')?.ended || false")
+            if posicao_guardada > 2 and not terminou and retomou < posicao_guardada - 3:
                 falhas.append(
                     f"não retomou do ponto salvo ({retomou:.1f}s vs {posicao_guardada:.1f}s)"
                 )
