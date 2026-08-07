@@ -341,11 +341,8 @@ export const adminResumo = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { data: ehTerapeuta } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "terapeuta",
-    });
-    if (!ehTerapeuta) negarAcesso({ acao: "adminResumo", userId, tabela: "user_roles" });
+    const { data: podeVer } = await supabase.rpc("pode", { _permissao: "ver_clientes" });
+    if (podeVer !== true) negarAcesso({ acao: "adminResumo", userId, tabela: "user_roles" });
 
     const [papeis, perfis, conteudos, liberacoes, progresso, pacotes, vinculos, eixos] =
       await Promise.all([
@@ -446,11 +443,9 @@ export const adminGetCliente = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ clienteId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: ehTerapeuta } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "terapeuta",
-    });
-    if (!ehTerapeuta) {
+    const { data: podeVer } = await supabase.rpc("pode", { _permissao: "ver_clientes" });
+    const { data: podeVerDiario } = await supabase.rpc("pode", { _permissao: "ver_diario" });
+    if (podeVer !== true) {
       negarAcesso({
         acao: "adminGetCliente",
         userId,
@@ -494,7 +489,8 @@ export const adminGetCliente = createServerFn({ method: "GET" })
       conteudos: conteudos.data ?? [],
       liberacoes: liberacoes.data ?? [],
       progresso: progresso.data ?? [],
-      diario: diario.data ?? [],
+      diario: podeVerDiario === true ? (diario.data ?? []) : [],
+      podeVerDiario: podeVerDiario === true,
       vinculos: vinculos.data ?? [],
       pacotes: pacotes.data ?? [],
     };
@@ -516,11 +512,10 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: ehTerapeuta } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "terapeuta",
+    const { data: podeLiberar } = await supabase.rpc("pode", {
+      _permissao: "gerenciar_liberacoes",
     });
-    if (!ehTerapeuta) {
+    if (podeLiberar !== true) {
       negarAcesso({
         acao: "adminDefinirLiberacao",
         userId,
