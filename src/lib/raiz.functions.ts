@@ -191,13 +191,23 @@ export const getConteudo = createServerFn({ method: "GET" })
       );
       throw new Error(error.message);
     }
-    if (!conteudo) return { conteudo: null, url: null, status: "nao_iniciado" as const };
+    if (!conteudo)
+      return {
+        conteudo: null,
+        url: null,
+        urlExpiraEm: null,
+        status: "nao_iniciado" as const,
+      };
 
     let url: string | null = null;
+    let urlExpiraEm: string | null = null;
+    const VALIDADE_SEGUNDOS = 60 * 60;
     if (conteudo.storage_path) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const signed = auditarResultado(
-        await supabaseAdmin.storage.from("midias").createSignedUrl(conteudo.storage_path, 60 * 60),
+        await supabaseAdmin.storage
+          .from("midias")
+          .createSignedUrl(conteudo.storage_path, VALIDADE_SEGUNDOS),
         {
           acao: "getConteudo:signedUrl",
           userId,
@@ -206,6 +216,7 @@ export const getConteudo = createServerFn({ method: "GET" })
         },
       );
       url = signed.data?.signedUrl ?? null;
+      if (url) urlExpiraEm = new Date(Date.now() + VALIDADE_SEGUNDOS * 1000).toISOString();
     }
 
     const { data: prog } = await supabase
@@ -215,7 +226,8 @@ export const getConteudo = createServerFn({ method: "GET" })
       .eq("conteudo_id", data.conteudoId)
       .maybeSingle();
 
-    return { conteudo, url, status: prog?.status ?? ("nao_iniciado" as const) };
+    return { conteudo, url, urlExpiraEm, status: prog?.status ?? ("nao_iniciado" as const) };
+
   });
 
 export const marcarProgresso = createServerFn({ method: "POST" })
