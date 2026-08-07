@@ -45,6 +45,8 @@ function Player() {
   useSincronizarLiberacoes(() => void revalidarLiberacao());
 
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
+  /** link de saída: recebe o foco quando a pessoa pressiona Esc no aviso */
+  const voltarRef = useRef<HTMLAnchorElement | null>(null);
   const posicaoRef = useRef(0);
   /** estava tocando no instante em que o link venceu? */
   const tocandoAntesRef = useRef(false);
@@ -363,9 +365,10 @@ function Player() {
     <div>
       {conteudo ? (
         <Link
+          ref={voltarRef}
           to="/app/eixo/$eixoId"
           params={{ eixoId: conteudo.eixo_id }}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-floresta"
+          className="inline-flex items-center gap-1.5 rounded-full text-sm text-muted-foreground hover:text-floresta focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2"
         >
           <ArrowLeft className="h-4 w-4" /> Voltar à trilha
         </Link>
@@ -461,7 +464,15 @@ function Player() {
               )}
 
               <div className="mt-4 px-1">
-                <div className="h-1.5 overflow-hidden rounded-full bg-floresta-foreground/20">
+                <div
+                  className="h-1.5 overflow-hidden rounded-full bg-floresta-foreground/20"
+                  role="progressbar"
+                  aria-label="Progresso da reprodução"
+                  aria-valuemin={0}
+                  aria-valuemax={Math.floor(total) || 0}
+                  aria-valuenow={Math.floor(tempo)}
+                  aria-valuetext={`${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}`}
+                >
                   <div
                     className="h-full rounded-full bg-ocre transition-all"
                     style={{ width: `${total ? (tempo / total) * 100 : 0}%` }}
@@ -473,24 +484,29 @@ function Player() {
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-center gap-6">
+              <div
+                className="mt-4 flex items-center justify-center gap-6"
+                role="group"
+                aria-label="Controles de reprodução"
+              >
                 <button
                   onClick={() => pular(-15)}
-                  className="text-floresta-foreground/80 hover:text-ocre"
+                  className="rounded-full text-floresta-foreground/80 hover:text-ocre focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label="Voltar 15 segundos"
                 >
                   <RotateCcw className="h-6 w-6" />
                 </button>
                 <button
                   onClick={alternar}
-                  className="rounded-full bg-terracota p-4 text-terracota-foreground"
+                  className="rounded-full bg-terracota p-4 text-terracota-foreground focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label={tocando ? "Pausar" : "Reproduzir"}
+                  aria-pressed={tocando}
                 >
                   {tocando ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7" />}
                 </button>
                 <button
                   onClick={() => pular(15)}
-                  className="text-floresta-foreground/80 hover:text-ocre"
+                  className="rounded-full text-floresta-foreground/80 hover:text-ocre focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label="Avançar 15 segundos"
                 >
                   <RotateCw className="h-6 w-6" />
@@ -507,6 +523,7 @@ function Player() {
               esperaAte={esperaAte}
               eixoId={conteudo.eixo_id}
               onRenovar={renovarMidia}
+              onSair={() => voltarRef.current?.focus()}
             />
           )}
 
