@@ -122,8 +122,8 @@ export function AvisoMidiaBloqueada({
         caixa.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"),
       ).filter((el) => el.getAttribute("aria-hidden") !== "true");
       if (focaveis.length === 0) return;
-      const primeiro = focaveis[0];
-      const ultimo = focaveis[focaveis.length - 1];
+      const primeiro = focaveis[0]!;
+      const ultimo = focaveis[focaveis.length - 1]!;
       const ativo = document.activeElement as HTMLElement | null;
       if (e.shiftKey && (ativo === primeiro || ativo === caixa)) {
         e.preventDefault();
