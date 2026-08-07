@@ -154,9 +154,15 @@ async def navegacao_bloqueada(session_json: str | None, storage_key: str | None,
                 if pode_administrar:
                     assert "/auth" not in page.url, f"admin legítimo expulso de {rota}"
                 else:
+                    # o guard é client-side: aguarda a saída da rota protegida
+                    for _ in range(20):
+                        if rota not in page.url:
+                            break
+                        await page.wait_for_timeout(500)
                     assert rota not in page.url, (
-                        f"sessão sem acesso administrativo permaneceu em {rota}"
+                        f"sessão sem acesso administrativo permaneceu em {rota} (url={page.url})"
                     )
+
             estado = "com acesso" if pode_administrar else "sem acesso"
             print(f"sessão {estado}: navegação coerente em /admin/* ✔")
             await page.screenshot(path=str(SCREENSHOTS / "painel_permissoes.png"))
