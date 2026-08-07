@@ -90,14 +90,16 @@ GRANT EXECUTE ON FUNCTION public.minha_funcao(uuid) TO service_role;
 - [ ] Nenhum `GRANT EXECUTE` de função interna para `anon`/`authenticated`.
 - [ ] Função `SECURITY DEFINER` com `SET search_path`.
 - [ ] Tabelas de equipe mantêm as três invariantes da seção 2.
-- [ ] `bun run security:scan` sem novos findings e `bunx vitest run` verde
-      (`src/lib/funcoes-seguranca-rls.test.ts` cobre estes contratos).
+- [ ] `bunx vitest run src/lib/politicas-rls-contrato.test.ts` verde (o teste lê
+      as migrations e reprova violações do contrato).
 
 ## 5. Onde isso é verificado automaticamente
 
-- `scripts/security-scan.mjs` — roda no job `security` do CI e bloqueia o merge
-  quando surge um finding novo (RLS/GRANT/policy ausente, `SECURITY DEFINER` sem
-  `search_path`, exposição de função interna, segredo embutido).
-- `src/lib/funcoes-seguranca-rls.test.ts` — contratos de execução das funções e
-  isolamento entre clientes.
-- `src/lib/admin-permissoes-servidor.test.ts` — guards de permissão no servidor.
+- `src/lib/politicas-rls-contrato.ts` — codifica as regras deste documento
+  (funções internas, policies abertas, tabelas de equipe, auditoria append-only,
+  `user_roles` sem escrita).
+- `src/lib/politicas-rls-contrato.test.ts` — lê todas as migrations e falha se
+  alguma alteração violar o contrato. Roda no CI junto do restante da suíte.
+- `src/lib/permissao-guard.test.ts` e `src/lib/admin-permissoes-servidor.test.ts`
+  — guards de permissão no servidor antes de devolver dado sensível.
+- `src/lib/auditoria-acesso.test.ts` — registro de acessos negados.
