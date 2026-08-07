@@ -71,10 +71,12 @@ export function guardarPendente(
   const anterior = dados[entrada.conteudoId];
   const status =
     anterior?.status === "concluido" ? "concluido" : (entrada.status ?? anterior?.status);
+  const posicao = entrada.posicaoSegundos ?? anterior?.posicaoSegundos;
+  const tocando = entrada.tocando ?? anterior?.tocando;
   const item: ProgressoPendente = {
     conteudoId: entrada.conteudoId,
-    posicaoSegundos: entrada.posicaoSegundos ?? anterior?.posicaoSegundos,
-    tocando: entrada.tocando ?? anterior?.tocando,
+    ...(typeof posicao === "number" ? { posicaoSegundos: posicao } : {}),
+    ...(typeof tocando === "boolean" ? { tocando } : {}),
     ...(status ? { status } : {}),
     atualizadoEm: entrada.atualizadoEm ?? Date.now(),
   };
