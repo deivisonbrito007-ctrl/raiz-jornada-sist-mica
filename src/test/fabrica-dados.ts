@@ -207,10 +207,15 @@ export async function criarCenarioSeguranca(opcoes: OpcoesCenario = {}): Promise
   const linhasLiberacao: Record<string, unknown>[] = [];
   for (const cliente of clientes) {
     for (const eixo of eixos) {
-      const alvo = (deslocamento: number) => eixo.conteudos[(cliente.indice + deslocamento) % eixo.conteudos.length];
+      const alvo = (deslocamento: number): ConteudoCenario => {
+        const item = eixo.conteudos[(cliente.indice + deslocamento) % eixo.conteudos.length];
+        if (!item) throw new Error("eixo sem conteúdos semeados");
+        return item;
+      };
       const liberado = alvo(0);
       const agendado = alvo(1);
       const revogado = alvo(2);
+
 
       cliente.liberados.push(liberado.id);
       linhasLiberacao.push({ cliente_id: cliente.id, conteudo_id: liberado.id, status: "liberado" });
