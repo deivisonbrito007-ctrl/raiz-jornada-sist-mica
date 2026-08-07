@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { garantirPermissao } from "./permissao-guard";
 import { PERMISSOES } from "./permissoes";
+import { atorAuditoria as ator, registrarAuditoria } from "./auditoria-equipe";
 
 const permissaoSchema = z.enum(PERMISSOES);
 
@@ -27,7 +28,7 @@ export const equipeListar = createServerFn({ method: "GET" })
       supabase.from("equipe_permissoes").select("user_id, permissao"),
       supabase
         .from("convites_equipe")
-        .select("id, email, permissoes, status, created_at, token, expira_em")
+        .select("id, email, permissoes, status, created_at")
         .eq("status", "pendente")
         .order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
@@ -59,13 +60,7 @@ export const equipeListar = createServerFn({ method: "GET" })
       .filter((p) => !idsAdmin.has(p.id) && !idsTerapeuta.has(p.id))
       .map((p) => ({ userId: p.id, nome: p.nome, email: p.email }));
 
-    const agora = Date.now();
-    const convitesComEstado = (convites.data ?? []).map((c) => ({
-      ...c,
-      expirado: new Date(c.expira_em).getTime() <= agora,
-    }));
-
-    return { membros, terapeutas, convites: convitesComEstado, candidatos };
+    return { membros, terapeutas, convites: convites.data ?? [], candidatos };
   });
 
 export const equipeConvidar = createServerFn({ method: "POST" })
@@ -75,7 +70,6 @@ export const equipeConvidar = createServerFn({ method: "POST" })
       .object({
         email: z.string().email().max(200),
         permissoes: z.array(permissaoSchema).min(1),
-        diasValidade: z.number().int().min(1).max(30).optional(),
       })
       .parse(input),
   )
@@ -93,22 +87,20 @@ export const equipeConvidar = createServerFn({ method: "POST" })
       return { ok: false, motivo: "conta_existente" as const, userId: existente.id };
     }
 
-    const expiraEm = new Date(
-      Date.now() + (data.diasValidade ?? 7) * 24 * 60 * 60 * 1000,
-    ).toISOString();
-
-    const { data: criado, error } = await supabase
-      .from("convites_equipe")
-      .insert({
-        email,
-        permissoes: data.permissoes,
-        criado_por: userId,
-        expira_em: expiraEm,
-      })
-      .select("id, token, expira_em")
-      .single();
+    const { error } = await supabase.from("convites_equipe").insert({
+      email,
+      permissoes: data.permissoes,
+      criado_por: userId,
+    });
     if (error) throw new Error(error.message);
-    return { ok: true as const, convite: criado };
+
+    await registrarAuditoria(supabase, ator(context), {
+      acao: "convite_criado",
+      alvoTipo: "convite",
+      alvoEmail: email,
+      detalhes: { permissoes: data.permissoes },
+    });
+    return { ok: true as const };
   });
 
 export const equipeCancelarConvite = createServerFn({ method: "POST" })
@@ -117,8 +109,20 @@ export const equipeCancelarConvite = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await garantirGerenciarEquipe(supabase, userId, "equipeCancelarConvite");
+    const { data: convite } = await supabase
+      .from("convites_equipe")
+      .select("email")
+      .eq("id", data.conviteId)
+      .maybeSingle();
     const { error } = await supabase.from("convites_equipe").delete().eq("id", data.conviteId);
     if (error) throw new Error(error.message);
+
+    await registrarAuditoria(supabase, ator(context), {
+      acao: "convite_cancelado",
+      alvoTipo: "convite",
+      alvoId: data.conviteId,
+      alvoEmail: convite?.email ?? null,
+    });
     return { ok: true };
   });
 
@@ -146,6 +150,11 @@ export const equipeDefinirPermissoes = createServerFn({ method: "POST" })
       throw new Error("A terapeuta responsável já tem acesso total e não pode ser limitada.");
     }
 
+    const { data: anteriores } = await supabase
+      .from("equipe_permissoes")
+      .select("permissao")
+      .eq("user_id", data.alvoId);
+
     const { error: erroAdmin } = await supabase
       .from("equipe_admins")
       .upsert({ user_id: data.alvoId, criado_por: userId }, { onConflict: "user_id" });
@@ -158,6 +167,23 @@ export const equipeDefinirPermissoes = createServerFn({ method: "POST" })
         .insert(data.permissoes.map((permissao) => ({ user_id: data.alvoId, permissao })));
       if (error) throw new Error(error.message);
     }
+
+    const { data: perfilAlvo } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("id", data.alvoId)
+      .maybeSingle();
+
+    await registrarAuditoria(supabase, ator(context), {
+      acao: data.permissoes.length === 0 ? "permissoes_revogadas" : "permissoes_definidas",
+      alvoTipo: "equipe",
+      alvoId: data.alvoId,
+      alvoEmail: perfilAlvo?.email ?? null,
+      detalhes: {
+        permissoes: data.permissoes,
+        anteriores: (anteriores ?? []).map((p) => p.permissao),
+      },
+    });
     return { ok: true };
   });
 
@@ -177,27 +203,59 @@ export const equipeRemover = createServerFn({ method: "POST" })
     if (ehTerapeuta) throw new Error("A terapeuta responsável não pode ser removida.");
     if (data.alvoId === userId) throw new Error("Você não pode remover o seu próprio acesso.");
 
+    const { data: perfilAlvo } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("id", data.alvoId)
+      .maybeSingle();
+
     await supabase.from("equipe_permissoes").delete().eq("user_id", data.alvoId);
     const { error } = await supabase.from("equipe_admins").delete().eq("user_id", data.alvoId);
     if (error) throw new Error(error.message);
+
+    await registrarAuditoria(supabase, ator(context), {
+      acao: "admin_removido",
+      alvoTipo: "equipe",
+      alvoId: data.alvoId,
+      alvoEmail: perfilAlvo?.email ?? null,
+    });
     return { ok: true };
   });
 
-export const equipeAceitarConvite = createServerFn({ method: "POST" })
+export const equipeAuditoria = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ token: z.string().min(10).max(200) }).parse(input))
-  .handler(async ({ data, context }) => {
-    const { data: resultado, error } = await context.supabase.rpc("aceitar_convite_equipe", {
-      _token: data.token,
-    });
-    if (error) throw new Error(error.message);
-    return { resultado: (resultado ?? "invalido") as ResultadoConvite };
-  });
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await garantirGerenciarEquipe(supabase, userId, "equipeAuditoria");
 
-export type ResultadoConvite =
-  | "aceito"
-  | "usado"
-  | "expirado"
-  | "invalido"
-  | "outro_email"
-  | "sem_sessao";
+    const { data, error } = await supabase
+      .from("auditoria_equipe")
+      .select("id, acao, alvo_tipo, alvo_id, alvo_email, detalhes, ator_email, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw new Error(error.message);
+
+    return {
+      registros: (data ?? []).map((r) => {
+        const det = (r.detalhes ?? {}) as {
+          permissoes?: string[];
+          anteriores?: string[];
+          titulo?: string;
+          agendadoPara?: string;
+        };
+        return {
+          id: r.id,
+          acao: r.acao,
+          alvoTipo: r.alvo_tipo,
+          alvoId: r.alvo_id,
+          alvoEmail: r.alvo_email,
+          permissoes: det.permissoes ?? [],
+          anteriores: det.anteriores ?? [],
+          titulo: det.titulo ?? "",
+          agendadoPara: det.agendadoPara ?? "",
+          atorEmail: r.ator_email,
+          quando: r.created_at,
+        };
+      }),
+    };
+  });

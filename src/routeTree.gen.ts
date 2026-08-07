@@ -18,7 +18,6 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedEntradaRouteImport } from './routes/_authenticated/entrada'
-import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -78,11 +77,6 @@ const AuthenticatedEntradaRoute = AuthenticatedEntradaRouteImport.update({
   id: '/entrada',
   path: '/entrada',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const ConviteTokenRoute = ConviteTokenRouteImport.update({
-  id: '/convite/$token',
-  path: '/convite/$token',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   id: '/.lovable/oauth/consent',
@@ -167,7 +161,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/entrada': typeof AuthenticatedEntradaRoute
-  '/convite/$token': typeof ConviteTokenRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
@@ -189,7 +182,6 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/entrada': typeof AuthenticatedEntradaRoute
-  '/convite/$token': typeof ConviteTokenRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
@@ -215,7 +207,6 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/entrada': typeof AuthenticatedEntradaRoute
-  '/convite/$token': typeof ConviteTokenRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
@@ -241,7 +232,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/entrada'
-    | '/convite/$token'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/conteudos'
@@ -263,7 +253,6 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/entrada'
-    | '/convite/$token'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/conteudos'
@@ -288,7 +277,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/app'
     | '/_authenticated/entrada'
-    | '/convite/$token'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/conteudos'
@@ -311,7 +299,6 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  ConviteTokenRoute: typeof ConviteTokenRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
@@ -380,13 +367,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/entrada'
       preLoaderRoute: typeof AuthenticatedEntradaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/convite/$token': {
-      id: '/convite/$token'
-      path: '/convite/$token'
-      fullPath: '/convite/$token'
-      preLoaderRoute: typeof ConviteTokenRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/.lovable/oauth/consent': {
       id: '/.lovable/oauth/consent'
@@ -547,7 +527,6 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
-  ConviteTokenRoute: ConviteTokenRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
