@@ -38,7 +38,7 @@ export type RegistroAuditoria = {
   alvoId?: string | null;
   alvoEmail?: string | null;
   /** Justificativa escrita por quem executou a ação (opcional). */
-  motivo?: string | null;
+  motivo?: string | null | undefined;
   detalhes?: Record<string, unknown>;
 };
 
