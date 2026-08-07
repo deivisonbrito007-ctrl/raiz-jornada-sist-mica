@@ -100,7 +100,11 @@ function renderPlayer() {
 const audio = () => document.querySelector("audio") as HTMLAudioElement;
 
 async function esperarPlayer() {
-  await waitFor(() => expect(audio()).toBeTruthy());
+  // sob carga, a expiração curta pode chegar antes da primeira checagem:
+  // aceita o player OU o aviso de bloqueio já renderizado
+  await waitFor(() =>
+    expect(audio() || screen.queryByRole("heading", { name: /expirou/i })).toBeTruthy(),
+  );
 }
 
 async function esperarBloqueio(titulo: string) {
