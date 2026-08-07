@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { TimerOff, Lock, AlertCircle } from "lucide-react";
+import { TimerOff, Lock, AlertCircle, Hourglass } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export type MotivoBloqueio = "validade" | "revogado" | "falha";
+export type MotivoBloqueio = "validade" | "revogado" | "falha" | "limite";
+
 
 interface Props {
   motivo: MotivoBloqueio;
@@ -69,7 +70,16 @@ export function AvisoMidiaBloqueada({
       botao: "Tentar novamente",
       tom: "muted",
     },
+    limite: {
+      icone: <Hourglass className="mt-0.5 h-5 w-5 shrink-0 text-ocre" aria-hidden="true" />,
+      titulo: "Muitos pedidos em pouco tempo",
+      texto:
+        "Para proteger sua conta, limitamos quantos links seguros podem ser gerados por minuto. Você chegou nesse limite: aguarde alguns segundos e tente de novo. Nada foi perdido — seu progresso e o ponto onde você parou seguem salvos.",
+      botao: "Tentar novamente",
+      tom: "ocre",
+    },
   };
+
 
   const cfg = configs[motivo];
 

@@ -1,6 +1,6 @@
-import { Lock, PlayCircle, TimerOff } from "lucide-react";
+import { Hourglass, Lock, PlayCircle, TimerOff } from "lucide-react";
 
-export type StatusMidia = "liberada" | "expirada" | "revogada";
+export type StatusMidia = "liberada" | "expirada" | "revogada" | "limitada";
 
 const CONFIG: Record<
   StatusMidia,
@@ -24,7 +24,15 @@ const CONFIG: Record<
     classes: "border-terracota/40 bg-terracota/15 text-terracota",
     descricao: "O terapeuta recolheu esta prática por enquanto.",
   },
+  limitada: {
+    rotulo: "Muitos pedidos",
+    icone: <Hourglass className="h-3.5 w-3.5" aria-hidden="true" />,
+    classes: "border-ocre/40 bg-ocre/15 text-floresta",
+    descricao:
+      "Você pediu vários links seguros em pouco tempo. Aguarde um instante e tente de novo.",
+  },
 };
+
 
 /** Selo curto e sempre visível com a situação atual da mídia no player. */
 export function StatusMidiaBadge({ status }: { status: StatusMidia }) {

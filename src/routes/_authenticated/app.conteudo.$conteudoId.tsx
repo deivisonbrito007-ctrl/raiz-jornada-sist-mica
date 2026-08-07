@@ -125,6 +125,15 @@ function Player() {
     el.pause();
   }
 
+  // O servidor recusou gerar um novo link por excesso de pedidos: avisamos e
+  // seguramos o botão pelo tempo que ele pediu, em vez de falhar em silêncio.
+  useEffect(() => {
+    if (data?.limitado) {
+      setBloqueio("limite");
+      segurarNovaTentativa((data.esperarSegundos || 5) * 1000);
+    }
+  }, [data?.limitado, data?.esperarSegundos]);
+
   // O link seguro da mídia tem validade limitada: ao chegar ao fim, o player para
   // sozinho e passa a exigir uma nova liberação em vez de tentar tocar um link morto.
   useEffect(() => {
@@ -140,6 +149,7 @@ function Player() {
   }, [data?.url, data?.urlExpiraEm]);
 
 
+
   /** Pede uma URL assinada nova ao backend e reinicia o player se estiver liberado. */
   async function renovarMidia() {
     if (renovando || emEspera) return;
@@ -151,7 +161,13 @@ function Player() {
         queryFn: () => fetchConteudo({ data: { conteudoId } }),
         staleTime: 0,
       });
-      if (novo?.url) {
+      if (novo?.limitado) {
+        setBloqueio("limite");
+        segurarNovaTentativa((novo.esperarSegundos || 5) * 1000);
+        toast.error(
+          `Muitos pedidos de link em pouco tempo. Aguarde ${novo.esperarSegundos || 5}s e tente de novo.`,
+        );
+      } else if (novo?.url) {
         // só volta a tocar sozinho se estava tocando quando o link venceu
         retomarAutoRef.current = tocandoAntesRef.current;
         setBloqueio(null);
@@ -167,6 +183,7 @@ function Player() {
         segurarNovaTentativa();
         toast.error("Esta prática não está mais liberada para você.");
       }
+
     } catch {
       setBloqueio("falha");
       segurarNovaTentativa();
@@ -221,14 +238,15 @@ function Player() {
   }
 
   /** Pequena espera entre tentativas — o botão nunca fica travado para sempre. */
-  function segurarNovaTentativa() {
+  function segurarNovaTentativa(espera = 5000) {
     setEmEspera(true);
-    setEsperaAte(Date.now() + 5000);
+    setEsperaAte(Date.now() + espera);
     setTimeout(() => {
       setEmEspera(false);
       setEsperaAte(null);
-    }, 5000);
+    }, espera);
   }
+
 
 
 
@@ -310,7 +328,14 @@ function Player() {
             <div>
               <StatusMidiaBadge
                 status={
-                  bloqueio === "revogado" ? "revogada" : bloqueio ? "expirada" : "liberada"
+                  bloqueio === "revogado"
+                    ? "revogada"
+                    : bloqueio === "limite"
+                      ? "limitada"
+                      : bloqueio
+                        ? "expirada"
+                        : "liberada"
+
                 }
               />
             </div>
