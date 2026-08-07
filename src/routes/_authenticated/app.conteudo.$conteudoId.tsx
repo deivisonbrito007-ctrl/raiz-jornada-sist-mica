@@ -17,11 +17,16 @@ import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bloqueada";
+import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 
 
 export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")({
   component: Player,
 });
+
+function ehMidiaTipo(tipo?: string) {
+  return tipo === "video" || tipo === "audio";
+}
 
 function Player() {
   const { conteudoId } = Route.useParams();
@@ -34,6 +39,8 @@ function Player() {
     queryKey: ["conteudo", conteudoId],
     queryFn: () => fetchConteudo({ data: { conteudoId } }),
   });
+
+  useSincronizarLiberacoes(() => void revalidarLiberacao());
 
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   const posicaoRef = useRef(0);
@@ -150,6 +157,39 @@ function Player() {
     }
   }
 
+
+  /**
+   * Chega um aviso de mudança de liberação: confere na hora se a prática segue
+   * liberada. Se foi revogada, para a mídia e mostra o aviso; se voltou a ser
+   * liberada, libera o player sem exigir recarregar a página.
+   */
+  async function revalidarLiberacao() {
+    try {
+      const novo = await queryClient.fetchQuery({
+        queryKey: ["conteudo", conteudoId],
+        queryFn: () => fetchConteudo({ data: { conteudoId } }),
+        staleTime: 0,
+      });
+      const liberado = Boolean(novo?.conteudo) && (!ehMidiaTipo(novo?.conteudo?.tipo) || !!novo?.url);
+      if (!liberado) {
+        const el = mediaRef.current;
+        if (el) {
+          posicaoRef.current = el.currentTime || posicaoRef.current;
+          el.pause();
+        }
+        setTocando(false);
+        setBloqueio("revogado");
+        toast.error("Esta prática não está mais liberada para você.");
+        return;
+      }
+      if (bloqueio) {
+        setBloqueio(null);
+        toast.success("Esta prática foi liberada de novo pelo seu terapeuta.");
+      }
+    } catch {
+      /* falha de rede: o estado atual é mantido e o botão de renovar segue disponível */
+    }
+  }
 
   /** Pequena espera entre tentativas — o botão nunca fica travado para sempre. */
   function segurarNovaTentativa() {

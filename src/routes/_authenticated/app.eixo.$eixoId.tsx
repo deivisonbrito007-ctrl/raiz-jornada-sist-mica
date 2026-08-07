@@ -5,12 +5,14 @@ import { ArrowLeft, CheckCircle2, Circle, PlayCircle } from "lucide-react";
 import { getEixoTrilha } from "@/lib/raiz.functions";
 import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 
 export const Route = createFileRoute("/_authenticated/app/eixo/$eixoId")({
   component: Trilha,
 });
 
 function Trilha() {
+  useSincronizarLiberacoes();
   const { eixoId } = Route.useParams();
   const fetchTrilha = useServerFn(getEixoTrilha);
   const { data, isLoading } = useQuery({
