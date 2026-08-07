@@ -246,6 +246,14 @@ function Player() {
     }
   }, [data?.limitado, data?.esperarSegundos]);
 
+  // Ao abrir com o acesso válido, o que ficou guardado no aparelho é enviado.
+  useEffect(() => {
+    if (!data?.url) return;
+    if (!temPendente(conteudoId)) return;
+    setTemPendencia(true);
+    void reenviarProgressoLocal();
+  }, [data?.url, conteudoId]);
+
   // O link seguro da mídia tem validade limitada: ao chegar ao fim, o player para
   // sozinho e passa a exigir uma nova liberação em vez de tentar tocar um link morto.
   useEffect(() => {
