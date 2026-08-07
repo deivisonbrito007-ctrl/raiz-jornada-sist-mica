@@ -14,7 +14,7 @@ export type NegacaoPersistida = {
   tipo?: string;
   alvoId?: string | null;
   rota?: string | null;
-  detalhes?: Record<string, unknown>;
+  detalhes?: Record<string, string | number | boolean | null>;
 };
 
 /** Grava a tentativa negada. Nunca lança: falha de auditoria só vai para o log. */
@@ -40,7 +40,7 @@ export async function persistirAcessoNegado(registro: NegacaoPersistida): Promis
       tipo: registro.tipo ?? "papel",
       alvo_id: registro.alvoId ?? null,
       rota: registro.rota ?? "",
-      detalhes: registro.detalhes ?? {},
+      detalhes: (registro.detalhes ?? {}) as Record<string, string | number | boolean | null>,
     });
     if (error) console.error("[auditoria:negado] falha ao gravar", registro.acao, error.message);
   } catch (e) {
