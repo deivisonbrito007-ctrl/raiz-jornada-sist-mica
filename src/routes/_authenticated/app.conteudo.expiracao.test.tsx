@@ -34,7 +34,7 @@ vi.mock("@/lib/raiz.functions", () => ({
   marcarProgresso: Symbol("marcarProgresso"),
 }));
 
-vi.mock("sonner", () => ({ toast: { error: toastError, success: toastSuccess } }));
+vi.mock("sonner", () => ({ toast: { error: toastError, success: toastSuccess, info: toastInfo } }));
 
 const { Route } = await import("./app.conteudo.$conteudoId");
 const PlayerPage = (Route as unknown as { component: () => React.ReactElement }).component;
