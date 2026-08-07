@@ -245,4 +245,92 @@ describe("player — expiração da URL assinada", () => {
     expect(toastError).toHaveBeenCalledWith("Não foi possível renovar o acesso à mídia.");
     expect(salvarProgresso).not.toHaveBeenCalled();
   });
+
+  /** toca, avança até `segundo` e deixa o link vencer com a mídia tocando */
+  async function tocarEExpirar(user: ReturnType<typeof userEvent.setup>, segundo: number) {
+    fetchConteudo.mockResolvedValue(resposta("https://midia/uma.mp3", 60_000));
+    renderPlayer();
+    await esperarPlayer();
+
+    await user.click(screen.getByLabelText("Reproduzir"));
+    const el = audio();
+    el.currentTime = segundo;
+    fireEvent.timeUpdate(el);
+    fireEvent.error(el);
+    await esperarBloqueio("O link seguro expirou");
+  }
+
+  it("retoma a reprodução sozinha, do ponto anterior, quando estava tocando na expiração", async () => {
+    const user = userEvent.setup();
+    await tocarEExpirar(user, 42);
+    play.mockClear();
+
+    fetchConteudo.mockResolvedValue(resposta("https://midia/nova.mp3", 60_000, "em_andamento"));
+    await user.click(screen.getByRole("button", { name: "Renovar acesso" }));
+
+    await waitFor(() => expect(audio()?.src).toBe("https://midia/nova.mp3"));
+    fireEvent.loadedMetadata(audio());
+
+    expect(audio().currentTime).toBe(42);
+    expect(play).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.getByLabelText("Pausar")).toBeInTheDocument());
+    expect(toastSuccess).toHaveBeenCalledWith("Mídia liberada novamente. Voltando de onde você parou.");
+  });
+
+  it("não registra um segundo progresso 'em andamento' ao retomar depois da renovação", async () => {
+    const user = userEvent.setup();
+    await tocarEExpirar(user, 30);
+
+    expect(salvarProgresso).toHaveBeenCalledTimes(1);
+    expect(salvarProgresso).toHaveBeenCalledWith({ data: { conteudoId: "c-1", status: "em_andamento" } });
+
+    fetchConteudo.mockResolvedValue(resposta("https://midia/nova.mp3", 60_000, "em_andamento"));
+    await user.click(screen.getByRole("button", { name: "Renovar acesso" }));
+    await waitFor(() => expect(audio()?.src).toBe("https://midia/nova.mp3"));
+    fireEvent.loadedMetadata(audio());
+
+    // pausa e volta a tocar manualmente também não duplica o registro
+    await waitFor(() => expect(screen.getByLabelText("Pausar")).toBeInTheDocument());
+    await user.click(screen.getByLabelText("Pausar"));
+    await user.click(screen.getByLabelText("Reproduzir"));
+
+    expect(salvarProgresso).toHaveBeenCalledTimes(1);
+  });
+
+  it("se o navegador barrar o autoplay, orienta a tocar play sem quebrar a tela", async () => {
+    const user = userEvent.setup();
+    await tocarEExpirar(user, 20);
+
+    fetchConteudo.mockResolvedValue(resposta("https://midia/nova.mp3", 60_000, "em_andamento"));
+    await user.click(screen.getByRole("button", { name: "Renovar acesso" }));
+    await waitFor(() => expect(audio()?.src).toBe("https://midia/nova.mp3"));
+
+    play.mockImplementation(() => Promise.reject(new Error("NotAllowedError")));
+    fireEvent.loadedMetadata(audio());
+
+    await waitFor(() =>
+      expect(toastInfo).toHaveBeenCalledWith("Toque em play para continuar de onde parou."),
+    );
+    expect(audio().currentTime).toBe(20);
+    expect(screen.getByLabelText("Reproduzir")).toBeInTheDocument();
+  });
+
+  it("estava pausado na expiração: renova sem dar play automático", async () => {
+    const user = userEvent.setup();
+    fetchConteudo.mockResolvedValue(resposta("https://midia/uma.mp3", 60_000));
+    renderPlayer();
+    await esperarPlayer();
+
+    fireEvent.error(audio());
+    await esperarBloqueio("O link seguro expirou");
+
+    fetchConteudo.mockResolvedValue(resposta("https://midia/nova.mp3", 60_000));
+    await user.click(screen.getByRole("button", { name: "Renovar acesso" }));
+    await waitFor(() => expect(audio()?.src).toBe("https://midia/nova.mp3"));
+    fireEvent.loadedMetadata(audio());
+
+    expect(play).not.toHaveBeenCalled();
+    expect(audio().paused).toBe(true);
+    expect(toastSuccess).toHaveBeenCalledWith("Mídia liberada novamente. Você pode continuar de onde parou.");
+  });
 });
