@@ -35,6 +35,7 @@ function Player() {
   const queryClient = useQueryClient();
   const fetchConteudo = useServerFn(getConteudo);
   const salvarProgresso = useServerFn(marcarProgresso);
+  const persistirPosicao = useServerFn(salvarPosicao);
 
   const { data, isLoading } = useQuery({
     queryKey: ["conteudo", conteudoId],
