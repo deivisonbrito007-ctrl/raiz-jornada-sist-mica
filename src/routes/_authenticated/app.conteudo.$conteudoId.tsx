@@ -62,6 +62,9 @@ function Player() {
   const revalidacaoRef = useRef(0);
   const [renovando, setRenovando] = useState(false);
   const [emEspera, setEmEspera] = useState(false);
+  /** quando a nova tentativa volta a ser permitida (usado na contagem do aviso) */
+  const [esperaAte, setEsperaAte] = useState<number | null>(null);
+
 
 
   useEffect(() => {
