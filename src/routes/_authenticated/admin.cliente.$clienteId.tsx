@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { mensagemPainel } from "@/lib/erro-permissao";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, CalendarClock } from "lucide-react";
@@ -93,7 +94,7 @@ function AdminCliente() {
             : "Liberado para a cliente",
       );
     } catch (erro) {
-      toast.error(erro instanceof Error ? erro.message : "Não foi possível salvar");
+      toast.error(mensagemPainel(erro));
     }
   }
 

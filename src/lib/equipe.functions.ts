@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { erroSeguro } from "./erro-permissao";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { garantirPermissao } from "./permissao-guard";
@@ -92,7 +93,7 @@ export const equipeConvidar = createServerFn({ method: "POST" })
       permissoes: data.permissoes,
       criado_por: userId,
     });
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
 
     await registrarAuditoria(supabase, ator(context), {
       acao: "convite_criado",
@@ -115,7 +116,7 @@ export const equipeCancelarConvite = createServerFn({ method: "POST" })
       .eq("id", data.conviteId)
       .maybeSingle();
     const { error } = await supabase.from("convites_equipe").delete().eq("id", data.conviteId);
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
 
     await registrarAuditoria(supabase, ator(context), {
       acao: "convite_cancelado",
@@ -158,14 +159,14 @@ export const equipeDefinirPermissoes = createServerFn({ method: "POST" })
     const { error: erroAdmin } = await supabase
       .from("equipe_admins")
       .upsert({ user_id: data.alvoId, criado_por: userId }, { onConflict: "user_id" });
-    if (erroAdmin) throw new Error(erroAdmin.message);
+    if (erroAdmin) throw erroSeguro(erroAdmin);
 
     await supabase.from("equipe_permissoes").delete().eq("user_id", data.alvoId);
     if (data.permissoes.length > 0) {
       const { error } = await supabase
         .from("equipe_permissoes")
         .insert(data.permissoes.map((permissao) => ({ user_id: data.alvoId, permissao })));
-      if (error) throw new Error(error.message);
+      if (error) throw erroSeguro(error);
     }
 
     const { data: perfilAlvo } = await supabase
@@ -211,7 +212,7 @@ export const equipeRemover = createServerFn({ method: "POST" })
 
     await supabase.from("equipe_permissoes").delete().eq("user_id", data.alvoId);
     const { error } = await supabase.from("equipe_admins").delete().eq("user_id", data.alvoId);
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
 
     await registrarAuditoria(supabase, ator(context), {
       acao: "admin_removido",
@@ -233,7 +234,7 @@ export const equipeAuditoria = createServerFn({ method: "GET" })
       .select("id, acao, alvo_tipo, alvo_id, alvo_email, detalhes, ator_email, created_at")
       .order("created_at", { ascending: false })
       .limit(200);
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
 
     return {
       registros: (data ?? []).map((r) => {

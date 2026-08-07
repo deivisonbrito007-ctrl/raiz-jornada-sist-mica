@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { mensagemPainel } from "@/lib/erro-permissao";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -66,7 +67,7 @@ function AdminPacotes() {
       queryClient.invalidateQueries({ queryKey: ["admin-resumo"] });
       toast.success("Pacote salvo");
     } catch (erro) {
-      toast.error(erro instanceof Error ? erro.message : "Não foi possível salvar");
+      toast.error(mensagemPainel(erro));
     } finally {
       setEnviando(false);
     }

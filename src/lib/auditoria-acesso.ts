@@ -7,6 +7,8 @@
  * Nunca registramos conteúdo sensível — apenas identificadores e a causa.
  */
 
+import { MENSAGEM_ACESSO_RESTRITO, erroAcessoRestrito } from "./erro-permissao";
+
 export type TipoNegacao = "rls" | "grant" | "storage" | "papel" | "desconhecido";
 
 export type ContextoNegacao = {
@@ -89,9 +91,9 @@ export function registrarAcessoNegado(ctx: ContextoNegacao, erro?: unknown): Eve
 }
 
 /** Registra e lança o erro padrão de acesso restrito. */
-export function negarAcesso(ctx: ContextoNegacao, motivo = "Acesso restrito"): never {
+export function negarAcesso(ctx: ContextoNegacao, motivo = MENSAGEM_ACESSO_RESTRITO): never {
   registrarAcessoNegado(ctx, motivo);
-  throw new Error("Acesso restrito");
+  throw erroAcessoRestrito();
 }
 
 /**

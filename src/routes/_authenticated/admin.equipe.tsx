@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { mensagemPainel } from "@/lib/erro-permissao";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -115,7 +116,7 @@ function AdminEquipe() {
         toast.error("Esse e-mail já tem conta. Use o bloco “Promover conta existente”.");
       }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensagemPainel(e)),
   });
 
   const mPromover = useMutation({
@@ -126,7 +127,7 @@ function AdminEquipe() {
       setEmailPromover("");
       recarregar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensagemPainel(e)),
   });
 
   const mAtualizar = useMutation({
@@ -137,7 +138,7 @@ function AdminEquipe() {
       setEditando(null);
       recarregar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensagemPainel(e)),
   });
 
   const mRevogar = useMutation({
@@ -147,7 +148,7 @@ function AdminEquipe() {
       setEditando(null);
       recarregar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensagemPainel(e)),
   });
 
 
@@ -158,7 +159,7 @@ function AdminEquipe() {
       toast.success("Acesso removido.");
       recarregar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensagemPainel(e)),
   });
 
   const mCancelar = useMutation({
@@ -168,7 +169,7 @@ function AdminEquipe() {
       toast.success("Convite cancelado.");
       recarregar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensagemPainel(e)),
   });
 
   const linhasMatriz: LinhaMatriz[] = [
