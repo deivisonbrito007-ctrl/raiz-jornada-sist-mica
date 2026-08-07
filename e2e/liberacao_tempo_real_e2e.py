@@ -122,7 +122,10 @@ async def main() -> None:
     # escolhe um eixo bloqueado que tenha conteúdo — o cliente vê o eixo, não o título
     eixos = api.get("eixos", {"select": "id,nome", "order": "ordem"})
     conteudos = api.get("conteudos", {"select": "id,titulo,eixo_id,tipo", "order": "ordem"})
-    liberadas = api.get("liberacoes", {"select": "eixo_id,conteudo_id", "cliente_id": f"eq.{uid}"})
+    liberadas = api.get(
+        "liberacoes",
+        {"select": "eixo_id,conteudo_id", "cliente_id": f"eq.{uid}", "status": "eq.liberado"},
+    )
     eixos_liberados = {l["eixo_id"] for l in liberadas}
 
     alvo = next(
