@@ -312,7 +312,7 @@ async def main() -> None:
 
         # 5: renovar traz o player de volta a partir do ponto onde parou
         # a partir daqui a validade volta ao normal (mídia simulada segue presente)
-        await page.unroute("**/*")
+        await page.unroute("**/_serverFn/**")
         await encurtar_validade(page, 600, url_simulada)
         botao = page.get_by_role("button", name="Renovar acesso")
         for _ in range(30):
