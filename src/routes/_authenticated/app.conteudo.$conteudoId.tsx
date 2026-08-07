@@ -404,12 +404,19 @@ function Player() {
                   className="w-full rounded-2xl bg-black"
                   playsInline
                   onPlay={() => setTocando(true)}
-                  onPause={() => setTocando(false)}
-                  onTimeUpdate={(e) => setTempo(e.currentTarget.currentTime)}
+                  onPause={() => {
+                    setTocando(false);
+                    guardarPosicao(true);
+                  }}
+                  onTimeUpdate={(e) => {
+                    setTempo(e.currentTarget.currentTime);
+                    guardarPosicao();
+                  }}
                   onLoadedMetadata={(e) => retomarPosicao(e.currentTarget)}
                   onEnded={() => {
                     setTocando(false);
                     setTerminou(true);
+                    zerarPosicao();
                   }}
                   onError={expirarMidia}
                 />
@@ -419,15 +426,23 @@ function Player() {
                     ref={mediaRef as React.RefObject<HTMLAudioElement>}
                     src={data.url}
                     onPlay={() => setTocando(true)}
-                    onPause={() => setTocando(false)}
-                    onTimeUpdate={(e) => setTempo(e.currentTarget.currentTime)}
+                    onPause={() => {
+                      setTocando(false);
+                      guardarPosicao(true);
+                    }}
+                    onTimeUpdate={(e) => {
+                      setTempo(e.currentTarget.currentTime);
+                      guardarPosicao();
+                    }}
                     onLoadedMetadata={(e) => retomarPosicao(e.currentTarget)}
                     onEnded={() => {
                       setTocando(false);
                       setTerminou(true);
+                      zerarPosicao();
                     }}
                     onError={expirarMidia}
                   />
+
                   <p className="font-display text-lg text-floresta-foreground/70">
                     Feche os olhos e apenas escute.
                   </p>
