@@ -13,6 +13,11 @@ const auth = {
 };
 
 const toastError = vi.fn();
+/** controla o retorno de existe_terapeuta() no servidor */
+const estado = { existeTerapeuta: false };
+const rpc = vi.fn(async (fn: string) =>
+  fn === "existe_terapeuta" ? { data: estado.existeTerapeuta, error: null } : { data: null, error: null },
+);
 
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => (options: Record<string, unknown>) => ({
@@ -23,7 +28,7 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, ...props }: React.ComponentProps<"a">) => <a {...props}>{children}</a>,
 }));
 
-vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth } }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth, rpc } }));
 vi.mock("sonner", () => ({ toast: { error: toastError, success: vi.fn() } }));
 
 const { Route } = await import("./auth");
@@ -37,6 +42,7 @@ async function preencher(user: ReturnType<typeof userEvent.setup>) {
 describe("fluxo de login /auth", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    estado.existeTerapeuta = false;
     delete search.modo;
     delete search.next;
     auth.getSession.mockResolvedValue({ data: { session: null } });

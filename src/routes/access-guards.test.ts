@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const getUser = vi.fn<() => Promise<any>>();
 const papeisPorUsuario = new Map<string, string[]>();
+const usuarioAtual = { id: "" };
 
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => (options: Record<string, unknown>) => options,
@@ -17,6 +18,13 @@ vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({}) }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     auth: { getUser },
+    rpc: async (fn: string) => {
+      if (fn === "pode_administrar") {
+        const papeis = papeisPorUsuario.get(usuarioAtual.id) ?? [];
+        return { data: papeis.includes("terapeuta") || papeis.includes("admin"), error: null };
+      }
+      return { data: null, error: null };
+    },
     from: () => ({
       select: () => ({
         eq: async (_coluna: string, userId: string) => ({
@@ -31,6 +39,10 @@ vi.mock("@/integrations/supabase/client", () => ({
 const guardaAutenticado = (await import("./_authenticated/route")).Route as any;
 const guardaAdmin = (await import("./_authenticated/admin")).Route as any;
 
+function comUsuario(id: string | null) {
+  usuarioAtual.id = id ?? "";
+}
+
 async function destinoDoRedirect(fn: () => Promise<unknown>) {
   try {
     await fn();
@@ -44,6 +56,7 @@ describe("regras de acesso das rotas autenticadas", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     papeisPorUsuario.clear();
+    comUsuario(null);
   });
 
   it("manda visitante sem sessão para /auth", async () => {
@@ -65,12 +78,14 @@ describe("regras de acesso das rotas autenticadas", () => {
 
   it("bloqueia cliente no painel do terapeuta redirecionando para /app", async () => {
     getUser.mockResolvedValue({ data: { user: { id: "cliente-1" } }, error: null });
+    comUsuario("cliente-1");
     papeisPorUsuario.set("cliente-1", ["cliente"]);
     expect(await destinoDoRedirect(() => guardaAdmin.beforeLoad({}))).toBe("/app");
   });
 
   it("bloqueia usuário sem nenhum papel no painel do terapeuta", async () => {
     getUser.mockResolvedValue({ data: { user: { id: "sem-papel" } }, error: null });
+    comUsuario("sem-papel");
     expect(await destinoDoRedirect(() => guardaAdmin.beforeLoad({}))).toBe("/app");
   });
 
@@ -81,6 +96,7 @@ describe("regras de acesso das rotas autenticadas", () => {
 
   it("permite terapeuta no painel do terapeuta", async () => {
     getUser.mockResolvedValue({ data: { user: { id: "terapeuta-1" } }, error: null });
+    comUsuario("terapeuta-1");
     papeisPorUsuario.set("terapeuta-1", ["terapeuta"]);
     expect(await destinoDoRedirect(() => guardaAdmin.beforeLoad({}))).toBeNull();
   });

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { auditarResultado, negarAcesso, registrarAcessoNegado } from "./auditoria-acesso";
 import { garantirConteudoLiberado } from "./liberacao-guard";
+import { garantirPermissao, temPermissao } from "./permissao-guard";
 
 export const getMeuContexto = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -341,8 +342,9 @@ export const adminResumo = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { data: podeVer } = await supabase.rpc("pode", { _permissao: "ver_clientes" });
-    if (podeVer !== true) negarAcesso({ acao: "adminResumo", userId, tabela: "user_roles" });
+    await garantirPermissao(supabase, userId, "ver_clientes", "adminResumo", {
+      tabela: "user_roles",
+    });
 
     const [papeis, perfis, conteudos, liberacoes, progresso, pacotes, vinculos, eixos] =
       await Promise.all([
@@ -443,16 +445,11 @@ export const adminGetCliente = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ clienteId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: podeVer } = await supabase.rpc("pode", { _permissao: "ver_clientes" });
-    const { data: podeVerDiario } = await supabase.rpc("pode", { _permissao: "ver_diario" });
-    if (podeVer !== true) {
-      negarAcesso({
-        acao: "adminGetCliente",
-        userId,
-        clienteAlvo: data.clienteId,
-        tabela: "profiles",
-      });
-    }
+    await garantirPermissao(supabase, userId, "ver_clientes", "adminGetCliente", {
+      clienteAlvo: data.clienteId,
+      tabela: "profiles",
+    });
+    const podeVerDiario = await temPermissao(supabase, "ver_diario");
 
     const [perfil, eixos, conteudos, liberacoes, progresso, diario, vinculos, pacotes] =
       await Promise.all([
@@ -489,8 +486,8 @@ export const adminGetCliente = createServerFn({ method: "GET" })
       conteudos: conteudos.data ?? [],
       liberacoes: liberacoes.data ?? [],
       progresso: progresso.data ?? [],
-      diario: podeVerDiario === true ? (diario.data ?? []) : [],
-      podeVerDiario: podeVerDiario === true,
+      diario: podeVerDiario ? (diario.data ?? []) : [],
+      podeVerDiario,
       vinculos: vinculos.data ?? [],
       pacotes: pacotes.data ?? [],
     };
@@ -512,17 +509,10 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: podeLiberar } = await supabase.rpc("pode", {
-      _permissao: "gerenciar_liberacoes",
+    await garantirPermissao(supabase, userId, "gerenciar_liberacoes", "adminDefinirLiberacao", {
+      clienteAlvo: data.clienteId,
+      tabela: "liberacoes",
     });
-    if (podeLiberar !== true) {
-      negarAcesso({
-        acao: "adminDefinirLiberacao",
-        userId,
-        clienteAlvo: data.clienteId,
-        tabela: "liberacoes",
-      });
-    }
 
     const alvo = supabase
       .from("liberacoes")
@@ -588,7 +578,10 @@ export const adminSalvarConteudo = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
+    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminSalvarConteudo", {
+      tabela: "conteudos",
+    });
     const payload = {
       eixo_id: data.eixoId,
       tipo: data.tipo,
@@ -611,6 +604,13 @@ export const adminApagarConteudo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
+    await garantirPermissao(
+      context.supabase,
+      context.userId,
+      "gerenciar_conteudos",
+      "adminApagarConteudo",
+      { tabela: "conteudos" },
+    );
     const { error } = await context.supabase.from("conteudos").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -630,6 +630,13 @@ export const adminSalvarEixo = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    await garantirPermissao(
+      context.supabase,
+      context.userId,
+      "gerenciar_conteudos",
+      "adminSalvarEixo",
+      { tabela: "eixos" },
+    );
     const payload = {
       nome: data.nome,
       descricao: data.descricao,
@@ -647,6 +654,13 @@ export const adminSalvarEixo = createServerFn({ method: "POST" })
 export const adminListarConteudos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    await garantirPermissao(
+      context.supabase,
+      context.userId,
+      "gerenciar_conteudos",
+      "adminListarConteudos",
+      { tabela: "conteudos" },
+    );
     const [eixos, conteudos] = await Promise.all([
       context.supabase.from("eixos").select("id, nome, descricao, icone, ordem").order("ordem"),
       context.supabase
@@ -674,6 +688,13 @@ export const adminSalvarPacote = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    await garantirPermissao(
+      context.supabase,
+      context.userId,
+      "gerenciar_pacotes",
+      "adminSalvarPacote",
+      { tabela: "pacotes" },
+    );
     const payload = {
       nome: data.nome,
       descricao: data.descricao,
@@ -701,6 +722,13 @@ export const adminVincularPacote = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    await garantirPermissao(
+      context.supabase,
+      context.userId,
+      "gerenciar_pacotes",
+      "adminVincularPacote",
+      { clienteAlvo: data.clienteId, tabela: "clientes_pacotes" },
+    );
     const { error } = await context.supabase.from("clientes_pacotes").insert({
       cliente_id: data.clienteId,
       pacote_id: data.pacoteId,
@@ -718,6 +746,13 @@ export const adminAtualizarPagamento = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    await garantirPermissao(
+      context.supabase,
+      context.userId,
+      "gerenciar_pacotes",
+      "adminAtualizarPagamento",
+      { tabela: "clientes_pacotes" },
+    );
     const { error } = await context.supabase
       .from("clientes_pacotes")
       .update({ status_pagamento: data.statusPagamento })
