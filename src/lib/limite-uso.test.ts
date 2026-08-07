@@ -63,7 +63,15 @@ describe("limite de geração de URLs assinadas", () => {
       throw new Error("sem conexão");
     });
 
-    const r = await consumirLimite("user-1", "midia:url-assinada");
-    expect(r.permitido).toBe(true);
+    let resultado: Awaited<ReturnType<typeof consumirLimite>> | null = null;
+    let lancou: unknown = null;
+    try {
+      resultado = await consumirLimite("user-1", "midia:url-assinada");
+    } catch (e) {
+      lancou = e;
+    }
+    expect(lancou).toBeNull();
+    expect(resultado?.permitido).toBe(true);
   });
+
 });
