@@ -357,7 +357,7 @@ function Player() {
             </div>
           )}
 
-          {ehMidia && bloqueio && (
+          {(ehMidia || bloqueio === "revogado") && bloqueio && (
             <AvisoMidiaBloqueada
               motivo={bloqueio}
               renovando={renovando}
@@ -374,7 +374,7 @@ function Player() {
           )}
 
 
-          {!ehMidia && (
+          {!ehMidia && bloqueio !== "revogado" && (
             <div className="mt-6 whitespace-pre-line rounded-3xl bg-card p-6 text-[15px] leading-relaxed text-foreground shadow-[var(--shadow-organico)]">
               {conteudo.corpo_texto || "Conteúdo em preparação."}
             </div>
