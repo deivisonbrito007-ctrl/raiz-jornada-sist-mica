@@ -96,6 +96,7 @@ describe("regras de acesso das rotas autenticadas", () => {
 
   it("permite terapeuta no painel do terapeuta", async () => {
     getUser.mockResolvedValue({ data: { user: { id: "terapeuta-1" } }, error: null });
+    comUsuario("terapeuta-1");
     papeisPorUsuario.set("terapeuta-1", ["terapeuta"]);
     expect(await destinoDoRedirect(() => guardaAdmin.beforeLoad({}))).toBeNull();
   });
