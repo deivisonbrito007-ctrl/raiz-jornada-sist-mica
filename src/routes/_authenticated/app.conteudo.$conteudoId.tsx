@@ -171,7 +171,11 @@ function Player() {
     if (!el || bloqueio) return;
     if (el.paused) {
       void el.play();
-      if (data?.status === "nao_iniciado") void registrar("em_andamento");
+      // um único registro de "em andamento" por sessão, mesmo após renovar
+      if (!progressoIniciadoRef.current) {
+        progressoIniciadoRef.current = true;
+        void registrar("em_andamento");
+      }
     } else {
       el.pause();
     }
