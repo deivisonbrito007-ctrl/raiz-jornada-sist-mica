@@ -93,6 +93,36 @@ export type Database = {
           },
         ]
       }
+      convites_equipe: {
+        Row: {
+          aceito_em: string | null
+          created_at: string
+          criado_por: string | null
+          email: string
+          id: string
+          permissoes: string[]
+          status: string
+        }
+        Insert: {
+          aceito_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          email: string
+          id?: string
+          permissoes?: string[]
+          status?: string
+        }
+        Update: {
+          aceito_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          email?: string
+          id?: string
+          permissoes?: string[]
+          status?: string
+        }
+        Relationships: []
+      }
       diario: {
         Row: {
           cliente_id: string
@@ -149,6 +179,45 @@ export type Database = {
           id?: string
           nome?: string
           ordem?: number
+        }
+        Relationships: []
+      }
+      equipe_admins: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      equipe_permissoes: {
+        Row: {
+          created_at: string
+          id: string
+          permissao: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permissao: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permissao?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -340,6 +409,7 @@ export type Database = {
         Args: { _cliente_id: string; _conteudo_id: string; _eixo_id: string }
         Returns: boolean
       }
+      existe_terapeuta: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -348,6 +418,12 @@ export type Database = {
         Returns: boolean
       }
       is_terapeuta: { Args: never; Returns: boolean }
+      pode: { Args: { _permissao: string }; Returns: boolean }
+      pode_administrar: { Args: never; Returns: boolean }
+      tem_permissao: {
+        Args: { _permissao: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "terapeuta" | "cliente"
