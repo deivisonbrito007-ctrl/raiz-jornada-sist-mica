@@ -32,12 +32,25 @@ function AdminLayout() {
   const { data: contexto } = useQuery({
     queryKey: ["meu-contexto"],
     queryFn: () => fetchContexto(),
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
   const ehTerapeuta = contexto?.papel === "terapeuta";
   const minhasPermissoes = contexto?.permissoes ?? [];
   const visiveis = links.filter(
     (l) => ehTerapeuta || minhasPermissoes.includes(l.permissao),
   );
+
+  // Bloqueio imediato: se o acesso administrativo for revogado, sai do painel.
+  useEffect(() => {
+    if (!contexto) return;
+    if (contexto.podeAdministrar) return;
+    queryClient.clear();
+    toast.error("Seu acesso administrativo foi removido.");
+    navigate({ to: "/app", replace: true });
+  }, [contexto, navigate, queryClient]);
+
 
   async function sair() {
     await queryClient.cancelQueries();
