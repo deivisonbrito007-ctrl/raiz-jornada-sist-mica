@@ -193,13 +193,47 @@ function AdminEquipe() {
                     {editando === m.userId ? "Fechar" : "Editar permissões"}
                   </Button>
                   <Button
-                    variant="ghost"
-                    className="rounded-full text-terracota"
-                    onClick={() => mRemover.mutate(m.userId)}
-                    aria-label={`Remover acesso de ${m.email}`}
+                    variant="outline"
+                    className="rounded-full border-terracota/30 text-terracota"
+                    onClick={() => mRevogar.mutate(m.userId)}
+                    disabled={m.permissoes.length === 0 || mRevogar.isPending}
+                    aria-label={`Revogar permissões de ${m.email}`}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <ShieldOff className="mr-2 h-4 w-4" /> Revogar permissões
                   </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="rounded-full text-terracota"
+                        aria-label={`Remover acesso de ${m.email}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="rounded-3xl">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-floresta">
+                          Remover o acesso de {m.nome || m.email}?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Todas as permissões são apagadas na hora e a pessoa deixa de ser admin.
+                          O painel dela é bloqueado imediatamente. Ela continua com a conta de
+                          cliente.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="rounded-full">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="rounded-full bg-terracota text-terracota-foreground hover:bg-terracota/90"
+                          onClick={() => mRemover.mutate(m.userId)}
+                        >
+                          Remover acesso
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
                 </div>
               </div>
 
