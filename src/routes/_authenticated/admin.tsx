@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { RaizWordmark } from "@/components/raiz-logo";
 import { getMeuContexto } from "@/lib/raiz.functions";
 import type { Permissao } from "@/lib/permissoes";
+import { useVigiaPermissoes } from "@/hooks/use-vigia-permissoes";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
@@ -33,6 +34,7 @@ function AdminLayout() {
     queryKey: ["meu-contexto"],
     queryFn: () => fetchContexto(),
   });
+  useVigiaPermissoes();
   const ehTerapeuta = contexto?.papel === "terapeuta";
   const minhasPermissoes = contexto?.permissoes ?? [];
   const visiveis = links.filter(
