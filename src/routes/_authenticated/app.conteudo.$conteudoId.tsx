@@ -228,14 +228,15 @@ function Player() {
   }
 
   /** Pequena espera entre tentativas — o botão nunca fica travado para sempre. */
-  function segurarNovaTentativa() {
+  function segurarNovaTentativa(espera = 5000) {
     setEmEspera(true);
-    setEsperaAte(Date.now() + 5000);
+    setEsperaAte(Date.now() + espera);
     setTimeout(() => {
       setEmEspera(false);
       setEsperaAte(null);
-    }, 5000);
+    }, espera);
   }
+
 
 
 
