@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import {
+  equipeAtualizarConvite,
   equipeAuditoria,
   equipeCancelarConvite,
   equipeConvidar,
@@ -25,7 +26,14 @@ import {
   equipeListar,
   equipeRemover,
 } from "@/lib/equipe.functions";
-import { PERMISSAO_DESCRICAO, PERMISSAO_LABEL, PERMISSOES, type Permissao } from "@/lib/permissoes";
+import {
+  PERFIS_PERMISSAO,
+  PERMISSAO_DESCRICAO,
+  PERMISSAO_LABEL,
+  PERMISSOES,
+  ehPermissao,
+  type Permissao,
+} from "@/lib/permissoes";
 import { formatarData } from "@/lib/raiz-format";
 import { avisarMudancaPermissoes } from "@/hooks/use-vigia-permissoes";
 import { MatrizPermissoes, type LinhaMatriz } from "@/components/matriz-permissoes";
@@ -113,6 +121,7 @@ function AdminEquipe() {
   const listar = useServerFn(equipeListar);
   const convidar = useServerFn(equipeConvidar);
   const cancelar = useServerFn(equipeCancelarConvite);
+  const atualizarConvite = useServerFn(equipeAtualizarConvite);
   const definir = useServerFn(equipeDefinirPermissoes);
   const remover = useServerFn(equipeRemover);
   const auditoria = useServerFn(equipeAuditoria);
@@ -128,6 +137,8 @@ function AdminEquipe() {
   const [emailPromover, setEmailPromover] = useState("");
   const [permsPromover, setPermsPromover] = useState<Permissao[]>(["ver_clientes"]);
   const [editando, setEditando] = useState<string | null>(null);
+  const [conviteEditando, setConviteEditando] = useState<string | null>(null);
+  const [permsConviteEdicao, setPermsConviteEdicao] = useState<Permissao[]>([]);
   const [permsEdicao, setPermsEdicao] = useState<Permissao[]>([]);
 
   function recarregar() {
@@ -188,6 +199,21 @@ function AdminEquipe() {
       avisarMudancaPermissoes();
       toast.success("Acesso removido.");
       recarregar();
+    },
+    onError: (e: Error) => toast.error(mensagemPainel(e)),
+  });
+
+  const mAtualizarConvite = useMutation({
+    mutationFn: (conviteId: string) =>
+      atualizarConvite({ data: { conviteId, permissoes: permsConviteEdicao } }),
+    onSuccess: (r) => {
+      if (r.ok) {
+        toast.success("Permissões do convite atualizadas.");
+        setConviteEditando(null);
+        recarregar();
+      } else {
+        toast.error("Esse convite já não está pendente.");
+      }
     },
     onError: (e: Error) => toast.error(mensagemPainel(e)),
   });
@@ -382,6 +408,7 @@ function AdminEquipe() {
             valor={permsConvite}
             onChange={setPermsConvite}
             idPrefixo="convite"
+            comPerfis
           />
           <Button
             onClick={() => mConvidar.mutate()}
@@ -396,23 +423,54 @@ function AdminEquipe() {
           <div className="mt-6 space-y-2">
             <p className="text-xs uppercase tracking-wider text-salvia">Convites pendentes</p>
             {(data?.convites ?? []).map((c) => (
-              <div
-                key={c.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-secondary p-4"
-              >
-                <div>
-                  <p className="text-sm font-medium text-floresta">{c.email}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {c.permissoes.map((p) => PERMISSAO_LABEL[p as Permissao] ?? p).join(" · ")}
-                  </p>
+              <div key={c.id} className="rounded-2xl bg-secondary p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-floresta">{c.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {c.permissoes.map((p) => PERMISSAO_LABEL[p as Permissao] ?? p).join(" · ")}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      className="rounded-full border-salvia text-salvia"
+                      onClick={() => {
+                        setConviteEditando(conviteEditando === c.id ? null : c.id);
+                        setPermsConviteEdicao(
+                          c.permissoes.filter((p): p is Permissao => ehPermissao(p)),
+                        );
+                      }}
+                    >
+                      {conviteEditando === c.id ? "Fechar" : "Ajustar permissões"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="rounded-full text-terracota"
+                      onClick={() => mCancelar.mutate(c.id)}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  className="rounded-full text-terracota"
-                  onClick={() => mCancelar.mutate(c.id)}
-                >
-                  Cancelar
-                </Button>
+
+                {conviteEditando === c.id && (
+                  <div className="mt-4 space-y-4">
+                    <SeletorPermissoes
+                      valor={permsConviteEdicao}
+                      onChange={setPermsConviteEdicao}
+                      idPrefixo={`convite-${c.id}`}
+                      comPerfis
+                    />
+                    <Button
+                      onClick={() => mAtualizarConvite.mutate(c.id)}
+                      disabled={permsConviteEdicao.length === 0 || mAtualizarConvite.isPending}
+                      className="rounded-full bg-salvia px-6 text-salvia-foreground hover:bg-salvia/90"
+                    >
+                      Salvar permissões do convite
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -448,6 +506,7 @@ function AdminEquipe() {
             valor={permsPromover}
             onChange={setPermsPromover}
             idPrefixo="promover"
+            comPerfis
           />
           <Button
             onClick={() => candidato && mPromover.mutate(candidato.userId)}
