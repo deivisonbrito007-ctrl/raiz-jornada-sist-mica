@@ -12,6 +12,8 @@ import {
   linhaDoTempoSemanal,
 } from "@/lib/raiz-format";
 import { Flame } from "lucide-react";
+import { AvisoPermissao } from "@/components/aviso-permissao";
+import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminClientes,
@@ -19,9 +21,12 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 
 function AdminClientes() {
   const fetchResumo = useServerFn(adminResumo);
-  const { data, isLoading } = useQuery({
+  const perms = useMinhasPermissoes();
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["admin-resumo"],
     queryFn: () => fetchResumo(),
+    enabled: !perms.bloqueado("ver_clientes"),
+    retry: false,
   });
   const [busca, setBusca] = useState("");
 
