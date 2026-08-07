@@ -251,7 +251,7 @@ function AdminEquipe() {
                 </Label>
                 <Input
                   id={`motivo-${m.userId}`}
-                  value={editando === m.userId || true ? motivoEdicao : ""}
+                  value={motivoEdicao}
                   onChange={(e) => setMotivoEdicao(e.target.value)}
                   placeholder="Ex.: saiu da equipe, mudança de função…"
                   maxLength={300}
@@ -450,6 +450,17 @@ function AdminEquipe() {
                 Encontrada: {candidato.nome || candidato.email}
               </p>
             )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="motivo-promover">Motivo da promoção (registrado no histórico)</Label>
+            <Input
+              id="motivo-promover"
+              value={motivoPromover}
+              onChange={(e) => setMotivoPromover(e.target.value)}
+              placeholder="Ex.: assumiu a gestão da biblioteca"
+              maxLength={300}
+              className="max-w-md rounded-full"
+            />
           </div>
           <SeletorPermissoes
             valor={permsPromover}

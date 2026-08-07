@@ -34,6 +34,7 @@ function AdminCliente() {
   const vincularPacote = useServerFn(adminVincularPacote);
   const atualizarPagamento = useServerFn(adminAtualizarPagamento);
   const [pacoteSelecionado, setPacoteSelecionado] = useState("");
+  const [motivoLiberacao, setMotivoLiberacao] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-cliente", clienteId],
@@ -82,6 +83,7 @@ function AdminCliente() {
           liberar,
           titulo: args.titulo,
           liberarEm: liberarEm ?? null,
+          motivo: motivoLiberacao,
         },
       });
       recarregar();
@@ -187,6 +189,23 @@ function AdminCliente() {
               Libere o eixo inteiro ou apenas práticas específicas — agora ou em uma data futura. A
               cliente recebe o aviso quando o conteúdo abrir.
             </p>
+
+            <div className="mt-4 max-w-md">
+              <label
+                htmlFor="motivo-liberacao"
+                className="text-xs text-muted-foreground"
+              >
+                Motivo das mudanças de acesso (registrado no histórico)
+              </label>
+              <input
+                id="motivo-liberacao"
+                value={motivoLiberacao}
+                onChange={(e) => setMotivoLiberacao(e.target.value)}
+                placeholder="Ex.: concluiu o eixo anterior"
+                maxLength={300}
+                className="mt-1 w-full rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground outline-none focus:border-salvia"
+              />
+            </div>
 
             <div className="mt-5 space-y-4">
               {data.eixos.map((eixo) => {
