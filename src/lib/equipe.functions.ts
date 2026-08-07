@@ -127,6 +127,46 @@ export const equipeCancelarConvite = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const equipeAtualizarConvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        conviteId: z.string().uuid(),
+        permissoes: z.array(permissaoSchema).min(1),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await garantirGerenciarEquipe(supabase, userId, "equipeAtualizarConvite");
+
+    const { data: convite } = await supabase
+      .from("convites_equipe")
+      .select("email, status")
+      .eq("id", data.conviteId)
+      .maybeSingle();
+    if (!convite || convite.status !== "pendente") {
+      return { ok: false as const, motivo: "convite_indisponivel" as const };
+    }
+
+    const { error } = await supabase
+      .from("convites_equipe")
+      .update({ permissoes: data.permissoes })
+      .eq("id", data.conviteId)
+      .eq("status", "pendente");
+    if (error) throw erroSeguro(error);
+
+    await registrarAuditoria(supabase, ator(context), {
+      acao: "convite_permissoes_atualizadas",
+      alvoTipo: "convite",
+      alvoId: data.conviteId,
+      alvoEmail: convite.email,
+      detalhes: { permissoes: data.permissoes },
+    });
+    return { ok: true as const };
+  });
+
 export const equipeDefinirPermissoes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
