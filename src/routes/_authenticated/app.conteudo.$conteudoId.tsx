@@ -133,7 +133,7 @@ function Player() {
 
 
   async function registrar(status: "em_andamento" | "concluido") {
-    if (midiaExpirada || semLiberacao) return;
+    if (bloqueio) return;
     await salvarProgresso({ data: { conteudoId, status } });
     queryClient.invalidateQueries({ queryKey: ["biblioteca"] });
     queryClient.invalidateQueries({ queryKey: ["conteudo", conteudoId] });
@@ -142,7 +142,7 @@ function Player() {
 
   function alternar() {
     const el = mediaRef.current;
-    if (!el || midiaExpirada || semLiberacao) return;
+    if (!el || bloqueio) return;
     if (el.paused) {
       void el.play();
       if (data?.status === "nao_iniciado") void registrar("em_andamento");
@@ -150,6 +150,7 @@ function Player() {
       el.pause();
     }
   }
+
 
   function pular(segundos: number) {
     const el = mediaRef.current;
