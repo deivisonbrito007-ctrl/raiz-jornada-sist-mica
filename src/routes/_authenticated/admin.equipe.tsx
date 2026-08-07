@@ -427,6 +427,12 @@ function AdminEquipe() {
           </Button>
         </div>
       </section>
+
+      <HistoricoAuditoria
+        registros={auditoriaQuery.data?.registros ?? []}
+        carregando={auditoriaQuery.isLoading}
+      />
+
     </div>
   );
 }
