@@ -147,7 +147,7 @@ describe("alterações concorrentes do terapeuta no mesmo cliente", () => {
     await waitFor(() =>
       expect(toastError).toHaveBeenCalledWith("Esta prática não está mais liberada para você."),
     );
-    expect(await screen.findByText(/não está mais liberada/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Prática não está mais liberada/i)).toBeInTheDocument();
     expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
   });
 
@@ -164,7 +164,7 @@ describe("alterações concorrentes do terapeuta no mesmo cliente", () => {
     rajada(4);
 
     expect(await screen.findByText("Respiração da raiz")).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByText(/não está mais liberada/i)).toBeNull());
+    await waitFor(() => expect(screen.queryByText(/Prática não está mais liberada/i)).toBeNull());
   });
 
   it("ignora resposta antiga que chega depois da mais recente (fora de ordem)", async () => {
@@ -183,7 +183,7 @@ describe("alterações concorrentes do terapeuta no mesmo cliente", () => {
 
     await espera(200);
     await waitFor(() => expect(screen.getByText("Respiração da raiz")).toBeInTheDocument());
-    expect(screen.queryByText(/não está mais liberada/i)).toBeNull();
+    expect(screen.queryByText(/Prática não está mais liberada/i)).toBeNull();
   });
 
   it("não duplica avisos quando a mesma revogação chega várias vezes", async () => {
