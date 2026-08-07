@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { TimerOff, Lock, AlertCircle } from "lucide-react";
+import { TimerOff, Lock, AlertCircle, Hourglass } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export type MotivoBloqueio = "validade" | "revogado" | "falha";
+export type MotivoBloqueio = "validade" | "revogado" | "falha" | "limite";
+
 
 interface Props {
   motivo: MotivoBloqueio;
