@@ -34,14 +34,15 @@ export function useSincronizarLiberacoes(onMudanca?: () => void) {
             table: "liberacoes",
             filter: `cliente_id=eq.${uid}`,
           },
-          () => {
+          (payload) => {
+            console.log("[raiz] mudanca liberacao:", payload.eventType);
             queryClient.invalidateQueries({ queryKey: ["biblioteca"] });
             queryClient.invalidateQueries({ queryKey: ["trilha"] });
             queryClient.invalidateQueries({ queryKey: ["conteudo"] });
             onMudanca?.();
           },
         )
-        .subscribe();
+        .subscribe((status) => console.log("[raiz] canal liberacoes:", status));
     }
 
     void assinar();
