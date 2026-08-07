@@ -62,8 +62,9 @@ function Player() {
       el.pause();
     }
     setTocando(false);
-    setMidiaExpirada(true);
+    setBloqueio("validade");
   }
+
 
   /** Ao carregar a nova mídia, volta ao ponto salvo e fica pausado. */
   function retomarPosicao(el: HTMLVideoElement | HTMLAudioElement) {
