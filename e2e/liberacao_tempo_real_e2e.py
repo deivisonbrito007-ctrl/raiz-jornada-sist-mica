@@ -109,15 +109,38 @@ async def main() -> None:
         print("SKIP: a sessão atual não pode gerenciar liberações; entre como terapeuta e repita.")
         return
 
-    conteudos = api.get("conteudos", {"select": "id,titulo,eixo_id,tipo", "limit": "1"})
-    if not conteudos:
-        print("SKIP: nenhum conteúdo cadastrado para testar liberação.")
-        return
-    conteudo = conteudos[0]
-    print("conteúdo de teste:", conteudo["titulo"])
+    # escolhe um eixo bloqueado que tenha conteúdo — o cliente vê o eixo, não o título
+    eixos = api.get("eixos", {"select": "id,nome", "order": "ordem"})
+    conteudos = api.get("conteudos", {"select": "id,titulo,eixo_id,tipo", "order": "ordem"})
+    liberadas = api.get("liberacoes", {"select": "eixo_id,conteudo_id", "cliente_id": f"eq.{uid}"})
+    eixos_liberados = {l["eixo_id"] for l in liberadas}
 
-    # ponto de partida limpo: sem liberação desse conteúdo para o próprio usuário
-    api.delete("liberacoes", {"cliente_id": f"eq.{uid}", "conteudo_id": f"eq.{conteudo['id']}"})
+    alvo = next(
+        (
+            (e, c)
+            for e in eixos
+            if e["id"] not in eixos_liberados
+            for c in conteudos
+            if c["eixo_id"] == e["id"]
+        ),
+        None,
+    )
+    if not alvo:
+        print("SKIP: nenhum eixo bloqueado com conteúdo para testar.")
+        return
+    eixo, conteudo = alvo
+    print("eixo de teste:", eixo["nome"], "| prática:", conteudo["titulo"])
+
+    def liberar_eixo() -> dict:
+        return api.insert(
+            "liberacoes",
+            {"cliente_id": uid, "eixo_id": eixo["id"], "conteudo_id": None, "status": "liberado"},
+        )
+
+    def revogar_eixo() -> None:
+        api.delete("liberacoes", {"cliente_id": f"eq.{uid}", "eixo_id": f"eq.{eixo['id']}"})
+
+    revogar_eixo()
 
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=True)
@@ -128,59 +151,40 @@ async def main() -> None:
 
         await restaurar_sessao(context, page, session, storage_key, cookies_json)
 
-        # 1) biblioteca antes da liberação
+        # 1) biblioteca antes da liberação: eixo aparece bloqueado
         await page.goto(f"{BASE_URL}/app", wait_until="domcontentloaded")
-        await page.get_by_text(conteudo["titulo"], exact=False).first.wait_for(timeout=20000)
+        cartao = page.locator("div").filter(has_text=eixo["nome"]).last
+        await cartao.wait_for(timeout=20000)
         await page.screenshot(path=str(SCREENSHOTS / "lib_1_antes.png"))
+        assert "será liberado" in (await cartao.inner_text()), "eixo deveria estar bloqueado"
 
-        item = page.locator("li, a, div").filter(has_text=conteudo["titulo"]).last
-        texto_antes = (await item.inner_text()).lower()
-        assert "bloquead" in texto_antes or "libera" not in texto_antes, (
-            "prática não deveria estar acessível antes da liberação"
-        )
-
-        # 2) terapeuta libera — a biblioteca deve reagir sozinha
-        liberacao = api.insert(
-            "liberacoes",
-            {
-                "cliente_id": uid,
-                "conteudo_id": conteudo["id"],
-                "eixo_id": conteudo["eixo_id"],
-                "status": "liberado",
-            },
-        )
-        link = page.get_by_role("link").filter(has_text=conteudo["titulo"]).first
-        await link.wait_for(timeout=20000)
+        # 2) terapeuta libera — a biblioteca reage sozinha
+        liberar_eixo()
+        link_eixo = page.get_by_role("link").filter(has_text=eixo["nome"]).first
+        await link_eixo.wait_for(timeout=20000)
         await page.screenshot(path=str(SCREENSHOTS / "lib_2_liberado.png"))
-        print("OK: biblioteca liberou a prática sem recarregar")
+        print("OK: biblioteca liberou o eixo sem recarregar")
 
-        # 3) abre o player e o terapeuta revoga
-        await link.click()
-        await page.get_by_role("heading", name=conteudo["titulo"]).wait_for(timeout=20000)
+        # 3) abre a trilha e o player, e o terapeuta revoga
+        await link_eixo.click()
+        link_pratica = page.get_by_role("link").filter(has_text=conteudo["titulo"]).first
+        await link_pratica.wait_for(timeout=20000)
+        await link_pratica.click()
+        await page.get_by_text(conteudo["titulo"], exact=False).first.wait_for(timeout=20000)
         await page.screenshot(path=str(SCREENSHOTS / "player_1_liberado.png"))
 
-        api.delete("liberacoes", {"id": f"eq.{liberacao['id']}"})
-        aviso = page.get_by_text("não está mais liberada", exact=False).first
-        await aviso.wait_for(timeout=20000)
+        revogar_eixo()
+        await page.get_by_text("não está mais liberada", exact=False).first.wait_for(timeout=20000)
         await page.screenshot(path=str(SCREENSHOTS / "player_2_revogado.png"))
         print("OK: player bloqueou na hora após a revogação")
 
         # 4) libera de novo — player volta sozinho
-        api.insert(
-            "liberacoes",
-            {
-                "cliente_id": uid,
-                "conteudo_id": conteudo["id"],
-                "eixo_id": conteudo["eixo_id"],
-                "status": "liberado",
-            },
-        )
+        liberar_eixo()
         await page.get_by_text("liberada de novo", exact=False).first.wait_for(timeout=20000)
         await page.screenshot(path=str(SCREENSHOTS / "player_3_reliberado.png"))
         print("OK: player voltou a liberar sem recarregar")
 
-        # limpeza
-        api.delete("liberacoes", {"cliente_id": f"eq.{uid}", "conteudo_id": f"eq.{conteudo['id']}"})
+        revogar_eixo()
 
         graves = [e for e in erros if "Warning" not in e]
         assert not graves, f"erros de console durante o fluxo: {graves[:3]}"
