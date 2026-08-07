@@ -44,16 +44,44 @@ function SeletorPermissoes({
   valor,
   onChange,
   idPrefixo,
+  comPerfis = false,
 }: {
   valor: Permissao[];
   onChange: (p: Permissao[]) => void;
   idPrefixo: string;
+  comPerfis?: boolean;
 }) {
   function alternar(p: Permissao, marcado: boolean) {
     onChange(marcado ? [...valor, p] : valor.filter((x) => x !== p));
   }
+  const perfilAtivo = PERFIS_PERMISSAO.find(
+    (perfil) =>
+      perfil.permissoes.length === valor.length &&
+      perfil.permissoes.every((p) => valor.includes(p)),
+  );
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
+    <div className="space-y-3">
+      {comPerfis && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs uppercase tracking-wider text-salvia">Perfis prontos</span>
+          {PERFIS_PERMISSAO.map((perfil) => (
+            <button
+              key={perfil.id}
+              type="button"
+              onClick={() => onChange([...perfil.permissoes])}
+              className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                perfilAtivo?.id === perfil.id
+                  ? "border-salvia bg-salvia text-salvia-foreground"
+                  : "border-border text-muted-foreground hover:border-salvia hover:text-floresta"
+              }`}
+            >
+              {perfil.nome}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="grid gap-2 sm:grid-cols-2">
+
       {PERMISSOES.map((p) => (
         <label
           key={p}
