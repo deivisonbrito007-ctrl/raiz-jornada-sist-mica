@@ -148,9 +148,10 @@ describe("player — posição de reprodução salva no backend", () => {
     audio().currentTime = 12;
     fireEvent.timeUpdate(audio());
     await waitFor(() => expect(salvarPosicaoFn).toHaveBeenCalledTimes(1));
-    expect(salvarPosicaoFn.mock.calls[0]?.[0]).toMatchObject({
-      data: { posicaoSegundos: 12 },
-    });
+    expect(salvarPosicaoFn.mock.calls[0]).toMatchObject([
+      { data: { posicaoSegundos: 12 } },
+    ]);
+
   });
 
   it("zera a posição quando a prática chega ao fim", async () => {
