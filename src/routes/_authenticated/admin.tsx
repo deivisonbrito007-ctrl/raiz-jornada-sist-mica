@@ -28,6 +28,16 @@ const links: { to: string; label: string; exact: boolean; permissao: Permissao }
 function AdminLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const fetchContexto = useServerFn(getMeuContexto);
+  const { data: contexto } = useQuery({
+    queryKey: ["meu-contexto"],
+    queryFn: () => fetchContexto(),
+  });
+  const ehTerapeuta = contexto?.papel === "terapeuta";
+  const minhasPermissoes = contexto?.permissoes ?? [];
+  const visiveis = links.filter(
+    (l) => ehTerapeuta || minhasPermissoes.includes(l.permissao),
+  );
 
   async function sair() {
     await queryClient.cancelQueries();
@@ -43,11 +53,11 @@ function AdminLayout() {
           <div className="flex items-center gap-3">
             <RaizWordmark className="text-floresta-foreground" />
             <span className="rounded-full bg-floresta-foreground/10 px-3 py-1 text-[11px] uppercase tracking-wider text-ocre">
-              Painel do terapeuta
+              {ehTerapeuta ? "Painel do terapeuta" : "Painel administrativo"}
             </span>
           </div>
           <nav className="flex items-center gap-1">
-            {links.map((link) => (
+            {visiveis.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
