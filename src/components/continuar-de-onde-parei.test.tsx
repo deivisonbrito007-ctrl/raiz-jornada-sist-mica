@@ -32,7 +32,7 @@ describe("botão Continuar de onde parei", () => {
   it("mostra onde parou e quanto falta", () => {
     render(<ContinuarDeOndeParei pratica={pratica} />);
     expect(screen.getByText("Meditação da origem")).toBeInTheDocument();
-    expect(screen.getByText(/parou em 2:30/)).toBeInTheDocument();
-    expect(screen.getByText(/faltam 7:30/)).toBeInTheDocument();
+    expect(screen.getByText(/parou em 2 min 30s/)).toBeInTheDocument();
+    expect(screen.getByText(/faltam 7 min 30s/)).toBeInTheDocument();
   });
 });
