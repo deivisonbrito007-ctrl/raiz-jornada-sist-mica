@@ -12,7 +12,7 @@ import {
   RotateCw,
   NotebookPen,
 } from "lucide-react";
-import { getConteudo, marcarProgresso, salvarPosicao } from "@/lib/raiz.functions";
+import { getConteudo, marcarProgresso } from "@/lib/raiz.functions";
 import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,12 +22,6 @@ import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 
 
 export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")({
-  // ?retomar=1 vem do botão "Continuar de onde parei" na trilha
-  validateSearch: (busca: Record<string, unknown>): { retomar?: boolean } => {
-    const v = busca["retomar"];
-    const ligado = v === true || v === "true" || v === "1";
-    return ligado ? { retomar: true } : {};
-  },
   component: Player,
 });
 
@@ -37,13 +31,10 @@ function ehMidiaTipo(tipo?: string) {
 
 function Player() {
   const { conteudoId } = Route.useParams();
-  // Route.useSearch pode não existir em ambientes de teste com router simulado
-  const { retomar: retomarAoAbrir } = (Route.useSearch?.() ?? {}) as { retomar?: boolean };
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fetchConteudo = useServerFn(getConteudo);
   const salvarProgresso = useServerFn(marcarProgresso);
-  const persistirPosicao = useServerFn(salvarPosicao);
 
   const { data, isLoading } = useQuery({
     queryKey: ["conteudo", conteudoId],
@@ -53,15 +44,11 @@ function Player() {
   useSincronizarLiberacoes(() => void revalidarLiberacao());
 
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
-  /** link de saída: recebe o foco quando a pessoa pressiona Esc no aviso */
-  const voltarRef = useRef<HTMLAnchorElement | null>(null);
   const posicaoRef = useRef(0);
   /** estava tocando no instante em que o link venceu? */
   const tocandoAntesRef = useRef(false);
   /** deve dar play sozinho quando a nova mídia carregar? */
   const retomarAutoRef = useRef(false);
-  /** o pedido de retomada automática (vindo da trilha) já foi consumido? */
-  const retomadaPedidaRef = useRef(false);
   /** o "em andamento" desta sessão já foi registrado — não repetir na retomada */
   const progressoIniciadoRef = useRef(false);
   const [tocando, setTocando] = useState(false);
@@ -98,75 +85,6 @@ function Player() {
     setConcluido(data?.status === "concluido");
     if (data?.status && data.status !== "nao_iniciado") progressoIniciadoRef.current = true;
   }, [data?.status]);
-
-  /** a posição guardada no backend já foi aplicada nesta visita? */
-  const posicaoRestauradaRef = useRef(false);
-  /** última posição enviada ao backend, para não gravar a mesma coisa toda hora */
-  const ultimaSalvaRef = useRef(-1);
-
-  // Retoma o ponto exato salvo no backend — vale após fechar o app, recarregar
-  // a página ou continuar em outro aparelho.
-  useEffect(() => {
-    if (posicaoRestauradaRef.current) return;
-    if (typeof data?.posicaoSegundos !== "number") return;
-    posicaoRestauradaRef.current = true;
-    // vindo do botão "Continuar de onde parei": já volta a tocar sozinho
-    if (retomarAoAbrir && !retomadaPedidaRef.current && data.posicaoSegundos > 0) {
-      retomadaPedidaRef.current = true;
-      retomarAutoRef.current = true;
-      tocandoAntesRef.current = true;
-    }
-    if (data.posicaoSegundos > 0) {
-      posicaoRef.current = data.posicaoSegundos;
-      ultimaSalvaRef.current = data.posicaoSegundos;
-      setTempo(data.posicaoSegundos);
-      const el = mediaRef.current;
-      if (el && el.readyState > 0) el.currentTime = data.posicaoSegundos;
-    }
-  }, [data?.posicaoSegundos, retomarAoAbrir]);
-
-  /** Grava no backend onde a pessoa parou (no máximo uma gravação a cada 5s). */
-  function guardarPosicao(agora = false) {
-    const el = mediaRef.current;
-    if (!el || bloqueioRef.current) return;
-    const pos = Math.floor(el.currentTime || posicaoRef.current || 0);
-    posicaoRef.current = el.currentTime || posicaoRef.current;
-    if (!agora && Math.abs(pos - ultimaSalvaRef.current) < 5) return;
-    ultimaSalvaRef.current = pos;
-    void Promise.resolve(
-      persistirPosicao({ data: { conteudoId, posicaoSegundos: pos, tocando: !el.paused } }),
-    ).catch(() => {
-      // falhou: libera a próxima tentativa em vez de perder a posição
-      ultimaSalvaRef.current = -1;
-    });
-  }
-
-  /** Terminou a prática: a próxima escuta começa do início. */
-  function zerarPosicao() {
-    posicaoRef.current = 0;
-    ultimaSalvaRef.current = 0;
-    void Promise.resolve(
-      persistirPosicao({ data: { conteudoId, posicaoSegundos: 0, tocando: false } }),
-    ).catch(() => {
-      ultimaSalvaRef.current = -1;
-    });
-  }
-
-  // Fechar a aba, minimizar o app ou sair da tela também salva o ponto atual.
-  useEffect(() => {
-    const aoSair = () => guardarPosicao(true);
-    const aoEsconder = () => {
-      if (document.visibilityState === "hidden") aoSair();
-    };
-    window.addEventListener("pagehide", aoSair);
-    document.addEventListener("visibilitychange", aoEsconder);
-    return () => {
-      window.removeEventListener("pagehide", aoSair);
-      document.removeEventListener("visibilitychange", aoEsconder);
-      aoSair();
-    };
-  }, [conteudoId]);
-
 
   const conteudo = data?.conteudo;
   const ehMidia = conteudo?.tipo === "video" || conteudo?.tipo === "audio";
@@ -381,10 +299,9 @@ function Player() {
     <div>
       {conteudo ? (
         <Link
-          ref={voltarRef}
           to="/app/eixo/$eixoId"
           params={{ eixoId: conteudo.eixo_id }}
-          className="inline-flex items-center gap-1.5 rounded-full text-sm text-muted-foreground hover:text-floresta focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-floresta"
         >
           <ArrowLeft className="h-4 w-4" /> Voltar à trilha
         </Link>
@@ -424,24 +341,6 @@ function Player() {
             </div>
           )}
 
-          {(ehMidia || bloqueio === "revogado") && (
-            <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-              {bloqueio === "revogado"
-                ? "Player indisponível: esta prática não está mais liberada."
-                : bloqueio === "limite"
-                  ? "Player pausado: muitos pedidos de link em pouco tempo. Aguarde para renovar o acesso."
-                  : bloqueio
-                    ? `Player pausado: o link seguro expirou em ${formatarDuracao(Math.floor(tempo))}. Renove o acesso para continuar.`
-                    : renovando
-                      ? "Renovando o acesso à mídia."
-                      : terminou
-                        ? "Prática concluída até o fim."
-                        : tocando
-                          ? `Reproduzindo, ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`
-                          : `Pausado em ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`}
-            </p>
-          )}
-
           {ehMidia && data?.url && !bloqueio && (
 
             <div className="mt-6 overflow-hidden rounded-3xl bg-floresta p-4">
@@ -452,19 +351,12 @@ function Player() {
                   className="w-full rounded-2xl bg-black"
                   playsInline
                   onPlay={() => setTocando(true)}
-                  onPause={() => {
-                    setTocando(false);
-                    guardarPosicao(true);
-                  }}
-                  onTimeUpdate={(e) => {
-                    setTempo(e.currentTarget.currentTime);
-                    guardarPosicao();
-                  }}
+                  onPause={() => setTocando(false)}
+                  onTimeUpdate={(e) => setTempo(e.currentTarget.currentTime)}
                   onLoadedMetadata={(e) => retomarPosicao(e.currentTarget)}
                   onEnded={() => {
                     setTocando(false);
                     setTerminou(true);
-                    zerarPosicao();
                   }}
                   onError={expirarMidia}
                 />
@@ -474,23 +366,15 @@ function Player() {
                     ref={mediaRef as React.RefObject<HTMLAudioElement>}
                     src={data.url}
                     onPlay={() => setTocando(true)}
-                    onPause={() => {
-                      setTocando(false);
-                      guardarPosicao(true);
-                    }}
-                    onTimeUpdate={(e) => {
-                      setTempo(e.currentTarget.currentTime);
-                      guardarPosicao();
-                    }}
+                    onPause={() => setTocando(false)}
+                    onTimeUpdate={(e) => setTempo(e.currentTarget.currentTime)}
                     onLoadedMetadata={(e) => retomarPosicao(e.currentTarget)}
                     onEnded={() => {
                       setTocando(false);
                       setTerminou(true);
-                      zerarPosicao();
                     }}
                     onError={expirarMidia}
                   />
-
                   <p className="font-display text-lg text-floresta-foreground/70">
                     Feche os olhos e apenas escute.
                   </p>
@@ -498,15 +382,7 @@ function Player() {
               )}
 
               <div className="mt-4 px-1">
-                <div
-                  className="h-1.5 overflow-hidden rounded-full bg-floresta-foreground/20"
-                  role="progressbar"
-                  aria-label="Progresso da reprodução"
-                  aria-valuemin={0}
-                  aria-valuemax={Math.floor(total) || 0}
-                  aria-valuenow={Math.floor(tempo)}
-                  aria-valuetext={`${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}`}
-                >
+                <div className="h-1.5 overflow-hidden rounded-full bg-floresta-foreground/20">
                   <div
                     className="h-full rounded-full bg-ocre transition-all"
                     style={{ width: `${total ? (tempo / total) * 100 : 0}%` }}
@@ -518,29 +394,24 @@ function Player() {
                 </div>
               </div>
 
-              <div
-                className="mt-4 flex items-center justify-center gap-6"
-                role="group"
-                aria-label="Controles de reprodução"
-              >
+              <div className="mt-4 flex items-center justify-center gap-6">
                 <button
                   onClick={() => pular(-15)}
-                  className="rounded-full text-floresta-foreground/80 hover:text-ocre focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
+                  className="text-floresta-foreground/80 hover:text-ocre"
                   aria-label="Voltar 15 segundos"
                 >
                   <RotateCcw className="h-6 w-6" />
                 </button>
                 <button
                   onClick={alternar}
-                  className="rounded-full bg-terracota p-4 text-terracota-foreground focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
+                  className="rounded-full bg-terracota p-4 text-terracota-foreground"
                   aria-label={tocando ? "Pausar" : "Reproduzir"}
-                  aria-pressed={tocando}
                 >
                   {tocando ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7" />}
                 </button>
                 <button
                   onClick={() => pular(15)}
-                  className="rounded-full text-floresta-foreground/80 hover:text-ocre focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
+                  className="text-floresta-foreground/80 hover:text-ocre"
                   aria-label="Avançar 15 segundos"
                 >
                   <RotateCw className="h-6 w-6" />
@@ -557,7 +428,6 @@ function Player() {
               esperaAte={esperaAte}
               eixoId={conteudo.eixo_id}
               onRenovar={renovarMidia}
-              onSair={() => voltarRef.current?.focus()}
             />
           )}
 

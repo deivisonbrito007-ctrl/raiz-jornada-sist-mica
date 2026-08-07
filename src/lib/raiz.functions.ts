@@ -55,7 +55,7 @@ export const getMinhaBiblioteca = createServerFn({ method: "GET" })
         .eq("cliente_id", userId),
       supabase
         .from("progresso")
-        .select("conteudo_id, status, concluido_em, posicao_segundos, posicao_atualizada_em")
+        .select("conteudo_id, status, concluido_em")
         .eq("cliente_id", userId),
     ]);
 
@@ -123,38 +123,9 @@ export const getMinhaBiblioteca = createServerFn({ method: "GET" })
     const totalItens = totalLiberado.reduce((acc, e) => acc + e.total, 0);
     const totalConcluidos = totalLiberado.reduce((acc, e) => acc + e.concluidos, 0);
 
-    // Última prática deixada no meio (com ponto salvo) que ainda está liberada:
-    // alimenta o botão "Continuar de onde parei" na trilha.
-    const idsLiberados = new Set(praticas.map((p) => p.id));
-    const retomar =
-      (progresso.data ?? [])
-        .filter(
-          (p) =>
-            p.status !== "concluido" &&
-            (p.posicao_segundos ?? 0) > 0 &&
-            idsLiberados.has(p.conteudo_id),
-        )
-        .sort((a, b) =>
-          String(b.posicao_atualizada_em ?? "").localeCompare(String(a.posicao_atualizada_em ?? "")),
-        )
-        .map((p) => {
-          const pratica = praticas.find((x) => x.id === p.conteudo_id)!;
-          return {
-            id: pratica.id,
-            eixoId: pratica.eixoId,
-            eixoNome: pratica.eixoNome,
-            tipo: pratica.tipo,
-            titulo: pratica.titulo,
-            duracaoSegundos: pratica.duracaoSegundos,
-            posicaoSegundos: p.posicao_segundos ?? 0,
-            atualizadoEm: p.posicao_atualizada_em,
-          };
-        })[0] ?? null;
-
     return {
       eixos: eixosResult,
       praticas,
-      retomar,
       resumo: {
         totalItens,
         totalConcluidos,
@@ -287,7 +258,7 @@ export const getConteudo = createServerFn({ method: "GET" })
 
     const { data: prog } = await supabase
       .from("progresso")
-      .select("status, posicao_segundos, estava_tocando, posicao_atualizada_em")
+      .select("status")
       .eq("cliente_id", userId)
       .eq("conteudo_id", data.conteudoId)
       .maybeSingle();
@@ -297,9 +268,6 @@ export const getConteudo = createServerFn({ method: "GET" })
       url,
       urlExpiraEm,
       status: prog?.status ?? ("nao_iniciado" as const),
-      posicaoSegundos: prog?.posicao_segundos ?? 0,
-      estavaTocando: prog?.estava_tocando ?? false,
-      posicaoAtualizadaEm: prog?.posicao_atualizada_em ?? null,
       limitado,
       esperarSegundos,
     };
@@ -333,50 +301,6 @@ export const marcarProgresso = createServerFn({ method: "POST" })
     if (error) throw erroSeguro(error);
     return { ok: true };
   });
-
-/**
- * Guarda no backend o ponto exato da reprodução (e se estava tocando), para a
- * pessoa retomar de onde parou mesmo depois de fechar o app ou recarregar.
- */
-export const salvarPosicao = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
-    z
-      .object({
-        conteudoId: z.string().uuid(),
-        posicaoSegundos: z.number().finite().min(0).max(60 * 60 * 12),
-        tocando: z.boolean().optional(),
-      })
-      .parse(input),
-  )
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    await garantirConteudoLiberado(supabase, userId, data.conteudoId, "salvarPosicao");
-
-    const { data: atual } = await supabase
-      .from("progresso")
-      .select("status")
-      .eq("cliente_id", userId)
-      .eq("conteudo_id", data.conteudoId)
-      .maybeSingle();
-
-    const { error } = await supabase.from("progresso").upsert(
-      {
-        cliente_id: userId,
-        conteudo_id: data.conteudoId,
-        // nunca rebaixa uma prática já concluída ao salvar a posição
-        status: atual?.status === "concluido" ? "concluido" : "em_andamento",
-        posicao_segundos: Math.floor(data.posicaoSegundos),
-        estava_tocando: data.tocando ?? false,
-        posicao_atualizada_em: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "cliente_id,conteudo_id" },
-    );
-    if (error) throw erroSeguro(error);
-    return { ok: true, posicaoSegundos: Math.floor(data.posicaoSegundos) };
-  });
-
 
 export const definirMetaSemanal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
