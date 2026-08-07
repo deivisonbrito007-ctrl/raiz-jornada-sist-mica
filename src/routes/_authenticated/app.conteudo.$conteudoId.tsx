@@ -23,9 +23,11 @@ import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 
 export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")({
   // ?retomar=1 vem do botão "Continuar de onde parei" na trilha
-  validateSearch: (busca: Record<string, unknown>) => ({
-    retomar: busca["retomar"] === true || busca["retomar"] === "true" || busca["retomar"] === "1",
-  }),
+  validateSearch: (busca: Record<string, unknown>): { retomar?: boolean } => {
+    const v = busca["retomar"];
+    const ligado = v === true || v === "true" || v === "1";
+    return ligado ? { retomar: true } : {};
+  },
   component: Player,
 });
 
