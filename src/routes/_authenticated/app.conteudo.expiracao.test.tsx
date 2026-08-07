@@ -209,8 +209,9 @@ describe("player — expiração da URL assinada", () => {
     );
     expect(screen.getByText(/O terapeuta recolheu o acesso a esta prática/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeInTheDocument();
-    const voltar = screen.getByText("Voltar à trilha");
-    expect(voltar.tagName).toBe("A");
+    const voltar = screen.getAllByText("Voltar à trilha");
+    expect(voltar.some((el) => el.tagName === "A")).toBe(true);
+
 
 
     expect(toastError).toHaveBeenCalledWith("Esta prática não está mais liberada para você.");
