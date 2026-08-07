@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { TimerOff, Lock, AlertCircle, Hourglass } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export type MotivoBloqueio = "validade" | "revogado" | "falha" | "limite";
@@ -14,6 +14,8 @@ interface Props {
   esperaAte?: number | null;
   eixoId?: string;
   onRenovar: () => void;
+  /** Esc dentro do aviso: devolve o foco para fora (ex.: link "Voltar à trilha"). */
+  onSair?: () => void;
 }
 
 /** Segundos que faltam para liberar o botão — atualiza a cada segundo. */
@@ -36,6 +38,7 @@ export function AvisoMidiaBloqueada({
   esperaAte,
   eixoId,
   onRenovar,
+  onSair,
 }: Props) {
   const segundos = useContagem(emEspera ? esperaAte : null);
 
