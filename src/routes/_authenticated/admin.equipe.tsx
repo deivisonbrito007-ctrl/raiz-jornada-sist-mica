@@ -231,6 +231,15 @@ function AdminEquipe() {
     (c) => c.email.toLowerCase() === emailPromover.trim().toLowerCase(),
   );
 
+  if (bloqueado) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl text-floresta">Equipe</h1>
+        <AvisoPermissao permissao="gerenciar_equipe" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -243,7 +252,12 @@ function AdminEquipe() {
 
       {isLoading && <Skeleton className="h-40 rounded-3xl" />}
 
-      {!isLoading && <MatrizPermissoes linhas={linhasMatriz} />}
+      {erroEquipe ? (
+        <AvisoPermissao erro={erroEquipe} onTentarNovamente={() => recarregarEquipe()} />
+      ) : null}
+
+      {!isLoading && !erroEquipe && <MatrizPermissoes linhas={linhasMatriz} />}
+
 
       <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
         <h2 className="flex items-center gap-2 text-xl text-floresta">
