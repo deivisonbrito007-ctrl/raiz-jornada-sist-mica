@@ -17,7 +17,8 @@
     "coverage:badge": "node scripts/coverage-badge.mjs",
     "test:e2e": "python3 e2e/heatmap_cliente_e2e.py",
     "test:e2e:permissoes": "python3 e2e/painel_terapeuta_permissoes_e2e.py",
-    "test:e2e:liberacao": "python3 e2e/liberacao_tempo_real_e2e.py"
+    "test:e2e:liberacao": "python3 e2e/liberacao_tempo_real_e2e.py",
+    "test:e2e:expiracao": "python3 e2e/expiracao_url_e2e.py"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
