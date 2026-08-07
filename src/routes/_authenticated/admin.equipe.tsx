@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Mail, ShieldCheck, ShieldOff, Trash2, UserPlus } from "lucide-react";
+import { Clock, Copy, Mail, ShieldCheck, ShieldOff, Trash2, UserPlus } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +25,7 @@ import {
 } from "@/lib/equipe.functions";
 import { PERMISSAO_DESCRICAO, PERMISSAO_LABEL, PERMISSOES, type Permissao } from "@/lib/permissoes";
 import { formatarData } from "@/lib/raiz-format";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { avisarMudancaPermissoes } from "@/hooks/use-vigia-permissoes";
 import { MatrizPermissoes, type LinhaMatriz } from "@/components/matriz-permissoes";
 import { Button } from "@/components/ui/button";
@@ -87,20 +88,50 @@ function AdminEquipe() {
 
   const [emailConvite, setEmailConvite] = useState("");
   const [permsConvite, setPermsConvite] = useState<Permissao[]>(["ver_clientes"]);
+  const [diasValidade, setDiasValidade] = useState("7");
   const [emailPromover, setEmailPromover] = useState("");
   const [permsPromover, setPermsPromover] = useState<Permissao[]>(["ver_clientes"]);
   const [editando, setEditando] = useState<string | null>(null);
   const [permsEdicao, setPermsEdicao] = useState<Permissao[]>([]);
+
+  function urlConvite(token: string) {
+    const base = typeof window === "undefined" ? "" : window.location.origin;
+    return `${base}/convite/${token}`;
+  }
+
+  async function copiarLink(token: string) {
+    try {
+      await navigator.clipboard.writeText(urlConvite(token));
+      toast.success("Link de convite copiado.");
+    } catch {
+      toast.error("Não foi possível copiar. Selecione o link manualmente.");
+    }
+  }
+
+  function linkEmail(email: string, token: string) {
+    const assunto = encodeURIComponent("Convite para administrar o Raiz");
+    const corpo = encodeURIComponent(
+      `Olá!\n\nVocê foi convidada(o) para ajudar a administrar o espaço Raiz.\n\nConfirme seu acesso por este link: ${urlConvite(token)}\n\nO link tem prazo de validade — se expirar, é só pedir um novo.`,
+    );
+    return `mailto:${email}?subject=${assunto}&body=${corpo}`;
+  }
 
   function recarregar() {
     queryClient.invalidateQueries({ queryKey: ["equipe"] });
   }
 
   const mConvidar = useMutation({
-    mutationFn: () => convidar({ data: { email: emailConvite, permissoes: permsConvite } }),
+    mutationFn: () =>
+      convidar({
+        data: {
+          email: emailConvite,
+          permissoes: permsConvite,
+          diasValidade: Number(diasValidade),
+        },
+      }),
     onSuccess: (r) => {
       if (r.ok) {
-        toast.success("Convite criado. Ao criar a conta, a pessoa já entra como admin.");
+        toast.success("Convite criado. Envie o link de confirmação para a pessoa.");
         setEmailConvite("");
         recarregar();
       } else {
@@ -325,8 +356,8 @@ function AdminEquipe() {
           <Mail className="h-5 w-5 text-salvia" /> Convidar por e-mail
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Ao criar a conta com este e-mail, a pessoa já entra como admin com as permissões
-          marcadas.
+          Geramos um link de confirmação único e com prazo de validade. A pessoa entra com o
+          e-mail convidado, abre o link e o acesso de admin é ativado na hora.
         </p>
         <div className="mt-4 space-y-4">
           <div className="space-y-2">
@@ -338,6 +369,21 @@ function AdminEquipe() {
               onChange={(e) => setEmailConvite(e.target.value)}
               className="max-w-sm rounded-full"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="validade-convite">Validade do convite</Label>
+            <Select value={diasValidade} onValueChange={setDiasValidade}>
+              <SelectTrigger id="validade-convite" className="max-w-[220px] rounded-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1 dia</SelectItem>
+                <SelectItem value="3">3 dias</SelectItem>
+                <SelectItem value="7">7 dias</SelectItem>
+                <SelectItem value="14">14 dias</SelectItem>
+                <SelectItem value="30">30 dias</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <SeletorPermissoes
             valor={permsConvite}
@@ -361,19 +407,49 @@ function AdminEquipe() {
                 key={c.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-secondary p-4"
               >
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-medium text-floresta">{c.email}</p>
                   <p className="text-xs text-muted-foreground">
                     {c.permissoes.map((p) => PERMISSAO_LABEL[p as Permissao] ?? p).join(" · ")}
                   </p>
+                  <p
+                    className={`mt-1 flex items-center gap-1 text-xs ${
+                      c.expirado ? "text-terracota" : "text-muted-foreground"
+                    }`}
+                  >
+                    <Clock className="h-3 w-3" />
+                    {c.expirado
+                      ? `Expirou em ${formatarData(c.expira_em)}`
+                      : `Válido até ${formatarData(c.expira_em)}`}
+                  </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  className="rounded-full text-terracota"
-                  onClick={() => mCancelar.mutate(c.id)}
-                >
-                  Cancelar
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="rounded-full border-floresta/20 text-floresta"
+                    disabled={c.expirado}
+                    onClick={() => copiarLink(c.token)}
+                  >
+                    <Copy className="mr-2 h-4 w-4" /> Copiar link
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="rounded-full border-floresta/20 text-floresta"
+                    disabled={c.expirado}
+                    asChild
+                  >
+                    <a href={linkEmail(c.email, c.token)}>
+                      <Mail className="mr-2 h-4 w-4" /> Enviar por e-mail
+                    </a>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="rounded-full text-terracota"
+                    onClick={() => mCancelar.mutate(c.id)}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
