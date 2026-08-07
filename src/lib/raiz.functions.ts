@@ -534,7 +534,13 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
     };
 
     if (!data.liberar) {
-      if (existente.data) await supabase.from("liberacoes").delete().eq("id", existente.data.id);
+      // mantém a linha e marca como bloqueada: assim o cliente recebe o evento
+      // de tempo real (eventos de exclusão não chegam com RLS ativa)
+      if (existente.data)
+        await supabase
+          .from("liberacoes")
+          .update({ status: "bloqueado", liberar_em: null })
+          .eq("id", existente.data.id);
       await registrarAuditoria(supabase, atorAuditoria(context), {
         acao: "liberacao_revogada",
         ...alvoAuditoria,

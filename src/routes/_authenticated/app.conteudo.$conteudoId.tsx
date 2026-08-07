@@ -17,11 +17,16 @@ import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bloqueada";
+import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 
 
 export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")({
   component: Player,
 });
+
+function ehMidiaTipo(tipo?: string) {
+  return tipo === "video" || tipo === "audio";
+}
 
 function Player() {
   const { conteudoId } = Route.useParams();
@@ -34,6 +39,8 @@ function Player() {
     queryKey: ["conteudo", conteudoId],
     queryFn: () => fetchConteudo({ data: { conteudoId } }),
   });
+
+  useSincronizarLiberacoes(() => void revalidarLiberacao());
 
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   const posicaoRef = useRef(0);
@@ -49,9 +56,24 @@ function Player() {
   const [terminou, setTerminou] = useState(false);
   const [concluido, setConcluido] = useState(false);
   const [bloqueio, setBloqueio] = useState<MotivoBloqueio | null>(null);
+  /** espelho do bloqueio para leitura dentro de callbacks de tempo real */
+  const bloqueioRef = useRef<MotivoBloqueio | null>(null);
   const [renovando, setRenovando] = useState(false);
   const [emEspera, setEmEspera] = useState(false);
 
+
+  useEffect(() => {
+    bloqueioRef.current = bloqueio;
+  }, [bloqueio]);
+
+  // A prática voltou a aparecer na consulta: o acesso foi liberado de novo e o
+  // aviso de revogação sai sozinho, sem precisar recarregar a página.
+  useEffect(() => {
+    if (data?.conteudo && bloqueioRef.current === "revogado") {
+      setBloqueio(null);
+      toast.success("Esta prática foi liberada de novo pelo seu terapeuta.");
+    }
+  }, [data?.conteudo]);
 
   useEffect(() => {
     setConcluido(data?.status === "concluido");
@@ -150,6 +172,40 @@ function Player() {
     }
   }
 
+
+  /**
+   * Chega um aviso de mudança de liberação: confere na hora se a prática segue
+   * liberada. Se foi revogada, para a mídia e mostra o aviso; se voltou a ser
+   * liberada, libera o player sem exigir recarregar a página.
+   */
+  async function revalidarLiberacao() {
+    try {
+      const novo = await queryClient.fetchQuery({
+        queryKey: ["conteudo", conteudoId],
+        queryFn: () => fetchConteudo({ data: { conteudoId } }),
+        staleTime: 0,
+      });
+      // a liberação é o que define o acesso; mídia ainda não enviada tem aviso próprio
+      const liberado = Boolean(novo?.conteudo);
+      if (!liberado) {
+        const el = mediaRef.current;
+        if (el) {
+          posicaoRef.current = el.currentTime || posicaoRef.current;
+          el.pause();
+        }
+        setTocando(false);
+        setBloqueio("revogado");
+        toast.error("Esta prática não está mais liberada para você.");
+        return;
+      }
+      if (bloqueioRef.current) {
+        setBloqueio(null);
+        toast.success("Esta prática foi liberada de novo pelo seu terapeuta.");
+      }
+    } catch {
+      /* falha de rede: o estado atual é mantido e o botão de renovar segue disponível */
+    }
+  }
 
   /** Pequena espera entre tentativas — o botão nunca fica travado para sempre. */
   function segurarNovaTentativa() {
@@ -311,7 +367,7 @@ function Player() {
             </div>
           )}
 
-          {ehMidia && bloqueio && (
+          {(ehMidia || bloqueio === "revogado") && bloqueio && (
             <AvisoMidiaBloqueada
               motivo={bloqueio}
               renovando={renovando}
@@ -328,7 +384,7 @@ function Player() {
           )}
 
 
-          {!ehMidia && (
+          {!ehMidia && bloqueio !== "revogado" && (
             <div className="mt-6 whitespace-pre-line rounded-3xl bg-card p-6 text-[15px] leading-relaxed text-foreground shadow-[var(--shadow-organico)]">
               {conteudo.corpo_texto || "Conteúdo em preparação."}
             </div>
