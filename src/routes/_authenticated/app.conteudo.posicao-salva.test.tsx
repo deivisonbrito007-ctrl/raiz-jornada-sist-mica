@@ -117,7 +117,8 @@ describe("player — posição de reprodução salva no backend", () => {
     fireEvent.loadedMetadata(audio());
     await waitFor(() => expect(audio().currentTime).toBe(92));
     // o tempo mostrado também parte do ponto salvo
-    expect(screen.getByText("1:32")).toBeInTheDocument();
+    expect(screen.getByText("1 min 32s")).toBeInTheDocument();
+
   });
 
   it("grava a posição no backend ao pausar", async () => {
