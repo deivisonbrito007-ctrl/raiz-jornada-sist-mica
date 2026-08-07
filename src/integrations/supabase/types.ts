@@ -25,6 +25,7 @@ export type Database = {
           created_at: string
           detalhes: Json
           id: string
+          motivo: string
         }
         Insert: {
           acao: string
@@ -36,6 +37,7 @@ export type Database = {
           created_at?: string
           detalhes?: Json
           id?: string
+          motivo?: string
         }
         Update: {
           acao?: string
@@ -47,6 +49,7 @@ export type Database = {
           created_at?: string
           detalhes?: Json
           id?: string
+          motivo?: string
         }
         Relationships: []
       }
