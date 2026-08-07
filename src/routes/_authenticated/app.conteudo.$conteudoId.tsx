@@ -222,8 +222,13 @@ function Player() {
   /** Pequena espera entre tentativas — o botão nunca fica travado para sempre. */
   function segurarNovaTentativa() {
     setEmEspera(true);
-    setTimeout(() => setEmEspera(false), 5000);
+    setEsperaAte(Date.now() + 5000);
+    setTimeout(() => {
+      setEmEspera(false);
+      setEsperaAte(null);
+    }, 5000);
   }
+
 
 
   async function registrar(status: "em_andamento" | "concluido") {
