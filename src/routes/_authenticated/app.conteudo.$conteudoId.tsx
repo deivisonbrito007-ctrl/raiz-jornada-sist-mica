@@ -17,6 +17,7 @@ import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bloqueada";
+import { StatusMidiaBadge } from "@/components/status-midia";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 
 
@@ -305,6 +306,16 @@ function Player() {
           <h1 className="mt-1 text-3xl text-floresta">{conteudo.titulo}</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{conteudo.descricao}</p>
 
+          {(ehMidia || bloqueio === "revogado") && (
+            <div>
+              <StatusMidiaBadge
+                status={
+                  bloqueio === "revogado" ? "revogada" : bloqueio ? "expirada" : "liberada"
+                }
+              />
+            </div>
+          )}
+
           {ehMidia && data?.url && !bloqueio && (
 
             <div className="mt-6 overflow-hidden rounded-3xl bg-floresta p-4">
@@ -389,6 +400,7 @@ function Player() {
               motivo={bloqueio}
               renovando={renovando}
               emEspera={emEspera}
+              esperaAte={esperaAte}
               eixoId={conteudo.eixo_id}
               onRenovar={renovarMidia}
             />
@@ -436,10 +448,15 @@ function Player() {
       )}
 
       {!conteudo && !isLoading && bloqueio === "revogado" && (
-        <AvisoMidiaBloqueada
+        <>
+          <div>
+            <StatusMidiaBadge status="revogada" />
+          </div>
+          <AvisoMidiaBloqueada
           motivo="revogado"
           renovando={renovando}
           emEspera={emEspera}
+          esperaAte={esperaAte}
           onRenovar={renovarMidia}
         />
       )}
