@@ -125,6 +125,15 @@ function Player() {
     el.pause();
   }
 
+  // O servidor recusou gerar um novo link por excesso de pedidos: avisamos e
+  // seguramos o botão pelo tempo que ele pediu, em vez de falhar em silêncio.
+  useEffect(() => {
+    if (data?.limitado) {
+      setBloqueio("limite");
+      segurarNovaTentativa((data.esperarSegundos || 5) * 1000);
+    }
+  }, [data?.limitado, data?.esperarSegundos]);
+
   // O link seguro da mídia tem validade limitada: ao chegar ao fim, o player para
   // sozinho e passa a exigir uma nova liberação em vez de tentar tocar um link morto.
   useEffect(() => {
@@ -138,6 +147,7 @@ function Player() {
     const timer = setTimeout(expirarMidia, restante);
     return () => clearTimeout(timer);
   }, [data?.url, data?.urlExpiraEm]);
+
 
 
   /** Pede uma URL assinada nova ao backend e reinicia o player se estiver liberado. */
