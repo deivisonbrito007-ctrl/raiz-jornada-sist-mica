@@ -197,7 +197,10 @@ async def main() -> None:
         await page.get_by_text(conteudo["titulo"], exact=False).first.wait_for(timeout=20000)
         await page.screenshot(path=str(SCREENSHOTS / "player_1_liberado.png"))
 
+        await page.wait_for_timeout(2000)
         revogar_eixo()
+        if os.environ.get("E2E_DEBUG"):
+            print("estado apos revogar:", api.get("liberacoes", {"select": "id,status,eixo_id", "cliente_id": f"eq.{uid}", "eixo_id": f"eq.{eixo['id']}"}))
         await page.get_by_text("não está mais liberada", exact=False).first.wait_for(timeout=20000)
         await page.screenshot(path=str(SCREENSHOTS / "player_2_revogado.png"))
         print("OK: player bloqueou na hora após a revogação")
