@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      auditoria_equipe: {
+        Row: {
+          acao: string
+          alvo_email: string | null
+          alvo_id: string | null
+          alvo_tipo: string
+          ator_email: string
+          ator_id: string | null
+          created_at: string
+          detalhes: Json
+          id: string
+        }
+        Insert: {
+          acao: string
+          alvo_email?: string | null
+          alvo_id?: string | null
+          alvo_tipo?: string
+          ator_email?: string
+          ator_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          id?: string
+        }
+        Update: {
+          acao?: string
+          alvo_email?: string | null
+          alvo_id?: string | null
+          alvo_tipo?: string
+          ator_email?: string
+          ator_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          id?: string
+        }
+        Relationships: []
+      }
       clientes_pacotes: {
         Row: {
           cliente_id: string
