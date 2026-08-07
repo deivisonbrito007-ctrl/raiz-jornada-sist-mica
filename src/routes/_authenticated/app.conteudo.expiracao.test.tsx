@@ -118,6 +118,7 @@ async function esperarBloqueio(titulo: string) {
 describe("player — expiração da URL assinada", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     play = vi.fn(function (this: HTMLMediaElement) {
       (this as any)._paused = false;
       fireEvent.play(this);
