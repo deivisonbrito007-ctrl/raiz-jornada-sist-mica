@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { erroSeguro } from "./erro-permissao";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { auditarResultado, negarAcesso, registrarAcessoNegado } from "./auditoria-acesso";
@@ -197,7 +198,7 @@ export const getConteudo = createServerFn({ method: "GET" })
         { acao: "getConteudo", userId, tabela: "conteudos", recurso: data.conteudoId },
         error,
       );
-      throw new Error(error.message);
+      throw erroSeguro(error);
     }
     if (!conteudo)
       return {
@@ -261,7 +262,7 @@ export const marcarProgresso = createServerFn({ method: "POST" })
       },
       { onConflict: "cliente_id,conteudo_id" },
     );
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
     return { ok: true };
   });
 
@@ -274,7 +275,7 @@ export const definirMetaSemanal = createServerFn({ method: "POST" })
       .from("profiles")
       .update({ meta_semanal: data.meta })
       .eq("id", userId);
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
     return { ok: true, meta: data.meta };
   });
 
@@ -295,7 +296,7 @@ export const salvarDiario = createServerFn({ method: "POST" })
       conteudo_id: data.conteudoId ?? null,
       texto: data.texto,
     });
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
     return { ok: true };
   });
 
@@ -505,7 +506,6 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
         liberar: z.boolean(),
         liberarEm: z.string().datetime().nullable().optional(),
         titulo: z.string().max(200).optional(),
-        motivo: z.string().max(300).optional(),
       })
       .parse(input),
   )
@@ -526,7 +526,6 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
     const alvoAuditoria = {
       alvoTipo: "liberacao" as const,
       alvoId: data.clienteId,
-      motivo: data.motivo,
       detalhes: {
         titulo: data.titulo ?? "",
         conteudoId: data.conteudoId ?? null,
@@ -535,7 +534,13 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
     };
 
     if (!data.liberar) {
-      if (existente.data) await supabase.from("liberacoes").delete().eq("id", existente.data.id);
+      // mantém a linha e marca como bloqueada: assim o cliente recebe o evento
+      // de tempo real (eventos de exclusão não chegam com RLS ativa)
+      if (existente.data)
+        await supabase
+          .from("liberacoes")
+          .update({ status: "bloqueado", liberar_em: null })
+          .eq("id", existente.data.id);
       await registrarAuditoria(supabase, atorAuditoria(context), {
         acao: "liberacao_revogada",
         ...alvoAuditoria,
@@ -560,7 +565,7 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
         status: "liberado",
         liberar_em: data.liberarEm ?? null,
       });
-      if (error) throw new Error(error.message);
+      if (error) throw erroSeguro(error);
     }
 
     const agendadoParaFuturo = Boolean(data.liberarEm && new Date(data.liberarEm) > new Date());
@@ -618,7 +623,7 @@ export const adminSalvarConteudo = createServerFn({ method: "POST" })
       ? supabase.from("conteudos").update(payload).eq("id", data.id)
       : supabase.from("conteudos").insert(payload);
     const { error } = await query;
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
     return { ok: true };
   });
 
@@ -634,7 +639,7 @@ export const adminApagarConteudo = createServerFn({ method: "POST" })
       { tabela: "conteudos" },
     );
     const { error } = await context.supabase.from("conteudos").delete().eq("id", data.id);
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
     return { ok: true };
   });
 
@@ -669,7 +674,7 @@ export const adminSalvarEixo = createServerFn({ method: "POST" })
       ? context.supabase.from("eixos").update(payload).eq("id", data.id)
       : context.supabase.from("eixos").insert(payload);
     const { error } = await query;
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
     return { ok: true };
   });
 
@@ -728,7 +733,7 @@ export const adminSalvarPacote = createServerFn({ method: "POST" })
       ? context.supabase.from("pacotes").update(payload).eq("id", data.id)
       : context.supabase.from("pacotes").insert(payload);
     const { error } = await query;
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
     return { ok: true };
   });
 
@@ -756,7 +761,7 @@ export const adminVincularPacote = createServerFn({ method: "POST" })
       pacote_id: data.pacoteId,
       status_pagamento: data.statusPagamento,
     });
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
     return { ok: true };
   });
 
@@ -779,6 +784,6 @@ export const adminAtualizarPagamento = createServerFn({ method: "POST" })
       .from("clientes_pacotes")
       .update({ status_pagamento: data.statusPagamento })
       .eq("id", data.id);
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
     return { ok: true };
   });

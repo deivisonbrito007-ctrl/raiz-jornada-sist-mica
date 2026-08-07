@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { mensagemPainel } from "@/lib/erro-permissao";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -22,9 +23,6 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
-import { AvisoPermissao } from "@/components/aviso-permissao";
-import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
-import { notificarErro } from "@/lib/erro-permissao";
 
 export const Route = createFileRoute("/_authenticated/admin/conteudos")({
   component: AdminConteudos,
@@ -61,14 +59,7 @@ function AdminConteudos() {
   const salvar = useServerFn(adminSalvarConteudo);
   const apagar = useServerFn(adminApagarConteudo);
 
-  const perms = useMinhasPermissoes();
-  const bloqueado = perms.bloqueado("gerenciar_conteudos");
-  const { data, error, refetch } = useQuery({
-    queryKey: ["admin-conteudos"],
-    queryFn: () => fetchTudo(),
-    enabled: !bloqueado,
-    retry: false,
-  });
+  const { data } = useQuery({ queryKey: ["admin-conteudos"], queryFn: () => fetchTudo() });
   const [form, setForm] = useState<Formulario | null>(null);
   const [busca, setBusca] = useState("");
   const [eixoFiltro, setEixoFiltro] = useState("todos");
@@ -113,7 +104,7 @@ function AdminConteudos() {
       setForm({ ...form, storagePath: caminho });
       toast.success("Mídia enviada");
     } catch (erro) {
-      notificarErro(erro, "Não foi possível enviar a mídia");
+      toast.error(mensagemPainel(erro));
     } finally {
       setSubindo(false);
     }
@@ -140,31 +131,14 @@ function AdminConteudos() {
       recarregar();
       toast.success("Conteúdo salvo");
     } catch (erro) {
-      notificarErro(erro, "Não foi possível salvar o conteúdo");
+      toast.error(mensagemPainel(erro));
     } finally {
       setEnviando(false);
     }
   }
 
-  if (bloqueado) {
-    return (
-      <div>
-        <h1 className="text-3xl text-floresta">Conteúdos</h1>
-        <div className="mt-6">
-          <AvisoPermissao permissao="gerenciar_conteudos" />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
-      {error ? (
-        <div className="mb-6">
-          <AvisoPermissao erro={error} onTentarNovamente={() => refetch()} />
-        </div>
-      ) : null}
-
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl text-floresta">Conteúdos</h1>

@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { erroSeguro } from "./erro-permissao";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { garantirPermissao } from "./permissao-guard";
@@ -6,7 +7,6 @@ import { PERMISSOES } from "./permissoes";
 import { atorAuditoria as ator, registrarAuditoria } from "./auditoria-equipe";
 
 const permissaoSchema = z.enum(PERMISSOES);
-const motivoSchema = z.string().max(300).optional();
 
 async function garantirGerenciarEquipe(
   supabase: Parameters<typeof garantirPermissao>[0],
@@ -71,7 +71,6 @@ export const equipeConvidar = createServerFn({ method: "POST" })
       .object({
         email: z.string().email().max(200),
         permissoes: z.array(permissaoSchema).min(1),
-        motivo: motivoSchema,
       })
       .parse(input),
   )
@@ -94,12 +93,11 @@ export const equipeConvidar = createServerFn({ method: "POST" })
       permissoes: data.permissoes,
       criado_por: userId,
     });
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
 
     await registrarAuditoria(supabase, ator(context), {
       acao: "convite_criado",
       alvoTipo: "convite",
-      motivo: data.motivo,
       alvoEmail: email,
       detalhes: { permissoes: data.permissoes },
     });
@@ -108,7 +106,7 @@ export const equipeConvidar = createServerFn({ method: "POST" })
 
 export const equipeCancelarConvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ conviteId: z.string().uuid(), motivo: motivoSchema }).parse(input))
+  .inputValidator((input) => z.object({ conviteId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await garantirGerenciarEquipe(supabase, userId, "equipeCancelarConvite");
@@ -118,16 +116,55 @@ export const equipeCancelarConvite = createServerFn({ method: "POST" })
       .eq("id", data.conviteId)
       .maybeSingle();
     const { error } = await supabase.from("convites_equipe").delete().eq("id", data.conviteId);
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
 
     await registrarAuditoria(supabase, ator(context), {
       acao: "convite_cancelado",
       alvoTipo: "convite",
-      motivo: data.motivo,
       alvoId: data.conviteId,
       alvoEmail: convite?.email ?? null,
     });
     return { ok: true };
+  });
+
+export const equipeAtualizarConvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        conviteId: z.string().uuid(),
+        permissoes: z.array(permissaoSchema).min(1),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await garantirGerenciarEquipe(supabase, userId, "equipeAtualizarConvite");
+
+    const { data: convite } = await supabase
+      .from("convites_equipe")
+      .select("email, status")
+      .eq("id", data.conviteId)
+      .maybeSingle();
+    if (!convite || convite.status !== "pendente") {
+      return { ok: false as const, motivo: "convite_indisponivel" as const };
+    }
+
+    const { error } = await supabase
+      .from("convites_equipe")
+      .update({ permissoes: data.permissoes })
+      .eq("id", data.conviteId)
+      .eq("status", "pendente");
+    if (error) throw erroSeguro(error);
+
+    await registrarAuditoria(supabase, ator(context), {
+      acao: "convite_permissoes_atualizadas",
+      alvoTipo: "convite",
+      alvoId: data.conviteId,
+      alvoEmail: convite.email,
+      detalhes: { permissoes: data.permissoes },
+    });
+    return { ok: true as const };
   });
 
 export const equipeDefinirPermissoes = createServerFn({ method: "POST" })
@@ -137,7 +174,6 @@ export const equipeDefinirPermissoes = createServerFn({ method: "POST" })
       .object({
         alvoId: z.string().uuid(),
         permissoes: z.array(permissaoSchema),
-        motivo: motivoSchema,
       })
       .parse(input),
   )
@@ -163,14 +199,14 @@ export const equipeDefinirPermissoes = createServerFn({ method: "POST" })
     const { error: erroAdmin } = await supabase
       .from("equipe_admins")
       .upsert({ user_id: data.alvoId, criado_por: userId }, { onConflict: "user_id" });
-    if (erroAdmin) throw new Error(erroAdmin.message);
+    if (erroAdmin) throw erroSeguro(erroAdmin);
 
     await supabase.from("equipe_permissoes").delete().eq("user_id", data.alvoId);
     if (data.permissoes.length > 0) {
       const { error } = await supabase
         .from("equipe_permissoes")
         .insert(data.permissoes.map((permissao) => ({ user_id: data.alvoId, permissao })));
-      if (error) throw new Error(error.message);
+      if (error) throw erroSeguro(error);
     }
 
     const { data: perfilAlvo } = await supabase
@@ -184,7 +220,6 @@ export const equipeDefinirPermissoes = createServerFn({ method: "POST" })
       alvoTipo: "equipe",
       alvoId: data.alvoId,
       alvoEmail: perfilAlvo?.email ?? null,
-      motivo: data.motivo,
       detalhes: {
         permissoes: data.permissoes,
         anteriores: (anteriores ?? []).map((p) => p.permissao),
@@ -195,7 +230,7 @@ export const equipeDefinirPermissoes = createServerFn({ method: "POST" })
 
 export const equipeRemover = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ alvoId: z.string().uuid(), motivo: motivoSchema }).parse(input))
+  .inputValidator((input) => z.object({ alvoId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await garantirGerenciarEquipe(supabase, userId, "equipeRemover");
@@ -217,14 +252,13 @@ export const equipeRemover = createServerFn({ method: "POST" })
 
     await supabase.from("equipe_permissoes").delete().eq("user_id", data.alvoId);
     const { error } = await supabase.from("equipe_admins").delete().eq("user_id", data.alvoId);
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
 
     await registrarAuditoria(supabase, ator(context), {
       acao: "admin_removido",
       alvoTipo: "equipe",
       alvoId: data.alvoId,
       alvoEmail: perfilAlvo?.email ?? null,
-      motivo: data.motivo,
     });
     return { ok: true };
   });
@@ -237,10 +271,10 @@ export const equipeAuditoria = createServerFn({ method: "GET" })
 
     const { data, error } = await supabase
       .from("auditoria_equipe")
-      .select("id, acao, alvo_tipo, alvo_id, alvo_email, motivo, detalhes, ator_email, created_at")
+      .select("id, acao, alvo_tipo, alvo_id, alvo_email, detalhes, ator_email, created_at")
       .order("created_at", { ascending: false })
       .limit(200);
-    if (error) throw new Error(error.message);
+    if (error) throw erroSeguro(error);
 
     return {
       registros: (data ?? []).map((r) => {
@@ -256,7 +290,6 @@ export const equipeAuditoria = createServerFn({ method: "GET" })
           alvoTipo: r.alvo_tipo,
           alvoId: r.alvo_id,
           alvoEmail: r.alvo_email,
-          motivo: r.motivo ?? "",
           permissoes: det.permissoes ?? [],
           anteriores: det.anteriores ?? [],
           titulo: det.titulo ?? "",
@@ -265,5 +298,34 @@ export const equipeAuditoria = createServerFn({ method: "GET" })
           quando: r.created_at,
         };
       }),
+    };
+  });
+
+/** Tentativas negadas por permissão — visível a quem gerencia a equipe. */
+export const equipeAcessosNegados = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await garantirGerenciarEquipe(supabase, userId, "equipeAcessosNegados");
+
+    const { data, error } = await supabase
+      .from("auditoria_acessos_negados")
+      .select("id, user_id, user_email, acao, permissao, tipo, alvo_id, rota, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw erroSeguro(error);
+
+    return {
+      registros: (data ?? []).map((r) => ({
+        id: r.id,
+        userId: r.user_id,
+        userEmail: r.user_email,
+        acao: r.acao,
+        permissao: r.permissao,
+        tipo: r.tipo,
+        alvoId: r.alvo_id,
+        rota: r.rota,
+        quando: r.created_at,
+      })),
     };
   });

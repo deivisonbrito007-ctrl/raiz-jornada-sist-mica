@@ -1,74 +1,53 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-
-vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
-
-import { toast } from "sonner";
+import { describe, expect, it } from "vitest";
 import {
-  bloqueioDePermissao,
-  classificarErroPermissao,
-  notificarErro,
+  MENSAGEM_ACESSO_RESTRITO,
+  MENSAGEM_FALHA_GENERICA,
+  ORIENTACAO_ACESSO_RESTRITO,
+  ehErroPermissao,
+  erroAcessoRestrito,
+  erroSeguro,
+  mensagemPainel,
 } from "./erro-permissao";
 
-describe("classificarErroPermissao", () => {
-  it("reconhece acesso restrito como falta de permissão", () => {
-    const r = classificarErroPermissao(new Error("Acesso restrito"));
-    expect(r.tipo).toBe("permissao");
-    expect(r.ehPermissao).toBe(true);
-    expect(r.orientacao).toMatch(/terapeuta/i);
+describe("respostas padronizadas de bloqueio", () => {
+  it("classifica RLS, GRANT, 401/403 e 'nada encontrado' como bloqueio", () => {
+    for (const erro of [
+      new Error("new row violates row-level security policy for table clientes"),
+      { message: "permission denied for table profiles" },
+      { status: 403, message: "Forbidden" },
+      { code: "PGRST116", message: "JSON object requested, 0 rows returned" },
+      erroAcessoRestrito(),
+    ]) {
+      expect(ehErroPermissao(erro)).toBe(true);
+    }
   });
 
-  it("reconhece permission denied do Postgres (42501)", () => {
-    const r = classificarErroPermissao({ message: "permission denied for table", code: "42501" });
-    expect(r.tipo).toBe("permissao");
+  it("usa sempre a mesma mensagem, sem revelar existência nem schema", () => {
+    const vazamentos = [
+      new Error('relation "public.convites_equipe" does not exist'),
+      new Error("permission denied for table diario"),
+      new Error("0 rows returned for cliente 8f2a-..."),
+    ];
+    const saidas = vazamentos.map((e) => mensagemPainel(e));
+    expect(new Set(saidas).size).toBe(1);
+    expect(saidas[0]).toBe(ORIENTACAO_ACESSO_RESTRITO);
+    for (const s of saidas) {
+      expect(s).not.toMatch(/table|relation|policy|rows|convites_equipe|diario/i);
+    }
   });
 
-  it("reconhece bloqueio de RLS", () => {
-    const r = classificarErroPermissao({
-      message: "new row violates row-level security policy",
-    });
-    expect(r.tipo).toBe("rls");
+  it("erroSeguro colapsa erro do banco em acesso restrito ou falha genérica", () => {
+    expect(erroSeguro({ message: "permission denied for table pacotes" }).message).toBe(
+      MENSAGEM_ACESSO_RESTRITO,
+    );
+    expect(erroSeguro({ message: "duplicate key value violates unique constraint" }).message).toBe(
+      MENSAGEM_FALHA_GENERICA,
+    );
   });
 
-  it("reconhece sessão expirada", () => {
-    expect(classificarErroPermissao({ status: 401, message: "Unauthorized" }).tipo).toBe("sessao");
-    expect(classificarErroPermissao(new Error("JWT expired")).tipo).toBe("sessao");
-  });
-
-  it("reconhece pedido fora do escopo", () => {
-    expect(classificarErroPermissao(new Error("Cliente fora do escopo")).tipo).toBe("escopo");
-  });
-
-  it("não classifica erros comuns como permissão, mas mantém a mensagem", () => {
-    const r = classificarErroPermissao(new Error("Falha de rede"));
-    expect(r.ehPermissao).toBe(false);
-    expect(r.mensagem).toBe("Falha de rede");
-  });
-
-  it("nunca deixa mensagem vazia", () => {
-    const r = classificarErroPermissao(undefined);
-    expect(r.titulo.length).toBeGreaterThan(0);
-    expect(r.mensagem.length).toBeGreaterThan(0);
-  });
-});
-
-describe("bloqueioDePermissao", () => {
-  it("cita a permissão que falta", () => {
-    const r = bloqueioDePermissao("ver_diario");
-    expect(r.mensagem).toContain("Ver diário dos clientes");
-    expect(r.orientacao).toMatch(/Equipe/);
-  });
-});
-
-describe("notificarErro", () => {
-  beforeEach(() => vi.mocked(toast.error).mockClear());
-
-  it("avisa o usuário com título e orientação (nunca falha em silêncio)", () => {
-    notificarErro(new Error("Acesso restrito"), "Não foi possível salvar o conteúdo");
-    expect(toast.error).toHaveBeenCalledTimes(1);
-    const [titulo, opcoes] = vi.mocked(toast.error).mock.calls[0]!;
-    expect(titulo).toBe("Você não tem permissão para isso");
-    expect(String((opcoes as { description: string }).description)).toContain(
-      "Não foi possível salvar o conteúdo",
+  it("preserva mensagens de regra de negócio escritas por nós", () => {
+    expect(mensagemPainel(new Error("A terapeuta responsável não pode ser removida."))).toBe(
+      "A terapeuta responsável não pode ser removida.",
     );
   });
 });

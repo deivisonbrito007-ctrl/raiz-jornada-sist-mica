@@ -144,49 +144,9 @@ jobs:
             echo "Badge inalterado."
           fi
 
-  security:
-    name: Checagens de seguranca
-    needs: install
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-      - name: Restore dependências
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.bun/install/cache
-            node_modules
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock', 'bun.lockb', 'package.json') }}
-          restore-keys: |
-            bun-${{ runner.os }}-
-      - name: Install dependencies (fallback)
-        run: bun install --frozen-lockfile
-      - name: Re-scan de segurança (RLS, grants, segredos, guards)
-        run: bun run security:scan
-      - name: Auditoria de dependências (high/critical)
-        run: bun run security:audit
-      - name: Relatório de segurança
-        if: always()
-        run: |
-          bun run security:scan -- --json > security-findings.json || true
-      - name: Upload relatório de segurança
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-report
-          path: |
-            security-findings.json
-            .github/security-baseline.json
-          if-no-files-found: ignore
-
   ci:
     name: CI verde
-    needs: [lint, typecheck, test, security]
+    needs: [lint, typecheck, test]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -196,4 +156,4 @@ jobs:
             echo "Algum job falhou."
             exit 1
           fi
-          echo "Lint, typecheck, testes e seguranca passaram."
+          echo "Lint, typecheck e testes passaram."

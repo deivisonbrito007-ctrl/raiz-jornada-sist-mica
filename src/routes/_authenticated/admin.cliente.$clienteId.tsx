@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { mensagemPainel } from "@/lib/erro-permissao";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, CalendarClock } from "lucide-react";
@@ -21,9 +22,6 @@ import {
 } from "@/components/ui/select";
 import { formatarData, PAGAMENTO_LABEL, TIPO_LABEL } from "@/lib/raiz-format";
 import { useState } from "react";
-import { AvisoPermissao } from "@/components/aviso-permissao";
-import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
-import { notificarErro } from "@/lib/erro-permissao";
 
 export const Route = createFileRoute("/_authenticated/admin/cliente/$clienteId")({
   component: AdminCliente,
@@ -37,15 +35,10 @@ function AdminCliente() {
   const vincularPacote = useServerFn(adminVincularPacote);
   const atualizarPagamento = useServerFn(adminAtualizarPagamento);
   const [pacoteSelecionado, setPacoteSelecionado] = useState("");
-  const [motivoLiberacao, setMotivoLiberacao] = useState("");
 
-  const perms = useMinhasPermissoes();
-  const bloqueado = perms.bloqueado("ver_clientes");
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["admin-cliente", clienteId],
     queryFn: () => fetchCliente({ data: { clienteId } }),
-    enabled: !bloqueado,
-    retry: false,
   });
 
   function recarregar() {
@@ -90,7 +83,6 @@ function AdminCliente() {
           liberar,
           titulo: args.titulo,
           liberarEm: liberarEm ?? null,
-          motivo: motivoLiberacao,
         },
       });
       recarregar();
@@ -102,7 +94,7 @@ function AdminCliente() {
             : "Liberado para a cliente",
       );
     } catch (erro) {
-      notificarErro(erro, "Não foi possível atualizar o acesso da cliente");
+      toast.error(mensagemPainel(erro));
     }
   }
 
@@ -110,24 +102,6 @@ function AdminCliente() {
     (data?.progresso ?? []).find((p) => p.conteudo_id === conteudoId)?.status ?? "nao_iniciado";
 
   const vinculo = (data?.vinculos ?? [])[0];
-
-  if (bloqueado) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-3xl text-floresta">Cliente</h1>
-        <AvisoPermissao permissao="ver_clientes" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-3xl text-floresta">Cliente</h1>
-        <AvisoPermissao erro={error} onTentarNovamente={() => refetch()} />
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -214,23 +188,6 @@ function AdminCliente() {
               Libere o eixo inteiro ou apenas práticas específicas — agora ou em uma data futura. A
               cliente recebe o aviso quando o conteúdo abrir.
             </p>
-
-            <div className="mt-4 max-w-md">
-              <label
-                htmlFor="motivo-liberacao"
-                className="text-xs text-muted-foreground"
-              >
-                Motivo das mudanças de acesso (registrado no histórico)
-              </label>
-              <input
-                id="motivo-liberacao"
-                value={motivoLiberacao}
-                onChange={(e) => setMotivoLiberacao(e.target.value)}
-                placeholder="Ex.: concluiu o eixo anterior"
-                maxLength={300}
-                className="mt-1 w-full rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground outline-none focus:border-salvia"
-              />
-            </div>
 
             <div className="mt-5 space-y-4">
               {data.eixos.map((eixo) => {

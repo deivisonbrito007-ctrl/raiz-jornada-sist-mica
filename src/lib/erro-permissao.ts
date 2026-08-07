@@ -1,126 +1,97 @@
-import { toast } from "sonner";
-import { PERMISSAO_LABEL, type Permissao } from "./permissoes";
+/**
+ * Respostas padronizadas para ações do painel bloqueadas por permissão.
+ *
+ * Regras (valem para servidor e interface):
+ * 1. Uma única mensagem para qualquer bloqueio de permissão — não distinguimos
+ *    "não existe" de "existe mas você não pode ver", para não revelar a
+ *    existência de clientes, conteúdos, convites ou admins.
+ * 2. Nunca repassamos o texto cru do banco (RLS, nome de tabela, coluna,
+ *    política, id) para o usuário; isso fica só nos logs de auditoria.
+ * 3. Toda mensagem orienta o próximo passo: pedir a permissão à terapeuta.
+ */
 
-export type TipoErroPermissao =
-  | "permissao" // falta a permissão granular / papel
-  | "sessao" // sessão expirada ou ausente
-  | "escopo" // pediu dado de outro cliente
-  | "rls" // bloqueado por política do banco
-  | "nenhum"; // não é erro de permissão
+export const CODIGO_ACESSO_RESTRITO = "ACESSO_RESTRITO";
 
-export type ErroPermissaoUI = {
-  tipo: TipoErroPermissao;
-  titulo: string;
-  mensagem: string;
-  orientacao: string;
-  ehPermissao: boolean;
-};
+/** Mensagem única de bloqueio por permissão. */
+export const MENSAGEM_ACESSO_RESTRITO = "Acesso restrito";
+
+/** Orientação exibida junto da mensagem na interface. */
+export const ORIENTACAO_ACESSO_RESTRITO =
+  "Você não tem permissão para esta ação. Peça à terapeuta responsável para liberar essa permissão na aba Equipe.";
+
+/** Mensagem genérica para falhas que não são de permissão. */
+export const MENSAGEM_FALHA_GENERICA = "Não foi possível concluir a ação. Tente novamente.";
+
+export type ErroPermissao = Error & { codigo: typeof CODIGO_ACESSO_RESTRITO };
+
+/** Cria o erro canônico de acesso restrito. */
+export function erroAcessoRestrito(): ErroPermissao {
+  const erro = new Error(MENSAGEM_ACESSO_RESTRITO) as ErroPermissao;
+  erro.codigo = CODIGO_ACESSO_RESTRITO;
+  return erro;
+}
 
 function texto(erro: unknown): string {
   if (!erro) return "";
   if (typeof erro === "string") return erro;
-  if (erro instanceof Error) return erro.message;
   if (typeof erro === "object") {
-    const e = erro as { message?: unknown; error?: unknown; statusText?: unknown };
-    for (const v of [e.message, e.error, e.statusText]) {
-      if (typeof v === "string") return v;
-    }
+    const e = erro as { message?: unknown; error?: unknown; codigo?: unknown; code?: unknown };
+    if (e.codigo === CODIGO_ACESSO_RESTRITO) return MENSAGEM_ACESSO_RESTRITO;
+    if (typeof e.message === "string") return e.message;
+    if (typeof e.error === "string") return e.error;
   }
   return String(erro);
 }
 
-function status(erro: unknown): number | null {
-  if (erro && typeof erro === "object") {
-    const e = erro as { status?: unknown; statusCode?: unknown; code?: unknown };
-    for (const v of [e.status, e.statusCode]) {
-      if (typeof v === "number") return v;
-    }
-    if (e.code === "42501") return 403;
-    if (e.code === "PGRST301") return 401;
-  }
-  return null;
-}
+const MARCADORES_PERMISSAO = [
+  "acesso restrito",
+  "row-level security",
+  "row level security",
+  "permission denied",
+  "insufficient_privilege",
+  "not authorized",
+  "unauthorized",
+  "forbidden",
+  "jwt",
+  // "nada encontrado" também é tratado como bloqueio: pode ser RLS filtrando.
+  "pgrst116",
+  "no rows",
+  "not found",
+  "does not exist",
+  "0 rows",
+];
 
-/** Traduz qualquer erro de bloqueio em algo legível, com o próximo passo. */
-export function classificarErroPermissao(erro: unknown): ErroPermissaoUI {
+/** Diz se um erro (do servidor ou do banco) representa bloqueio de permissão. */
+export function ehErroPermissao(erro: unknown): boolean {
+  if (erro && typeof erro === "object" && (erro as { codigo?: unknown }).codigo === CODIGO_ACESSO_RESTRITO) {
+    return true;
+  }
   const msg = texto(erro).toLowerCase();
-  const st = status(erro);
-
-  if (st === 401 || msg.includes("unauthorized") || msg.includes("jwt expired") || msg.includes("sessão")) {
-    return {
-      tipo: "sessao",
-      titulo: "Sua sessão expirou",
-      mensagem: "Não conseguimos confirmar quem está usando o painel agora.",
-      orientacao: "Entre novamente para continuar de onde parou.",
-      ehPermissao: true,
-    };
-  }
-
-  if (msg.includes("fora do escopo") || msg.includes("outro cliente")) {
-    return {
-      tipo: "escopo",
-      titulo: "Esses dados não são do seu escopo",
-      mensagem: "Você só pode ver informações dos clientes vinculados ao seu acesso.",
-      orientacao: "Volte à lista de clientes e escolha alguém do seu acompanhamento.",
-      ehPermissao: true,
-    };
-  }
-
-  if (msg.includes("row-level security") || msg.includes("row level security")) {
-    return {
-      tipo: "rls",
-      titulo: "Ação bloqueada por segurança",
-      mensagem: "As regras de proteção de dados impediram essa operação.",
-      orientacao: "Confirme com a terapeuta responsável se você deveria ter esse acesso.",
-      ehPermissao: true,
-    };
-  }
-
-  if (
-    st === 403 ||
-    msg.includes("acesso restrito") ||
-    msg.includes("permission denied") ||
-    msg.includes("forbidden") ||
-    msg.includes("sem permissão")
-  ) {
-    return {
-      tipo: "permissao",
-      titulo: "Você não tem permissão para isso",
-      mensagem: "Essa área ou ação exige uma permissão que a sua conta não possui.",
-      orientacao: "Peça à terapeuta responsável para liberar essa permissão na aba Equipe.",
-      ehPermissao: true,
-    };
-  }
-
-  return {
-    tipo: "nenhum",
-    titulo: "Não foi possível concluir",
-    mensagem: texto(erro) || "Algo deu errado ao processar sua solicitação.",
-    orientacao: "Tente novamente em alguns instantes.",
-    ehPermissao: false,
-  };
-}
-
-/** Mensagem de bloqueio quando sabemos exatamente qual permissão falta. */
-export function bloqueioDePermissao(permissao: Permissao): ErroPermissaoUI {
-  return {
-    tipo: "permissao",
-    titulo: "Área sem permissão",
-    mensagem: `Esta área exige a permissão “${PERMISSAO_LABEL[permissao]}”, que não está ativa na sua conta.`,
-    orientacao: "Peça à terapeuta responsável para ativar essa permissão na aba Equipe.",
-    ehPermissao: true,
-  };
+  if (!msg) return false;
+  const status = (erro as { status?: unknown } | null)?.status;
+  if (status === 401 || status === 403 || status === 404) return true;
+  return MARCADORES_PERMISSAO.some((m) => msg.includes(m));
 }
 
 /**
- * Exibe um aviso claro (nunca silencioso) para qualquer falha de ação.
- * Erros de permissão ganham título + orientação; outros erros usam o texto original.
+ * Converte qualquer erro de Supabase/servidor no erro que pode sair do
+ * servidor: bloqueio vira "Acesso restrito"; o resto vira falha genérica.
+ * Assim nenhum detalhe de schema, política ou id chega ao cliente.
  */
-export function notificarErro(erro: unknown, contexto?: string) {
-  const info = classificarErroPermissao(erro);
-  const descricao = contexto
-    ? `${contexto}. ${info.mensagem} ${info.orientacao}`
-    : `${info.mensagem} ${info.orientacao}`;
-  toast.error(info.titulo, { description: descricao.trim() });
-  return info;
+export function erroSeguro(erro: unknown, fallback = MENSAGEM_FALHA_GENERICA): Error {
+  if (ehErroPermissao(erro)) return erroAcessoRestrito();
+  return new Error(fallback);
+}
+
+/**
+ * Mensagem final para a interface (toast, banner). Sempre clara, nunca
+ * expondo dados nem confirmando que o registro existe.
+ */
+export function mensagemPainel(erro: unknown, fallback = MENSAGEM_FALHA_GENERICA): string {
+  if (ehErroPermissao(erro)) return ORIENTACAO_ACESSO_RESTRITO;
+  const msg = texto(erro);
+  // Mensagens de regra de negócio nossas (curtas, sem SQL) podem passar.
+  const suspeita = /select |insert |update |relation |column |policy |constraint |supabase|postgres|uuid|=/i;
+  if (msg && msg.length <= 140 && !suspeita.test(msg)) return msg;
+  return fallback;
 }

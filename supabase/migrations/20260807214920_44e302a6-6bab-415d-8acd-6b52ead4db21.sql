@@ -1,1 +1,0 @@
-ALTER TABLE public.auditoria_equipe ADD COLUMN IF NOT EXISTS motivo text NOT NULL DEFAULT '';

@@ -3,6 +3,7 @@
 export const ACOES_AUDITORIA = [
   "convite_criado",
   "convite_cancelado",
+  "convite_permissoes_atualizadas",
   "permissoes_definidas",
   "permissoes_revogadas",
   "admin_removido",
@@ -16,6 +17,7 @@ export type AcaoAuditoria = (typeof ACOES_AUDITORIA)[number];
 export const ACAO_LABEL: Record<AcaoAuditoria, string> = {
   convite_criado: "Convite enviado",
   convite_cancelado: "Convite cancelado",
+  convite_permissoes_atualizadas: "Permissões do convite atualizadas",
   permissoes_definidas: "Permissões definidas",
   permissoes_revogadas: "Permissões revogadas",
   admin_removido: "Acesso de admin removido",
@@ -37,15 +39,8 @@ export type RegistroAuditoria = {
   alvoTipo: "equipe" | "convite" | "liberacao";
   alvoId?: string | null;
   alvoEmail?: string | null;
-  /** Justificativa escrita por quem executou a ação (opcional). */
-  motivo?: string | null | undefined;
   detalhes?: Record<string, unknown>;
 };
-
-/** Normaliza o motivo: sem espaços sobrando e limitado para não inflar o log. */
-export function normalizarMotivo(motivo?: string | null): string {
-  return (motivo ?? "").trim().slice(0, 300);
-}
 
 type ClienteInsert = {
   from: (tabela: "auditoria_equipe") => {
@@ -68,7 +63,6 @@ export async function registrarAuditoria(
       alvo_tipo: registro.alvoTipo,
       alvo_id: registro.alvoId ?? null,
       alvo_email: registro.alvoEmail ?? null,
-      motivo: normalizarMotivo(registro.motivo),
       detalhes: registro.detalhes ?? {},
       ator_id: ator.userId,
       ator_email: ator.email ?? "",
