@@ -396,18 +396,27 @@ function Player() {
   }
 
   async function concluir() {
+    if (bloqueio === "revogado") {
+      toast.error("Esta prática não está mais liberada. Fale com seu terapeuta se quiser continuar.");
+      return;
+    }
     if (bloqueio) {
-      const texto =
-        bloqueio === "revogado"
-          ? "Esta prática não está mais liberada. Fale com seu terapeuta se quiser continuar."
-          : "Acesso à mídia expirado. Renove antes de concluir a prática.";
-      toast.error(texto);
+      // link vencido: guardamos a conclusão no aparelho e enviamos ao renovar
+      guardarPendente({
+        conteudoId,
+        status: "concluido",
+        posicaoSegundos: Math.floor(posicaoRef.current || 0),
+        tocando: false,
+      });
+      setTemPendencia(true);
+      toast.info("Guardamos sua conclusão neste aparelho. Ela será enviada quando você renovar o acesso.");
       return;
     }
     await registrar("concluido");
     setConcluido(true);
     toast.success("Prática concluída. Que tal registrar no diário?");
   }
+
 
 
 
