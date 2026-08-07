@@ -8,7 +8,7 @@ export const getMeuContexto = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [perfil, papeis, pacotes] = await Promise.all([
+    const [perfil, papeis, pacotes, permissoes] = await Promise.all([
       supabase
         .from("profiles")
         .select("id, nome, email, created_at, meta_semanal")
@@ -20,15 +20,21 @@ export const getMeuContexto = createServerFn({ method: "GET" })
         .select("id, status_pagamento, created_at, pacotes(id, nome, descricao, tipo_cobranca)")
         .eq("cliente_id", userId)
         .order("created_at", { ascending: false }),
+      supabase.from("equipe_permissoes").select("permissao").eq("user_id", userId),
     ]);
 
     const roles = (papeis.data ?? []).map((r) => r.role);
+    const ehTerapeuta = roles.includes("terapeuta");
+    const minhasPermissoes = (permissoes.data ?? []).map((p) => p.permissao);
     return {
       perfil: perfil.data,
-      papel: roles.includes("terapeuta") ? ("terapeuta" as const) : ("cliente" as const),
+      papel: ehTerapeuta ? ("terapeuta" as const) : ("cliente" as const),
+      permissoes: minhasPermissoes,
+      podeAdministrar: ehTerapeuta || minhasPermissoes.length > 0,
       pacotes: pacotes.data ?? [],
     };
   });
+
 
 export const getMinhaBiblioteca = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
