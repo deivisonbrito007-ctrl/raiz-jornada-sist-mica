@@ -202,7 +202,8 @@ function Player() {
           <h1 className="mt-1 text-3xl text-floresta">{conteudo.titulo}</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{conteudo.descricao}</p>
 
-          {ehMidia && data?.url && !midiaExpirada && (
+          {ehMidia && data?.url && !bloqueio && (
+
             <div className="mt-6 overflow-hidden rounded-3xl bg-floresta p-4">
               {conteudo.tipo === "video" ? (
                 <video
