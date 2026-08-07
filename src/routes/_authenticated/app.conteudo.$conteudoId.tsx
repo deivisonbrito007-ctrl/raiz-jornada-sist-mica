@@ -81,8 +81,7 @@ function Player() {
   // sozinho e passa a exigir uma nova liberação em vez de tentar tocar um link morto.
   useEffect(() => {
     if (!data?.url || !data?.urlExpiraEm) return;
-    setMidiaExpirada(false);
-    setSemLiberacao(false);
+    setBloqueio(null);
     const restante = new Date(data.urlExpiraEm).getTime() - Date.now();
     if (restante <= 0) {
       expirarMidia();
@@ -91,6 +90,7 @@ function Player() {
     const timer = setTimeout(expirarMidia, restante);
     return () => clearTimeout(timer);
   }, [data?.url, data?.urlExpiraEm]);
+
 
   /** Pede uma URL assinada nova ao backend e reinicia o player se estiver liberado. */
   async function renovarMidia() {
