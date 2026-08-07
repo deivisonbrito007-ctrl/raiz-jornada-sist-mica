@@ -11,6 +11,7 @@ import {
   RotateCcw,
   RotateCw,
   NotebookPen,
+  TimerOff,
 } from "lucide-react";
 import { getConteudo, marcarProgresso } from "@/lib/raiz.functions";
 import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
@@ -157,7 +158,7 @@ function Player() {
           <h1 className="mt-1 text-3xl text-floresta">{conteudo.titulo}</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{conteudo.descricao}</p>
 
-          {ehMidia && data?.url && (
+          {ehMidia && data?.url && !midiaExpirada && (
             <div className="mt-6 overflow-hidden rounded-3xl bg-floresta p-4">
               {conteudo.tipo === "video" ? (
                 <video
@@ -173,6 +174,7 @@ function Player() {
                     setTocando(false);
                     setTerminou(true);
                   }}
+                  onError={expirarMidia}
                 />
               ) : (
                 <div className="flex h-40 items-center justify-center rounded-2xl bg-floresta-foreground/5">
@@ -187,6 +189,7 @@ function Player() {
                       setTocando(false);
                       setTerminou(true);
                     }}
+                    onError={expirarMidia}
                   />
                   <p className="font-display text-lg text-floresta-foreground/70">
                     Feche os olhos e apenas escute.
@@ -233,7 +236,30 @@ function Player() {
             </div>
           )}
 
-          {ehMidia && !data?.url && (
+          {ehMidia && midiaExpirada && (
+            <div className="mt-6 rounded-3xl border border-terracota/30 bg-terracota/10 p-6">
+              <div className="flex items-start gap-3">
+                <TimerOff className="mt-0.5 h-5 w-5 shrink-0 text-terracota" />
+                <div>
+                  <h2 className="text-lg text-floresta">Acesso à mídia expirou</h2>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                    {semLiberacao
+                      ? "Esta prática não está mais liberada para você. Fale com seu terapeuta para liberar novamente — até então, a reprodução fica indisponível e nada é registrado."
+                      : "O link seguro desta mídia tem tempo de validade e acabou de encerrar. Renove o acesso para continuar de onde parou."}
+                  </p>
+                  <Button
+                    onClick={renovarMidia}
+                    disabled={semLiberacao || renovando}
+                    className="mt-4 rounded-full bg-floresta px-6 text-floresta-foreground hover:bg-floresta/90"
+                  >
+                    {renovando ? "Renovando..." : "Renovar acesso"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {ehMidia && !data?.url && !midiaExpirada && (
             <p className="mt-6 rounded-3xl border border-dashed border-border p-6 text-sm text-muted-foreground">
               A mídia desta prática ainda não foi enviada.
             </p>
