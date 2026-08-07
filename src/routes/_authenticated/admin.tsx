@@ -26,6 +26,7 @@ const links: { to: string; label: string; exact: boolean; permissao: Permissao }
   { to: "/admin/conteudos", label: "Conteúdos", exact: false, permissao: "gerenciar_conteudos" },
   { to: "/admin/pacotes", label: "Pacotes", exact: false, permissao: "gerenciar_pacotes" },
   { to: "/admin/equipe", label: "Equipe", exact: false, permissao: "gerenciar_equipe" },
+  { to: "/admin/auditoria", label: "Auditoria", exact: false, permissao: "gerenciar_equipe" },
 ];
 
 

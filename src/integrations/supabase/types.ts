@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      auditoria_acessos_negados: {
+        Row: {
+          acao: string
+          alvo_id: string | null
+          created_at: string
+          detalhes: Json
+          id: string
+          permissao: string
+          rota: string
+          tipo: string
+          user_email: string
+          user_id: string | null
+        }
+        Insert: {
+          acao: string
+          alvo_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          id?: string
+          permissao?: string
+          rota?: string
+          tipo?: string
+          user_email?: string
+          user_id?: string | null
+        }
+        Update: {
+          acao?: string
+          alvo_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          id?: string
+          permissao?: string
+          rota?: string
+          tipo?: string
+          user_email?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       auditoria_equipe: {
         Row: {
           acao: string
