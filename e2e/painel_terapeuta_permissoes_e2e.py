@@ -186,7 +186,7 @@ async def main() -> None:
         await page.evaluate(
             f"window.localStorage.setItem({json.dumps(storage_key)}, {json.dumps(session_json)})"
         )
-        await page.reload(wait_until="domcontentloaded")
+        await page.reload(wait_until="networkidle")
 
         info = await page.evaluate(SCRIPT_CONTEXTO)
         assert info.get("ok"), f"sessão injetada inválida: {info.get('erro')}"
