@@ -281,38 +281,22 @@ function Player() {
             </div>
           )}
 
-          {ehMidia && midiaExpirada && (
-            <div className="mt-6 rounded-3xl border border-terracota/30 bg-terracota/10 p-6">
-              <div className="flex items-start gap-3">
-                <TimerOff className="mt-0.5 h-5 w-5 shrink-0 text-terracota" />
-                <div>
-                  <h2 className="text-lg text-floresta">Acesso à mídia expirou</h2>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                    {semLiberacao
-                      ? "Esta prática não está mais liberada para você. Fale com seu terapeuta para liberar novamente — até então, a reprodução fica indisponível e nada é registrado."
-                      : "O link seguro desta mídia tem tempo de validade e acabou de encerrar. Renove o acesso para continuar de onde parou."}
-                  </p>
-                  <Button
-                    onClick={renovarMidia}
-                    disabled={renovando || emEspera}
-                    className="mt-4 rounded-full bg-floresta px-6 text-floresta-foreground hover:bg-floresta/90"
-                  >
-                    {renovando
-                      ? "Renovando..."
-                      : semLiberacao
-                        ? "Tentar novamente"
-                        : "Renovar acesso"}
-                  </Button>
-                </div>
-              </div>
-            </div>
+          {ehMidia && bloqueio && (
+            <AvisoMidiaBloqueada
+              motivo={bloqueio}
+              renovando={renovando}
+              emEspera={emEspera}
+              eixoId={conteudo.eixo_id}
+              onRenovar={renovarMidia}
+            />
           )}
 
-          {ehMidia && !data?.url && !midiaExpirada && (
+          {ehMidia && !data?.url && !bloqueio && (
             <p className="mt-6 rounded-3xl border border-dashed border-border p-6 text-sm text-muted-foreground">
               A mídia desta prática ainda não foi enviada.
             </p>
           )}
+
 
           {!ehMidia && (
             <div className="mt-6 whitespace-pre-line rounded-3xl bg-card p-6 text-[15px] leading-relaxed text-foreground shadow-[var(--shadow-organico)]">
