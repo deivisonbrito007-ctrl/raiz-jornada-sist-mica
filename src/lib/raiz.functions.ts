@@ -521,8 +521,22 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
       .eq(data.conteudoId ? "conteudo_id" : "eixo_id", (data.conteudoId ?? data.eixoId) as string);
     const existente = await (data.conteudoId ? alvo : alvo.is("conteudo_id", null)).maybeSingle();
 
+    const alvoAuditoria = {
+      alvoTipo: "liberacao" as const,
+      alvoId: data.clienteId,
+      detalhes: {
+        titulo: data.titulo ?? "",
+        conteudoId: data.conteudoId ?? null,
+        eixoId: data.eixoId ?? null,
+      },
+    };
+
     if (!data.liberar) {
       if (existente.data) await supabase.from("liberacoes").delete().eq("id", existente.data.id);
+      await registrarAuditoria(supabase, atorAuditoria(context), {
+        acao: "liberacao_revogada",
+        ...alvoAuditoria,
+      });
       return { ok: true };
     }
 
@@ -547,6 +561,11 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
     }
 
     const agendadoParaFuturo = Boolean(data.liberarEm && new Date(data.liberarEm) > new Date());
+    await registrarAuditoria(supabase, atorAuditoria(context), {
+      acao: agendadoParaFuturo ? "liberacao_agendada" : "conteudo_liberado",
+      ...alvoAuditoria,
+      detalhes: { ...alvoAuditoria.detalhes, agendadoPara: data.liberarEm ?? "" },
+    });
     if (agendadoParaFuturo) return { ok: true, agendado: true };
 
     await supabase.from("notificacoes").insert({
