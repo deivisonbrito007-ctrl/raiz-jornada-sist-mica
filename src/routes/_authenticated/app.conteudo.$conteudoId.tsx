@@ -55,6 +55,7 @@ function Player() {
 
   useEffect(() => {
     setConcluido(data?.status === "concluido");
+    if (data?.status && data.status !== "nao_iniciado") progressoIniciadoRef.current = true;
   }, [data?.status]);
 
   const conteudo = data?.conteudo;
@@ -63,8 +64,9 @@ function Player() {
   function expirarMidia() {
     const el = mediaRef.current;
     if (el) {
-      // guarda onde a pessoa parou para retomar depois da renovação
+      // guarda onde a pessoa parou e se estava tocando, para retomar igual depois
       posicaoRef.current = el.currentTime || posicaoRef.current;
+      tocandoAntesRef.current = !el.paused;
       el.pause();
     }
     setTocando(false);
@@ -72,13 +74,25 @@ function Player() {
   }
 
 
-  /** Ao carregar a nova mídia, volta ao ponto salvo e fica pausado. */
+  /** Ao carregar a nova mídia, volta ao ponto salvo e retoma se estava tocando. */
   function retomarPosicao(el: HTMLVideoElement | HTMLAudioElement) {
     setTotal(el.duration);
     const alvo = posicaoRef.current;
     if (alvo > 0 && alvo < (el.duration || Infinity)) {
       el.currentTime = alvo;
       setTempo(alvo);
+    }
+    if (retomarAutoRef.current) {
+      retomarAutoRef.current = false;
+      // autoplay pode ser barrado pelo navegador: nesse caso apenas orientamos
+      void Promise.resolve(el.play())
+        .then(() => setTempo(el.currentTime))
+        .catch(() => {
+          el.pause();
+          setTocando(false);
+          toast.info("Toque em play para continuar de onde parou.");
+        });
+      return;
     }
     el.pause();
   }
