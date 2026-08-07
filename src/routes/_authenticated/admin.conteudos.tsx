@@ -159,6 +159,12 @@ function AdminConteudos() {
 
   return (
     <div>
+      {error ? (
+        <div className="mb-6">
+          <AvisoPermissao erro={error} onTentarNovamente={() => refetch()} />
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl text-floresta">Conteúdos</h1>

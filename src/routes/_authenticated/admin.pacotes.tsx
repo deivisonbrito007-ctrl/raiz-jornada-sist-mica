@@ -110,6 +110,12 @@ function AdminPacotes() {
         </Button>
       </div>
 
+      {error ? (
+        <div className="mt-8">
+          <AvisoPermissao erro={error} onTentarNovamente={() => refetch()} />
+        </div>
+      ) : null}
+
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         {(data?.pacotes ?? []).map((pacote) => (
           <article
