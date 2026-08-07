@@ -16,6 +16,7 @@ import { getMeuContexto, getMinhaBiblioteca } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { calcularStreak, formatarData, formatarDuracao, TIPO_LABEL } from "@/lib/raiz-format";
 import { LembreteRetorno } from "@/components/lembrete-retorno";
+import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Biblioteca,
@@ -32,6 +33,7 @@ function Icone({ nome, className }: { nome: string; className?: string }) {
 }
 
 function Biblioteca() {
+  useSincronizarLiberacoes();
   const fetchBiblioteca = useServerFn(getMinhaBiblioteca);
   const fetchContexto = useServerFn(getMeuContexto);
   const { data: contexto } = useQuery({ queryKey: ["contexto"], queryFn: () => fetchContexto() });
