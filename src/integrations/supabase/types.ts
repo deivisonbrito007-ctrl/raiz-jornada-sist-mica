@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      auditoria_equipe: {
+        Row: {
+          acao: string
+          alvo_email: string | null
+          alvo_id: string | null
+          alvo_tipo: string
+          ator_email: string
+          ator_id: string | null
+          created_at: string
+          detalhes: Json
+          id: string
+        }
+        Insert: {
+          acao: string
+          alvo_email?: string | null
+          alvo_id?: string | null
+          alvo_tipo?: string
+          ator_email?: string
+          ator_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          id?: string
+        }
+        Update: {
+          acao?: string
+          alvo_email?: string | null
+          alvo_id?: string | null
+          alvo_tipo?: string
+          ator_email?: string
+          ator_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          id?: string
+        }
+        Relationships: []
+      }
       clientes_pacotes: {
         Row: {
           cliente_id: string
@@ -99,27 +135,33 @@ export type Database = {
           created_at: string
           criado_por: string | null
           email: string
+          expira_em: string
           id: string
           permissoes: string[]
           status: string
+          token: string
         }
         Insert: {
           aceito_em?: string | null
           created_at?: string
           criado_por?: string | null
           email: string
+          expira_em?: string
           id?: string
           permissoes?: string[]
           status?: string
+          token?: string
         }
         Update: {
           aceito_em?: string | null
           created_at?: string
           criado_por?: string | null
           email?: string
+          expira_em?: string
           id?: string
           permissoes?: string[]
           status?: string
+          token?: string
         }
         Relationships: []
       }
@@ -405,6 +447,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aceitar_convite_equipe: { Args: { _token: string }; Returns: string }
       conteudo_liberado: {
         Args: { _cliente_id: string; _conteudo_id: string; _eixo_id: string }
         Returns: boolean

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import {
+  equipeAuditoria,
   equipeCancelarConvite,
   equipeConvidar,
   equipeDefinirPermissoes,
@@ -27,6 +28,7 @@ import { PERMISSAO_DESCRICAO, PERMISSAO_LABEL, PERMISSOES, type Permissao } from
 import { formatarData } from "@/lib/raiz-format";
 import { avisarMudancaPermissoes } from "@/hooks/use-vigia-permissoes";
 import { MatrizPermissoes, type LinhaMatriz } from "@/components/matriz-permissoes";
+import { HistoricoAuditoria } from "@/components/historico-auditoria";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -82,8 +84,13 @@ function AdminEquipe() {
   const cancelar = useServerFn(equipeCancelarConvite);
   const definir = useServerFn(equipeDefinirPermissoes);
   const remover = useServerFn(equipeRemover);
+  const auditoria = useServerFn(equipeAuditoria);
 
   const { data, isLoading } = useQuery({ queryKey: ["equipe"], queryFn: () => listar() });
+  const auditoriaQuery = useQuery({
+    queryKey: ["equipe-auditoria"],
+    queryFn: () => auditoria(),
+  });
 
   const [emailConvite, setEmailConvite] = useState("");
   const [permsConvite, setPermsConvite] = useState<Permissao[]>(["ver_clientes"]);
@@ -94,6 +101,7 @@ function AdminEquipe() {
 
   function recarregar() {
     queryClient.invalidateQueries({ queryKey: ["equipe"] });
+    queryClient.invalidateQueries({ queryKey: ["equipe-auditoria"] });
   }
 
   const mConvidar = useMutation({
@@ -419,6 +427,12 @@ function AdminEquipe() {
           </Button>
         </div>
       </section>
+
+      <HistoricoAuditoria
+        registros={auditoriaQuery.data?.registros ?? []}
+        carregando={auditoriaQuery.isLoading}
+      />
+
     </div>
   );
 }
