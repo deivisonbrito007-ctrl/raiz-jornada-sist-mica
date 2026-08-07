@@ -107,20 +107,57 @@ function Player() {
     }
   }, [data?.posicaoSegundos]);
 
-  /** Grava no backend onde a pessoa parou (no máximo uma gravação a cada 5s). */
+  /** existe progresso guardado no aparelho esperando envio? */
+  const [temPendencia, setTemPendencia] = useState(false);
+
+  /**
+   * Grava no backend onde a pessoa parou (no máximo uma gravação a cada 5s).
+   * Com o acesso bloqueado, o backend recusaria o registro: guardamos no
+   * aparelho e reenviamos assim que o acesso for renovado.
+   */
   function guardarPosicao(agora = false) {
     const el = mediaRef.current;
-    if (!el || bloqueioRef.current) return;
+    if (!el) return;
     const pos = Math.floor(el.currentTime || posicaoRef.current || 0);
     posicaoRef.current = el.currentTime || posicaoRef.current;
+    if (bloqueioRef.current) {
+      guardarPendente({ conteudoId, posicaoSegundos: pos, tocando: false });
+      setTemPendencia(true);
+      return;
+    }
     if (!agora && Math.abs(pos - ultimaSalvaRef.current) < 5) return;
     ultimaSalvaRef.current = pos;
     void Promise.resolve(
       persistirPosicao({ data: { conteudoId, posicaoSegundos: pos, tocando: !el.paused } }),
     ).catch(() => {
-      // falhou: libera a próxima tentativa em vez de perder a posição
+      // falhou: guarda no aparelho para reenviar depois
       ultimaSalvaRef.current = -1;
+      guardarPendente({ conteudoId, posicaoSegundos: pos, tocando: !el.paused });
+      setTemPendencia(true);
     });
+  }
+
+  /** Reenvia o que ficou guardado no aparelho enquanto o acesso estava bloqueado. */
+  async function reenviarProgressoLocal() {
+    if (!temPendente(conteudoId)) {
+      setTemPendencia(false);
+      return;
+    }
+    const enviado = await reenviarPendente(conteudoId, {
+      salvarPosicao: (entrada) => persistirPosicao(entrada),
+      marcarProgresso: (entrada) => salvarProgresso(entrada),
+    });
+    if (!enviado) return;
+    setTemPendencia(false);
+    if (typeof enviado.posicaoSegundos === "number") {
+      posicaoRef.current = enviado.posicaoSegundos;
+      ultimaSalvaRef.current = Math.floor(enviado.posicaoSegundos);
+    }
+    if (enviado.status === "concluido") setConcluido(true);
+    queryClient.invalidateQueries({ queryKey: ["biblioteca"] });
+    queryClient.invalidateQueries({ queryKey: ["conteudo", conteudoId] });
+    queryClient.invalidateQueries({ queryKey: ["trilha"] });
+    toast.success("Seu progresso guardado no aparelho foi enviado.");
   }
 
   /** Terminou a prática: a próxima escuta começa do início. */
@@ -133,6 +170,7 @@ function Player() {
       ultimaSalvaRef.current = -1;
     });
   }
+
 
   // Fechar a aba, minimizar o app ou sair da tela também salva o ponto atual.
   useEffect(() => {
