@@ -20,7 +20,9 @@ export function useSincronizarLiberacoes(onMudanca?: () => void) {
     let canal: ReturnType<typeof supabase.channel> | null = null;
 
     async function assinar() {
+      console.log("[raiz] assinando canal");
       const { data } = await supabase.auth.getUser();
+      console.log("[raiz] uid:", data.user?.id, ativo);
       const uid = data.user?.id;
       if (!uid || !ativo) return;
 
