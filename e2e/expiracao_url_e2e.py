@@ -120,11 +120,18 @@ def progresso_atual(api: Api, uid: str, conteudo_id: str) -> dict | None:
     return linhas[0] if linhas else None
 
 
-async def encurtar_validade(page, segundos: int, url_simulada: str | None = None) -> None:
-    """Reescreve `urlExpiraEm` nas respostas do backend para vencer logo.
+def texto_seroval(valor: str) -> dict:
+    """Nó de string no formato que o TanStack Start usa para serializar respostas."""
+    return {"t": 1, "s": valor}
 
-    Com `url_simulada`, também preenche a URL da mídia quando o acervo ainda não
-    tem arquivo enviado, mantendo o resto do fluxo real.
+
+async def encurtar_validade(page, segundos: int, url_simulada: str | None = None) -> None:
+    """Reescreve `urlExpiraEm` na resposta que chega ao navegador, para vencer logo.
+
+    A resposta das funções de servidor vem serializada em pares de chaves/valores,
+    então o ajuste é feito nesse formato. Com `url_simulada`, também preenche a URL
+    da mídia quando o acervo ainda não tem arquivo enviado — o resto do fluxo
+    (timer de validade, pausa, aviso, bloqueio de progresso) continua sendo o real.
     """
 
     async def handler(route):
@@ -134,10 +141,14 @@ async def encurtar_validade(page, segundos: int, url_simulada: str | None = None
         except Exception:
             await route.continue_()
             return
-        if "urlExpiraEm" not in corpo and "posicaoSegundos" not in corpo:
+        if "urlExpiraEm" not in corpo:
             await route.fulfill(response=resposta, body=corpo)
             return
-        novo_prazo = (datetime.now(timezone.utc) + timedelta(seconds=segundos)).isoformat()
+        prazo = (
+            (datetime.now(timezone.utc) + timedelta(seconds=segundos))
+            .isoformat()
+            .replace("+00:00", "Z")
+        )
         try:
             dados = json.loads(corpo)
         except json.JSONDecodeError:
@@ -146,11 +157,19 @@ async def encurtar_validade(page, segundos: int, url_simulada: str | None = None
 
         def ajustar(no):
             if isinstance(no, dict):
-                if "urlExpiraEm" in no:
-                    if url_simulada and not no.get("url"):
-                        no["url"] = url_simulada
-                    if no.get("url"):
-                        no["urlExpiraEm"] = novo_prazo.replace("+00:00", "Z")
+                pares = no.get("p")
+                if isinstance(pares, dict) and "urlExpiraEm" in (pares.get("k") or []):
+                    chaves = pares["k"]
+                    valores = pares["v"]
+                    i_url = chaves.index("url")
+                    i_prazo = chaves.index("urlExpiraEm")
+                    atual = valores[i_url]
+                    tem_url = isinstance(atual, dict) and atual.get("t") == 1
+                    if url_simulada and not tem_url:
+                        valores[i_url] = texto_seroval(url_simulada)
+                        tem_url = True
+                    if tem_url:
+                        valores[i_prazo] = texto_seroval(prazo)
                 for v in no.values():
                     ajustar(v)
             elif isinstance(no, list):
@@ -160,7 +179,8 @@ async def encurtar_validade(page, segundos: int, url_simulada: str | None = None
         ajustar(dados)
         await route.fulfill(response=resposta, body=json.dumps(dados))
 
-    await page.route("**/*", handler)
+    await page.route("**/_serverFn/**", handler)
+
 
 
 async def main() -> None:
