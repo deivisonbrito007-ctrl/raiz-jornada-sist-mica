@@ -40,6 +40,15 @@ const RE_GRANT_FUNCAO =
 
 const RE_POLICY = /create\s+policy\s+"?([^"\n]+?)"?\s+on\s+public\.([a-z0-9_]+)([\s\S]{0,600}?);/gi;
 
+/** Indica se há um REVOKE sobre a função depois da posição informada no SQL agregado. */
+function revogadoDepois(sql: string, nome: string, posicao: number): boolean {
+  const re = new RegExp(`revoke[\\s\\S]{0,160}?on\\s+function\\s+(?:public\\.)?${nome}\\s*\\(`, 'gi');
+  for (const m of sql.matchAll(re)) {
+    if ((m.index ?? 0) > posicao) return true;
+  }
+  return false;
+}
+
 /** Analisa o SQL agregado das migrations e retorna os desvios do contrato. */
 export function auditarSql(sql: string): Desvio[] {
   const desvios: Desvio[] = [];
@@ -50,6 +59,8 @@ export function auditarSql(sql: string): Desvio[] {
     const nome = (match[1] ?? '').toLowerCase();
     const papeis = (match[2] ?? '').toLowerCase();
     const paraApp = /\b(anon|authenticated|public)\b/.test(papeis);
+    // As migrations são lidas em ordem: um GRANT antigo já revogado depois não é desvio.
+    if (revogadoDepois(sql, nome, match.index ?? 0)) continue;
 
     if ((FUNCOES_INTERNAS as readonly string[]).includes(nome) && paraApp) {
       add(
