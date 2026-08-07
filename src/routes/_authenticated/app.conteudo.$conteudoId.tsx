@@ -466,6 +466,17 @@ function Player() {
             </div>
           )}
 
+          {temPendencia && (
+            <p
+              data-testid="aviso-progresso-pendente"
+              className="mt-3 rounded-2xl bg-pergaminho px-4 py-3 text-sm text-floresta"
+            >
+              Seu progresso está guardado neste aparelho e será enviado automaticamente quando você
+              renovar o acesso.
+            </p>
+          )}
+
+
           {ehMidia && data?.url && !bloqueio && (
 
             <div className="mt-6 overflow-hidden rounded-3xl bg-floresta p-4">
