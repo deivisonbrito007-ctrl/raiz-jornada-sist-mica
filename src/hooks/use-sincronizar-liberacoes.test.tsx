@@ -37,7 +37,7 @@ const { useSincronizarLiberacoes } = await import("./use-sincronizar-liberacoes"
 
 let buscas = 0;
 
-function Biblioteca({ onMudanca }: { onMudanca?: () => void }) {
+function Biblioteca({ onMudanca }: { onMudanca?: (() => void) | undefined }) {
   useSincronizarLiberacoes(onMudanca);
   const { data } = useQuery({
     queryKey: ["biblioteca"],
