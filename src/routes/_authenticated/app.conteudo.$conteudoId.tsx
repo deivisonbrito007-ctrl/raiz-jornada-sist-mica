@@ -158,14 +158,19 @@ function Player() {
   }
 
   async function concluir() {
-    if (midiaExpirada || semLiberacao) {
-      toast.error("Acesso à mídia expirado. Renove antes de concluir a prática.");
+    if (bloqueio) {
+      const texto =
+        bloqueio === "revogado"
+          ? "Esta prática não está mais liberada. Fale com seu terapeuta se quiser continuar."
+          : "Acesso à mídia expirado. Renove antes de concluir a prática.";
+      toast.error(texto);
       return;
     }
     await registrar("concluido");
     setConcluido(true);
     toast.success("Prática concluída. Que tal registrar no diário?");
   }
+
 
 
   return (
