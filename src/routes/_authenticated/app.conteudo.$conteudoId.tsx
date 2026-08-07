@@ -179,12 +179,15 @@ function Player() {
    * liberada, libera o player sem exigir recarregar a página.
    */
   async function revalidarLiberacao() {
+    // alterações em sequência rápida: só a checagem mais recente pode mudar a tela
+    const minhaVez = (revalidacaoRef.current += 1);
     try {
       const novo = await queryClient.fetchQuery({
         queryKey: ["conteudo", conteudoId],
         queryFn: () => fetchConteudo({ data: { conteudoId } }),
         staleTime: 0,
       });
+      if (minhaVez !== revalidacaoRef.current) return;
       // a liberação é o que define o acesso; mídia ainda não enviada tem aviso próprio
       const liberado = Boolean(novo?.conteudo);
       if (!liberado) {
@@ -194,11 +197,15 @@ function Player() {
           el.pause();
         }
         setTocando(false);
-        setBloqueio("revogado");
-        toast.error("Esta prática não está mais liberada para você.");
+        if (bloqueioRef.current !== "revogado") {
+          bloqueioRef.current = "revogado";
+          setBloqueio("revogado");
+          toast.error("Esta prática não está mais liberada para você.");
+        }
         return;
       }
       if (bloqueioRef.current) {
+        bloqueioRef.current = null;
         setBloqueio(null);
         toast.success("Esta prática foi liberada de novo pelo seu terapeuta.");
       }
