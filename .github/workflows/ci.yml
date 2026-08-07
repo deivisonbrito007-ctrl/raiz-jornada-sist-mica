@@ -144,9 +144,44 @@ jobs:
             echo "Badge inalterado."
           fi
 
+  seguranca:
+    name: Testes de segurança (RLS) com mínimo de cobertura
+    needs: install
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Restore dependências
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock', 'bun.lockb', 'package.json') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+      - name: Install dependencies (fallback)
+        run: bun install --frozen-lockfile
+      - name: Rodar suíte de segurança/RLS (falha abaixo do mínimo de cobertura)
+        run: bun run test:seguranca:coverage
+      - name: Resumo da cobertura de segurança
+        if: always()
+        run: node scripts/resumo-cobertura-seguranca.mjs >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload cobertura de segurança
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-seguranca
+          path: coverage-seguranca/
+          if-no-files-found: ignore
+
   ci:
     name: CI verde
-    needs: [lint, typecheck, test]
+    needs: [lint, typecheck, test, seguranca]
     if: always()
     runs-on: ubuntu-latest
     steps:
