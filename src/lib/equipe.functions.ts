@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { garantirPermissao } from "./permissao-guard";
 import { PERMISSOES } from "./permissoes";
-import { registrarAuditoria } from "./auditoria-equipe";
+import { atorAuditoria as ator, registrarAuditoria } from "./auditoria-equipe";
 
 const permissaoSchema = z.enum(PERMISSOES);
 
@@ -15,12 +15,6 @@ async function garantirGerenciarEquipe(
   await garantirPermissao(supabase, userId, "gerenciar_equipe", acao, {
     tabela: "equipe_admins",
   });
-}
-
-/** Identifica quem está executando a ação, para o histórico de auditoria. */
-function ator(context: { userId: string; claims?: unknown }) {
-  const claims = (context.claims ?? {}) as { email?: string };
-  return { userId: context.userId, email: claims.email ?? "" };
 }
 
 export const equipeListar = createServerFn({ method: "GET" })

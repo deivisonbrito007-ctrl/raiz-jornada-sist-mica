@@ -70,3 +70,9 @@ export async function registrarAuditoria(
     console.error("[auditoria] erro inesperado", registro.acao, e);
   }
 }
+
+/** Extrai o responsável da ação a partir do contexto autenticado do servidor. */
+export function atorAuditoria(context: { userId: string; claims?: unknown }) {
+  const claims = (context.claims ?? {}) as { email?: string };
+  return { userId: context.userId, email: claims.email ?? "" };
+}

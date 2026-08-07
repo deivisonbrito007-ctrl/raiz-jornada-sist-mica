@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { auditarResultado, negarAcesso, registrarAcessoNegado } from "./auditoria-acesso";
+import { atorAuditoria, registrarAuditoria } from "./auditoria-equipe";
 import { garantirConteudoLiberado } from "./liberacao-guard";
 import { garantirPermissao, temPermissao } from "./permissao-guard";
 
