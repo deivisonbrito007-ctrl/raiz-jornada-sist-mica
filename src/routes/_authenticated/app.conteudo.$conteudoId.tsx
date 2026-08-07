@@ -29,7 +29,7 @@ function Player() {
   const fetchConteudo = useServerFn(getConteudo);
   const salvarProgresso = useServerFn(marcarProgresso);
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["conteudo", conteudoId],
     queryFn: () => fetchConteudo({ data: { conteudoId } }),
   });
@@ -205,7 +205,7 @@ function Player() {
                   onPlay={() => setTocando(true)}
                   onPause={() => setTocando(false)}
                   onTimeUpdate={(e) => setTempo(e.currentTarget.currentTime)}
-                  onLoadedMetadata={(e) => setTotal(e.currentTarget.duration)}
+                  onLoadedMetadata={(e) => retomarPosicao(e.currentTarget)}
                   onEnded={() => {
                     setTocando(false);
                     setTerminou(true);
@@ -220,7 +220,7 @@ function Player() {
                     onPlay={() => setTocando(true)}
                     onPause={() => setTocando(false)}
                     onTimeUpdate={(e) => setTempo(e.currentTarget.currentTime)}
-                    onLoadedMetadata={(e) => setTotal(e.currentTarget.duration)}
+                    onLoadedMetadata={(e) => retomarPosicao(e.currentTarget)}
                     onEnded={() => {
                       setTocando(false);
                       setTerminou(true);
@@ -285,10 +285,14 @@ function Player() {
                   </p>
                   <Button
                     onClick={renovarMidia}
-                    disabled={semLiberacao || renovando}
+                    disabled={renovando || emEspera}
                     className="mt-4 rounded-full bg-floresta px-6 text-floresta-foreground hover:bg-floresta/90"
                   >
-                    {renovando ? "Renovando..." : "Renovar acesso"}
+                    {renovando
+                      ? "Renovando..."
+                      : semLiberacao
+                        ? "Tentar novamente"
+                        : "Renovar acesso"}
                   </Button>
                 </div>
               </div>
