@@ -263,7 +263,15 @@ export const getConteudo = createServerFn({ method: "GET" })
       .eq("conteudo_id", data.conteudoId)
       .maybeSingle();
 
-    return { conteudo, url, urlExpiraEm, status: prog?.status ?? ("nao_iniciado" as const) };
+    return {
+      conteudo,
+      url,
+      urlExpiraEm,
+      status: prog?.status ?? ("nao_iniciado" as const),
+      limitado,
+      esperarSegundos,
+    };
+
 
   });
 
