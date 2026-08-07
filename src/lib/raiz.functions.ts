@@ -55,7 +55,7 @@ export const getMinhaBiblioteca = createServerFn({ method: "GET" })
         .eq("cliente_id", userId),
       supabase
         .from("progresso")
-        .select("conteudo_id, status, concluido_em")
+        .select("conteudo_id, status, concluido_em, posicao_segundos, posicao_atualizada_em")
         .eq("cliente_id", userId),
     ]);
 
@@ -123,9 +123,38 @@ export const getMinhaBiblioteca = createServerFn({ method: "GET" })
     const totalItens = totalLiberado.reduce((acc, e) => acc + e.total, 0);
     const totalConcluidos = totalLiberado.reduce((acc, e) => acc + e.concluidos, 0);
 
+    // Última prática deixada no meio (com ponto salvo) que ainda está liberada:
+    // alimenta o botão "Continuar de onde parei" na trilha.
+    const idsLiberados = new Set(praticas.map((p) => p.id));
+    const retomar =
+      (progresso.data ?? [])
+        .filter(
+          (p) =>
+            p.status !== "concluido" &&
+            (p.posicao_segundos ?? 0) > 0 &&
+            idsLiberados.has(p.conteudo_id),
+        )
+        .sort((a, b) =>
+          String(b.posicao_atualizada_em ?? "").localeCompare(String(a.posicao_atualizada_em ?? "")),
+        )
+        .map((p) => {
+          const pratica = praticas.find((x) => x.id === p.conteudo_id)!;
+          return {
+            id: pratica.id,
+            eixoId: pratica.eixoId,
+            eixoNome: pratica.eixoNome,
+            tipo: pratica.tipo,
+            titulo: pratica.titulo,
+            duracaoSegundos: pratica.duracaoSegundos,
+            posicaoSegundos: p.posicao_segundos ?? 0,
+            atualizadoEm: p.posicao_atualizada_em,
+          };
+        })[0] ?? null;
+
     return {
       eixos: eixosResult,
       praticas,
+      retomar,
       resumo: {
         totalItens,
         totalConcluidos,
