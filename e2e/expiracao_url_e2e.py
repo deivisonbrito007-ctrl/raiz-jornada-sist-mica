@@ -228,6 +228,7 @@ async def main() -> None:
         # registra as pausas feitas pelo app, para provar que a mídia parou sozinha
         await page.evaluate(
             """
+            () => {
             window.__pausas = 0;
             const orig = HTMLMediaElement.prototype.pause;
             HTMLMediaElement.prototype.pause = function () {
@@ -235,6 +236,7 @@ async def main() -> None:
               window.__ultimaPosicao = this.currentTime;
               return orig.call(this);
             };
+            }
             """
         )
 
