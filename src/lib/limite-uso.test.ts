@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const rpc = vi.fn();
 
@@ -9,7 +9,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({
 import { consumirLimite, LIMITE_MIDIA_POR_MINUTO } from "./limite-uso.server";
 
 describe("limite de geração de URLs assinadas", () => {
-  beforeEach(() => rpc.mockReset());
+  // cada teste define a resposta da RPC explicitamente
 
   it("permite o pedido quando ainda está dentro do limite", async () => {
     rpc.mockResolvedValue({
