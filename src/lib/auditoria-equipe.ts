@@ -68,6 +68,7 @@ export async function registrarAuditoria(
       alvo_tipo: registro.alvoTipo,
       alvo_id: registro.alvoId ?? null,
       alvo_email: registro.alvoEmail ?? null,
+      motivo: normalizarMotivo(registro.motivo),
       detalhes: registro.detalhes ?? {},
       ator_id: ator.userId,
       ator_email: ator.email ?? "",
