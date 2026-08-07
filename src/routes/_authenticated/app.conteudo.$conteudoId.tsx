@@ -123,6 +123,17 @@ function Player() {
     });
   }
 
+  /** Terminou a prática: a próxima escuta começa do início. */
+  function zerarPosicao() {
+    posicaoRef.current = 0;
+    ultimaSalvaRef.current = 0;
+    void Promise.resolve(
+      persistirPosicao({ data: { conteudoId, posicaoSegundos: 0, tocando: false } }),
+    ).catch(() => {
+      ultimaSalvaRef.current = -1;
+    });
+  }
+
   // Fechar a aba, minimizar o app ou sair da tela também salva o ponto atual.
   useEffect(() => {
     const aoSair = () => guardarPosicao(true);
