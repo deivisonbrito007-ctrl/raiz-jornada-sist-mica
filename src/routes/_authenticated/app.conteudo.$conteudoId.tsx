@@ -56,9 +56,15 @@ function Player() {
   const [terminou, setTerminou] = useState(false);
   const [concluido, setConcluido] = useState(false);
   const [bloqueio, setBloqueio] = useState<MotivoBloqueio | null>(null);
+  /** espelho do bloqueio para leitura dentro de callbacks de tempo real */
+  const bloqueioRef = useRef<MotivoBloqueio | null>(null);
   const [renovando, setRenovando] = useState(false);
   const [emEspera, setEmEspera] = useState(false);
 
+
+  useEffect(() => {
+    bloqueioRef.current = bloqueio;
+  }, [bloqueio]);
 
   useEffect(() => {
     setConcluido(data?.status === "concluido");
@@ -182,7 +188,7 @@ function Player() {
         toast.error("Esta prática não está mais liberada para você.");
         return;
       }
-      if (bloqueio) {
+      if (bloqueioRef.current) {
         setBloqueio(null);
         toast.success("Esta prática foi liberada de novo pelo seu terapeuta.");
       }
