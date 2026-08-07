@@ -59,7 +59,10 @@ describe("limite de geração de URLs assinadas", () => {
   });
 
   it("não trava a mídia se a chamada lançar erro", async () => {
-    rpc.mockRejectedValue(new Error("sem conexão"));
+    rpc.mockImplementation(() => {
+      throw new Error("sem conexão");
+    });
+
     const r = await consumirLimite("user-1", "midia:url-assinada");
     expect(r.permitido).toBe(true);
   });
