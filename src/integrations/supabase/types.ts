@@ -457,7 +457,10 @@ export type Database = {
           cliente_id: string
           concluido_em: string | null
           conteudo_id: string
+          estava_tocando: boolean
           id: string
+          posicao_atualizada_em: string | null
+          posicao_segundos: number
           status: Database["public"]["Enums"]["progresso_status"]
           updated_at: string
         }
@@ -465,7 +468,10 @@ export type Database = {
           cliente_id: string
           concluido_em?: string | null
           conteudo_id: string
+          estava_tocando?: boolean
           id?: string
+          posicao_atualizada_em?: string | null
+          posicao_segundos?: number
           status?: Database["public"]["Enums"]["progresso_status"]
           updated_at?: string
         }
@@ -473,7 +479,10 @@ export type Database = {
           cliente_id?: string
           concluido_em?: string | null
           conteudo_id?: string
+          estava_tocando?: boolean
           id?: string
+          posicao_atualizada_em?: string | null
+          posicao_segundos?: number
           status?: Database["public"]["Enums"]["progresso_status"]
           updated_at?: string
         }
