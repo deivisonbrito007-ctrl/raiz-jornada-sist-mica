@@ -69,6 +69,16 @@ class Api:
         r.raise_for_status()
         return r.json()[0]
 
+    def patch(self, tabela: str, params: dict, row: dict) -> None:
+        r = requests.patch(
+            f"{self.url}/rest/v1/{tabela}",
+            params=params,
+            json=row,
+            headers=self._headers({"Content-Type": "application/json"}),
+            timeout=30,
+        )
+        r.raise_for_status()
+
     def delete(self, tabela: str, params: dict) -> None:
         r = requests.delete(
             f"{self.url}/rest/v1/{tabela}", params=params, headers=self._headers(), timeout=30
@@ -131,16 +141,28 @@ async def main() -> None:
     eixo, conteudo = alvo
     print("eixo de teste:", eixo["nome"], "| prática:", conteudo["titulo"])
 
-    def liberar_eixo() -> dict:
-        return api.insert(
+    def liberar_eixo() -> None:
+        existente = api.get(
             "liberacoes",
-            {"cliente_id": uid, "eixo_id": eixo["id"], "conteudo_id": None, "status": "liberado"},
+            {"select": "id", "cliente_id": f"eq.{uid}", "eixo_id": f"eq.{eixo['id']}", "conteudo_id": "is.null"},
         )
+        if existente:
+            api.patch("liberacoes", {"id": f"eq.{existente[0]['id']}"}, {"status": "liberado"})
+        else:
+            api.insert(
+                "liberacoes",
+                {"cliente_id": uid, "eixo_id": eixo["id"], "conteudo_id": None, "status": "liberado"},
+            )
 
     def revogar_eixo() -> None:
-        api.delete("liberacoes", {"cliente_id": f"eq.{uid}", "eixo_id": f"eq.{eixo['id']}"})
+        """Mesma operação do painel: a linha fica com status bloqueado."""
+        api.patch(
+            "liberacoes",
+            {"cliente_id": f"eq.{uid}", "eixo_id": f"eq.{eixo['id']}"},
+            {"status": "bloqueado", "liberar_em": None},
+        )
 
-    revogar_eixo()
+    api.delete("liberacoes", {"cliente_id": f"eq.{uid}", "eixo_id": f"eq.{eixo['id']}", "conteudo_id": "is.null"})
 
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=True)
@@ -184,7 +206,10 @@ async def main() -> None:
         await page.screenshot(path=str(SCREENSHOTS / "player_3_reliberado.png"))
         print("OK: player voltou a liberar sem recarregar")
 
-        revogar_eixo()
+        api.delete(
+            "liberacoes",
+            {"cliente_id": f"eq.{uid}", "eixo_id": f"eq.{eixo['id']}", "conteudo_id": "is.null"},
+        )
 
         graves = [e for e in erros if "Warning" not in e]
         assert not graves, f"erros de console durante o fluxo: {graves[:3]}"
