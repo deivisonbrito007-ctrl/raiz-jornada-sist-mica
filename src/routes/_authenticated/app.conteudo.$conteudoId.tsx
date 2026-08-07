@@ -201,8 +201,17 @@ function Player() {
       el.pause();
     }
     setTocando(false);
+    bloqueioRef.current = "validade";
     setBloqueio("validade");
+    // o backend recusaria a gravação agora: fica guardado no aparelho
+    guardarPendente({
+      conteudoId,
+      posicaoSegundos: Math.floor(posicaoRef.current || 0),
+      tocando: false,
+    });
+    setTemPendencia(true);
   }
+
 
 
   /** Ao carregar a nova mídia, volta ao ponto salvo e retoma se estava tocando. */
