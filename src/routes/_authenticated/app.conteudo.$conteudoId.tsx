@@ -176,7 +176,8 @@ function Player() {
         queryFn: () => fetchConteudo({ data: { conteudoId } }),
         staleTime: 0,
       });
-      const liberado = Boolean(novo?.conteudo) && (!ehMidiaTipo(novo?.conteudo?.tipo) || !!novo?.url);
+      // a liberação é o que define o acesso; mídia ainda não enviada tem aviso próprio
+      const liberado = Boolean(novo?.conteudo);
       if (!liberado) {
         const el = mediaRef.current;
         if (el) {

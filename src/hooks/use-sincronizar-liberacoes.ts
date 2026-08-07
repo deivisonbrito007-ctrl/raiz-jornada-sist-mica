@@ -20,9 +20,7 @@ export function useSincronizarLiberacoes(onMudanca?: () => void) {
     let canal: ReturnType<typeof supabase.channel> | null = null;
 
     async function assinar() {
-      console.log("[raiz] assinando canal");
       const { data } = await supabase.auth.getUser();
-      console.log("[raiz] uid:", data.user?.id, ativo);
       const uid = data.user?.id;
       if (!uid || !ativo) return;
 
@@ -36,15 +34,14 @@ export function useSincronizarLiberacoes(onMudanca?: () => void) {
             table: "liberacoes",
             filter: `cliente_id=eq.${uid}`,
           },
-          (payload) => {
-            console.log("[raiz] mudanca liberacao:", payload.eventType);
+          () => {
             queryClient.invalidateQueries({ queryKey: ["biblioteca"] });
             queryClient.invalidateQueries({ queryKey: ["trilha"] });
             queryClient.invalidateQueries({ queryKey: ["conteudo"] });
             onMudanca?.();
           },
         )
-        .subscribe((status) => console.log("[raiz] canal liberacoes:", status));
+        .subscribe();
     }
 
     void assinar();
