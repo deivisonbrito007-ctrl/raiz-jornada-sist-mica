@@ -58,6 +58,8 @@ function Player() {
   const [bloqueio, setBloqueio] = useState<MotivoBloqueio | null>(null);
   /** espelho do bloqueio para leitura dentro de callbacks de tempo real */
   const bloqueioRef = useRef<MotivoBloqueio | null>(null);
+  /** ordem das revalidações concorrentes — só a última pode aplicar estado */
+  const revalidacaoRef = useRef(0);
   const [renovando, setRenovando] = useState(false);
   const [emEspera, setEmEspera] = useState(false);
 
