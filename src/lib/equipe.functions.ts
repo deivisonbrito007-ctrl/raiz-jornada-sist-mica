@@ -27,8 +27,8 @@ export const equipeListar = createServerFn({ method: "GET" })
       supabase.from("equipe_permissoes").select("user_id, permissao"),
       supabase
         .from("convites_equipe")
-        .select("id, email, permissoes, status, created_at")
-        .eq("status", "pendente")
+        .select("id, email, permissoes, status, created_at, token, expira_em")
+        .in_("status", ["pendente"])
         .order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("profiles").select("id, nome, email").order("nome"),
@@ -59,7 +59,13 @@ export const equipeListar = createServerFn({ method: "GET" })
       .filter((p) => !idsAdmin.has(p.id) && !idsTerapeuta.has(p.id))
       .map((p) => ({ userId: p.id, nome: p.nome, email: p.email }));
 
-    return { membros, terapeutas, convites: convites.data ?? [], candidatos };
+    const agora = Date.now();
+    const convitesComEstado = (convites.data ?? []).map((c) => ({
+      ...c,
+      expirado: new Date(c.expira_em).getTime() <= agora,
+    }));
+
+    return { membros, terapeutas, convites: convitesComEstado, candidatos };
   });
 
 export const equipeConvidar = createServerFn({ method: "POST" })
@@ -69,6 +75,7 @@ export const equipeConvidar = createServerFn({ method: "POST" })
       .object({
         email: z.string().email().max(200),
         permissoes: z.array(permissaoSchema).min(1),
+        diasValidade: z.number().int().min(1).max(30).optional(),
       })
       .parse(input),
   )
@@ -86,13 +93,22 @@ export const equipeConvidar = createServerFn({ method: "POST" })
       return { ok: false, motivo: "conta_existente" as const, userId: existente.id };
     }
 
-    const { error } = await supabase.from("convites_equipe").insert({
-      email,
-      permissoes: data.permissoes,
-      criado_por: userId,
-    });
+    const expiraEm = new Date(
+      Date.now() + (data.diasValidade ?? 7) * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    const { data: criado, error } = await supabase
+      .from("convites_equipe")
+      .insert({
+        email,
+        permissoes: data.permissoes,
+        criado_por: userId,
+        expira_em: expiraEm,
+      })
+      .select("id, token, expira_em")
+      .single();
     if (error) throw new Error(error.message);
-    return { ok: true as const };
+    return { ok: true as const, convite: criado };
   });
 
 export const equipeCancelarConvite = createServerFn({ method: "POST" })
@@ -166,3 +182,22 @@ export const equipeRemover = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const equipeAceitarConvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ token: z.string().min(10).max(200) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: resultado, error } = await context.supabase.rpc("aceitar_convite_equipe", {
+      _token: data.token,
+    });
+    if (error) throw new Error(error.message);
+    return { resultado: (resultado ?? "invalido") as ResultadoConvite };
+  });
+
+export type ResultadoConvite =
+  | "aceito"
+  | "usado"
+  | "expirado"
+  | "invalido"
+  | "outro_email"
+  | "sem_sessao";
