@@ -1,18 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { negarAcesso } from "./auditoria-acesso";
+import { garantirPermissao } from "./permissao-guard";
 import { PERMISSOES } from "./permissoes";
 
 const permissaoSchema = z.enum(PERMISSOES);
 
 async function garantirGerenciarEquipe(
-  supabase: { rpc: (fn: "pode", args: { _permissao: string }) => PromiseLike<{ data: unknown }> },
+  supabase: Parameters<typeof garantirPermissao>[0],
   userId: string,
   acao: string,
 ) {
-  const { data } = await supabase.rpc("pode", { _permissao: "gerenciar_equipe" });
-  if (data !== true) negarAcesso({ acao, userId, tabela: "equipe_admins" });
+  await garantirPermissao(supabase, userId, "gerenciar_equipe", acao, {
+    tabela: "equipe_admins",
+  });
 }
 
 export const equipeListar = createServerFn({ method: "GET" })
