@@ -11,12 +11,13 @@ import {
   RotateCcw,
   RotateCw,
   NotebookPen,
-  TimerOff,
 } from "lucide-react";
 import { getConteudo, marcarProgresso } from "@/lib/raiz.functions";
 import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bloqueada";
+
 
 export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")({
   component: Player,
