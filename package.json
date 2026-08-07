@@ -15,10 +15,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "coverage:badge": "node scripts/coverage-badge.mjs",
-    "security:scan": "node scripts/security-scan.mjs",
-    "security:baseline": "node scripts/security-scan.mjs --update",
-    "security:audit": "bun audit --audit-level=high",
-    "test:e2e": "python3 e2e/heatmap_cliente_e2e.py"
+    "test:e2e": "python3 e2e/heatmap_cliente_e2e.py",
+    "test:e2e:permissoes": "python3 e2e/painel_terapeuta_permissoes_e2e.py"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

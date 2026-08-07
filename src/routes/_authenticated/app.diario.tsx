@@ -4,7 +4,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { notificarErro } from "@/lib/erro-permissao";
 import { getConteudo, listarDiario, salvarDiario } from "@/lib/raiz.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,7 +51,7 @@ function Diario() {
       queryClient.invalidateQueries({ queryKey: ["diario"] });
       toast.success("Reflexão guardada.");
     } catch (erro) {
-      notificarErro(erro, "Não foi possível salvar sua reflexão");
+      toast.error(erro instanceof Error ? erro.message : "Não foi possível salvar");
     } finally {
       setEnviando(false);
     }

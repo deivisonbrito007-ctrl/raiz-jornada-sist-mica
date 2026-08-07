@@ -18,9 +18,6 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { COBRANCA_LABEL, formatarPreco } from "@/lib/raiz-format";
-import { AvisoPermissao } from "@/components/aviso-permissao";
-import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
-import { notificarErro } from "@/lib/erro-permissao";
 
 export const Route = createFileRoute("/_authenticated/admin/pacotes")({
   component: AdminPacotes,
@@ -47,14 +44,7 @@ function AdminPacotes() {
   const queryClient = useQueryClient();
   const fetchResumo = useServerFn(adminResumo);
   const salvar = useServerFn(adminSalvarPacote);
-  const perms = useMinhasPermissoes();
-  const bloqueado = perms.bloqueado("gerenciar_pacotes");
-  const { data, error, refetch } = useQuery({
-    queryKey: ["admin-resumo"],
-    queryFn: () => fetchResumo(),
-    enabled: !bloqueado,
-    retry: false,
-  });
+  const { data } = useQuery({ queryKey: ["admin-resumo"], queryFn: () => fetchResumo() });
   const [form, setForm] = useState<Formulario | null>(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -76,21 +66,10 @@ function AdminPacotes() {
       queryClient.invalidateQueries({ queryKey: ["admin-resumo"] });
       toast.success("Pacote salvo");
     } catch (erro) {
-      notificarErro(erro, "Não foi possível salvar o pacote");
+      toast.error(erro instanceof Error ? erro.message : "Não foi possível salvar");
     } finally {
       setEnviando(false);
     }
-  }
-
-  if (bloqueado) {
-    return (
-      <div>
-        <h1 className="text-3xl text-floresta">Pacotes</h1>
-        <div className="mt-6">
-          <AvisoPermissao permissao="gerenciar_pacotes" />
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -109,12 +88,6 @@ function AdminPacotes() {
           <Plus className="mr-2 h-4 w-4" /> Novo pacote
         </Button>
       </div>
-
-      {error ? (
-        <div className="mt-8">
-          <AvisoPermissao erro={error} onTentarNovamente={() => refetch()} />
-        </div>
-      ) : null}
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         {(data?.pacotes ?? []).map((pacote) => (

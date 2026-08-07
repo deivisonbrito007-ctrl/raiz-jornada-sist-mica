@@ -37,15 +37,8 @@ export type RegistroAuditoria = {
   alvoTipo: "equipe" | "convite" | "liberacao";
   alvoId?: string | null;
   alvoEmail?: string | null;
-  /** Justificativa escrita por quem executou a ação (opcional). */
-  motivo?: string | null | undefined;
   detalhes?: Record<string, unknown>;
 };
-
-/** Normaliza o motivo: sem espaços sobrando e limitado para não inflar o log. */
-export function normalizarMotivo(motivo?: string | null): string {
-  return (motivo ?? "").trim().slice(0, 300);
-}
 
 type ClienteInsert = {
   from: (tabela: "auditoria_equipe") => {
@@ -68,7 +61,6 @@ export async function registrarAuditoria(
       alvo_tipo: registro.alvoTipo,
       alvo_id: registro.alvoId ?? null,
       alvo_email: registro.alvoEmail ?? null,
-      motivo: normalizarMotivo(registro.motivo),
       detalhes: registro.detalhes ?? {},
       ator_id: ator.userId,
       ator_email: ator.email ?? "",

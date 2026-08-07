@@ -12,8 +12,6 @@ import {
   linhaDoTempoSemanal,
 } from "@/lib/raiz-format";
 import { Flame } from "lucide-react";
-import { AvisoPermissao } from "@/components/aviso-permissao";
-import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminClientes,
@@ -21,12 +19,9 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 
 function AdminClientes() {
   const fetchResumo = useServerFn(adminResumo);
-  const perms = useMinhasPermissoes();
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["admin-resumo"],
     queryFn: () => fetchResumo(),
-    enabled: !perms.bloqueado("ver_clientes"),
-    retry: false,
   });
   const [busca, setBusca] = useState("");
 
@@ -40,20 +35,8 @@ function AdminClientes() {
     { label: "Conclusão média", valor: `${data?.metricas.conclusaoMedia ?? 0}%` },
   ];
 
-  if (perms.bloqueado("ver_clientes")) {
-    return (
-      <div>
-        <h1 className="text-3xl text-floresta">Clientes</h1>
-        <div className="mt-6">
-          <AvisoPermissao permissao="ver_clientes" />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
-
       <h1 className="text-3xl text-floresta">Clientes</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Acompanhe o processo de cada pessoa e libere o próximo passo no tempo dela.
@@ -76,13 +59,6 @@ function AdminClientes() {
       />
 
       {isLoading && <Skeleton className="mt-6 h-48 rounded-3xl" />}
-
-      {error ? (
-        <div className="mt-6">
-          <AvisoPermissao erro={error} onTentarNovamente={() => refetch()} />
-        </div>
-      ) : null}
-
 
       <div className="mt-6 space-y-3">
         {clientes.map((cliente) => {
