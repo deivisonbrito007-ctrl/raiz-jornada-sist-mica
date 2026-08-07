@@ -34,6 +34,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AvisoPermissao } from "@/components/aviso-permissao";
+import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
+import { notificarErro } from "@/lib/erro-permissao";
 
 export const Route = createFileRoute("/_authenticated/admin/equipe")({
   component: AdminEquipe,
@@ -86,10 +89,24 @@ function AdminEquipe() {
   const remover = useServerFn(equipeRemover);
   const auditoria = useServerFn(equipeAuditoria);
 
-  const { data, isLoading } = useQuery({ queryKey: ["equipe"], queryFn: () => listar() });
+  const perms = useMinhasPermissoes();
+  const bloqueado = perms.bloqueado("gerenciar_equipe");
+  const {
+    data,
+    isLoading,
+    error: erroEquipe,
+    refetch: recarregarEquipe,
+  } = useQuery({
+    queryKey: ["equipe"],
+    queryFn: () => listar(),
+    enabled: !bloqueado,
+    retry: false,
+  });
   const auditoriaQuery = useQuery({
     queryKey: ["equipe-auditoria"],
     queryFn: () => auditoria(),
+    enabled: !bloqueado,
+    retry: false,
   });
 
   const [emailConvite, setEmailConvite] = useState("");
@@ -122,7 +139,7 @@ function AdminEquipe() {
         toast.error("Esse e-mail já tem conta. Use o bloco “Promover conta existente”.");
       }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => notificarErro(e),
   });
 
   const mPromover = useMutation({
@@ -135,7 +152,7 @@ function AdminEquipe() {
       setMotivoPromover("");
       recarregar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => notificarErro(e),
   });
 
   const mAtualizar = useMutation({
@@ -148,7 +165,7 @@ function AdminEquipe() {
       setMotivoEdicao("");
       recarregar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => notificarErro(e),
   });
 
   const mRevogar = useMutation({
@@ -160,7 +177,7 @@ function AdminEquipe() {
       setMotivoEdicao("");
       recarregar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => notificarErro(e),
   });
 
 
@@ -172,7 +189,7 @@ function AdminEquipe() {
       setMotivoEdicao("");
       recarregar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => notificarErro(e),
   });
 
   const mCancelar = useMutation({
@@ -182,7 +199,7 @@ function AdminEquipe() {
       toast.success("Convite cancelado.");
       recarregar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => notificarErro(e),
   });
 
   const linhasMatriz: LinhaMatriz[] = [
