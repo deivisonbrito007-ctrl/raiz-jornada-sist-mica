@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { TimerOff, Lock, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export type MotivoBloqueio = "validade" | "revogado" | "falha";
@@ -8,11 +9,35 @@ interface Props {
   motivo: MotivoBloqueio;
   renovando: boolean;
   emEspera: boolean;
+  /** instante (ms) em que a nova tentativa volta a ser permitida */
+  esperaAte?: number | null;
   eixoId?: string;
   onRenovar: () => void;
 }
 
-export function AvisoMidiaBloqueada({ motivo, renovando, emEspera, eixoId, onRenovar }: Props) {
+/** Segundos que faltam para liberar o botão — atualiza a cada segundo. */
+function useContagem(esperaAte?: number | null) {
+  const [agora, setAgora] = useState(() => Date.now());
+  useEffect(() => {
+    if (!esperaAte) return;
+    setAgora(Date.now());
+    const id = setInterval(() => setAgora(Date.now()), 500);
+    return () => clearInterval(id);
+  }, [esperaAte]);
+  if (!esperaAte) return 0;
+  return Math.max(0, Math.ceil((esperaAte - agora) / 1000));
+}
+
+export function AvisoMidiaBloqueada({
+  motivo,
+  renovando,
+  emEspera,
+  esperaAte,
+  eixoId,
+  onRenovar,
+}: Props) {
+  const segundos = useContagem(emEspera ? esperaAte : null);
+
   const configs: Record<MotivoBloqueio, {
     icone: React.ReactNode;
     titulo: string;
