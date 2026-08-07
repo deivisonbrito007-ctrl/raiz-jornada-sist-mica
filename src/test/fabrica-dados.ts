@@ -277,6 +277,20 @@ export async function criarCenarioSeguranca(opcoes: OpcoesCenario = {}): Promise
     }
   };
 
+  const primeiroTerapeuta = terapeutas[0];
+  const primeiroCliente = clientes[0];
+  const segundoCliente = clientes[1] ?? clientes[0];
+  if (!primeiroTerapeuta || !primeiroCliente || !segundoCliente) {
+    throw new Error("cenário exige ao menos 1 terapeuta e 1 cliente");
+  }
+  const idLiberado = primeiroCliente.liberados[0];
+  const idBloqueado = primeiroCliente.revogados[0] ?? primeiroCliente.agendados[0];
+  const conteudoLiberado = conteudos.find((c) => c.id === idLiberado);
+  const conteudoBloqueado = conteudos.find((c) => c.id === idBloqueado);
+  if (!conteudoLiberado || !conteudoBloqueado) {
+    throw new Error("cenário exige conteúdo liberado e conteúdo bloqueado");
+  }
+
   return {
     admin,
     marcador,
@@ -284,11 +298,12 @@ export async function criarCenarioSeguranca(opcoes: OpcoesCenario = {}): Promise
     conteudos,
     terapeutas,
     clientes,
-    terapeuta: terapeutas[0],
-    cliente: clientes[0],
-    outroCliente: clientes[1],
-    conteudoLiberado: conteudos.find((c) => c.id === clientes[0].liberados[0])!,
-    conteudoBloqueado: conteudos.find((c) => c.id === clientes[0].revogados[0] ?? "")!,
+    terapeuta: primeiroTerapeuta,
+    cliente: primeiroCliente,
+    outroCliente: segundoCliente,
+    conteudoLiberado,
+    conteudoBloqueado,
     limpar,
   };
 }
+
