@@ -1,5 +1,4 @@
 import { negarAcesso } from "./auditoria-acesso";
-import { persistirAcessoNegado } from "./auditoria-negados.server";
 import type { Permissao } from "./permissoes";
 
 type ClientePode = {
@@ -17,6 +16,8 @@ export async function garantirPermissao(
   const { data } = await supabase.rpc("pode", { _permissao: permissao });
   if (data !== true) {
     // Registro persistente para a página de auditoria do painel.
+    // Import dinâmico: módulo server-only não pode entrar no bundle do cliente.
+    const { persistirAcessoNegado } = await import("./auditoria-negados.server");
     await persistirAcessoNegado({
       acao,
       userId,
