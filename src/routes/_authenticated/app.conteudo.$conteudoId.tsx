@@ -87,6 +87,58 @@ function Player() {
     if (data?.status && data.status !== "nao_iniciado") progressoIniciadoRef.current = true;
   }, [data?.status]);
 
+  /** a posição guardada no backend já foi aplicada nesta visita? */
+  const posicaoRestauradaRef = useRef(false);
+  /** última posição enviada ao backend, para não gravar a mesma coisa toda hora */
+  const ultimaSalvaRef = useRef(-1);
+
+  // Retoma o ponto exato salvo no backend — vale após fechar o app, recarregar
+  // a página ou continuar em outro aparelho.
+  useEffect(() => {
+    if (posicaoRestauradaRef.current) return;
+    if (typeof data?.posicaoSegundos !== "number") return;
+    posicaoRestauradaRef.current = true;
+    if (data.posicaoSegundos > 0) {
+      posicaoRef.current = data.posicaoSegundos;
+      ultimaSalvaRef.current = data.posicaoSegundos;
+      setTempo(data.posicaoSegundos);
+      const el = mediaRef.current;
+      if (el && el.readyState > 0) el.currentTime = data.posicaoSegundos;
+    }
+  }, [data?.posicaoSegundos]);
+
+  /** Grava no backend onde a pessoa parou (no máximo uma gravação a cada 5s). */
+  function guardarPosicao(agora = false) {
+    const el = mediaRef.current;
+    if (!el || bloqueioRef.current) return;
+    const pos = Math.floor(el.currentTime || posicaoRef.current || 0);
+    posicaoRef.current = el.currentTime || posicaoRef.current;
+    if (!agora && Math.abs(pos - ultimaSalvaRef.current) < 5) return;
+    ultimaSalvaRef.current = pos;
+    void Promise.resolve(
+      persistirPosicao({ data: { conteudoId, posicaoSegundos: pos, tocando: !el.paused } }),
+    ).catch(() => {
+      // falhou: libera a próxima tentativa em vez de perder a posição
+      ultimaSalvaRef.current = -1;
+    });
+  }
+
+  // Fechar a aba, minimizar o app ou sair da tela também salva o ponto atual.
+  useEffect(() => {
+    const aoSair = () => guardarPosicao(true);
+    const aoEsconder = () => {
+      if (document.visibilityState === "hidden") aoSair();
+    };
+    window.addEventListener("pagehide", aoSair);
+    document.addEventListener("visibilitychange", aoEsconder);
+    return () => {
+      window.removeEventListener("pagehide", aoSair);
+      document.removeEventListener("visibilitychange", aoEsconder);
+      aoSair();
+    };
+  }, [conteudoId]);
+
+
   const conteudo = data?.conteudo;
   const ehMidia = conteudo?.tipo === "video" || conteudo?.tipo === "audio";
 
