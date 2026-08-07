@@ -37,6 +37,12 @@ function Player() {
 
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   const posicaoRef = useRef(0);
+  /** estava tocando no instante em que o link venceu? */
+  const tocandoAntesRef = useRef(false);
+  /** deve dar play sozinho quando a nova mídia carregar? */
+  const retomarAutoRef = useRef(false);
+  /** o "em andamento" desta sessão já foi registrado — não repetir na retomada */
+  const progressoIniciadoRef = useRef(false);
   const [tocando, setTocando] = useState(false);
   const [tempo, setTempo] = useState(0);
   const [total, setTotal] = useState(0);
