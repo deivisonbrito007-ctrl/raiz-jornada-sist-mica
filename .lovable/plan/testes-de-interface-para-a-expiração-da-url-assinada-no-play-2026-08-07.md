@@ -1,22 +1,29 @@
-# Testes de interface para a expiração da URL assinada no player
+# Mensagens distintas: acesso expirado vs conteúdo revogado
 
-Novo arquivo de testes cobrindo a tela do player (`/app/conteudo/$conteudoId`) com a mídia expirando de verdade durante a simulação, no mesmo estilo dos testes de UI já existentes (`src/routes/auth.test.tsx`).
+Hoje os dois casos aparecem no mesmo bloco, com o mesmo título ("Acesso à mídia expirou") e só o parágrafo muda. A tela passa a tratar cada situação como um estado próprio, com título, ícone, orientação e ações diferentes.
 
-## Cenários cobertos
+## Caso 1 — Link expirou, prática segue liberada
 
-1. **Expiração pelo tempo de validade** — a mídia chega com validade curta; ao vencer, o player pausa sozinho, o bloco de reprodução sai da tela e aparece a mensagem "Acesso à mídia expirou" com o botão "Renovar acesso".
-2. **Expiração por link morto** — quando o elemento de vídeo/áudio dispara erro de carregamento, o mesmo estado de expiração aparece (pausa + mensagem).
-3. **Progresso bloqueado** — com o acesso expirado, "Marcar como concluída" não grava nada no backend e mostra o aviso de que é preciso renovar antes de concluir; o play também não volta a tocar.
-4. **Renovação bem-sucedida** — clicando em "Renovar acesso", o backend é chamado de novo, a mensagem desaparece, o player volta com o link novo, pausado, no ponto onde estava.
-5. **Mídia revogada na renovação** — quando o backend responde sem URL, aparece a mensagem de prática não liberada, o botão passa a "Tentar novamente" e nenhum progresso é gravado.
-6. **Sem gravação de progresso durante todo o período expirado** — verificação de que a função de progresso do servidor não recebeu nenhuma chamada nesses fluxos.
+- Título: "O link seguro expirou"
+- Ícone de tempo (TimerOff), tom neutro/ocre.
+- Texto: explica que o link de reprodução vale por um tempo limitado por segurança e que nada foi perdido — o ponto onde parou está guardado.
+- Ação principal: "Renovar acesso" (comportamento atual).
+- Nota curta: "Seu progresso continua salvo."
+
+## Caso 2 — Conteúdo revogado pelo terapeuta
+
+- Título: "Prática não está mais liberada"
+- Ícone de bloqueio (Lock), tom terracota de alerta.
+- Texto: orienta que o terapeuta recolheu esta prática, que isso costuma ser parte do ritmo do acompanhamento, e que a reprodução fica indisponível e nada novo é registrado.
+- Ações: "Tentar novamente" (com a espera curta atual) e "Voltar à trilha" (link para o eixo), além de sugerir falar com o terapeuta e, se quiser, registrar no diário.
+- Deixa claro que o progresso já registrado permanece.
+
+## Caso 3 — Falha ao renovar (rede/servidor)
+
+Distinguido dos dois acima: título "Não conseguimos renovar agora", texto pedindo para tentar de novo em instantes, botão "Tentar novamente". Evita dizer que foi revogado quando na verdade a chamada falhou.
 
 ## Detalhes técnicos
 
-- Arquivo: `src/routes/_authenticated/app.conteudo.expiracao.test.tsx`.
-- Mocks: `@tanstack/react-router` (`createFileRoute`, `useParams`, `Link`, `useNavigate`), `@tanstack/react-start` (`useServerFn` devolvendo os mocks de `getConteudo`/`marcarProgresso`), `sonner` para capturar os avisos, e `@/lib/raiz.functions` para não puxar código de servidor.
-- Render com `QueryClientProvider` (retry desligado) e o componente extraído de `Route.component`.
-- Tempo controlado com `vi.useFakeTimers()` + `userEvent.setup({ advanceTimers })`, avançando até passar de `urlExpiraEm` para acionar o timer de expiração.
-- jsdom não implementa `play`/`pause`: stub em `HTMLMediaElement.prototype` (`play`, `pause`) e `duration`/`currentTime` configuráveis, para checar pausa e posição retomada.
-- Asserções por texto/rótulo acessível ("Acesso à mídia expirou", "Renovar acesso", "Tentar novamente", `aria-label` "Reproduzir"), sem depender de classes.
-- Sem mudanças em código de produção; apenas testes.
+- `src/routes/_authenticated/app.conteudo.$conteudoId.tsx`: substituir o par de estados `midiaExpirada`/`semLiberacao` por um estado único de motivo (`"validade" | "revogado" | "falha" | null`), mantendo os guards de progresso (`registrar`, `alternar`, `concluir`) para qualquer motivo diferente de `null`.
+- Extrair o bloco em um componente de apresentação `src/components/aviso-midia-bloqueada.tsx` que recebe motivo, estado de carregamento/espera, `onRenovar` e o `eixoId` para o link de volta.
+- Ajustar `src/routes/_authenticated/app.conteudo.expiracao.test.tsx` aos novos títulos/textos e adicionar caso cobrindo a mensagem de falha de rede separada da de revogação.
