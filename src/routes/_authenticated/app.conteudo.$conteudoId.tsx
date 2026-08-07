@@ -28,7 +28,7 @@ function Player() {
   const fetchConteudo = useServerFn(getConteudo);
   const salvarProgresso = useServerFn(marcarProgresso);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["conteudo", conteudoId],
     queryFn: () => fetchConteudo({ data: { conteudoId } }),
   });
@@ -39,6 +39,9 @@ function Player() {
   const [total, setTotal] = useState(0);
   const [terminou, setTerminou] = useState(false);
   const [concluido, setConcluido] = useState(false);
+  const [midiaExpirada, setMidiaExpirada] = useState(false);
+  const [semLiberacao, setSemLiberacao] = useState(false);
+  const [renovando, setRenovando] = useState(false);
 
   useEffect(() => {
     setConcluido(data?.status === "concluido");
@@ -47,7 +50,51 @@ function Player() {
   const conteudo = data?.conteudo;
   const ehMidia = conteudo?.tipo === "video" || conteudo?.tipo === "audio";
 
+  function expirarMidia() {
+    const el = mediaRef.current;
+    if (el) el.pause();
+    setTocando(false);
+    setMidiaExpirada(true);
+  }
+
+  // O link seguro da mídia tem validade limitada: ao chegar ao fim, o player para
+  // sozinho e passa a exigir uma nova liberação em vez de tentar tocar um link morto.
+  useEffect(() => {
+    if (!data?.url || !data?.urlExpiraEm) return;
+    setMidiaExpirada(false);
+    setSemLiberacao(false);
+    const restante = new Date(data.urlExpiraEm).getTime() - Date.now();
+    if (restante <= 0) {
+      expirarMidia();
+      return;
+    }
+    const timer = setTimeout(expirarMidia, restante);
+    return () => clearTimeout(timer);
+  }, [data?.url, data?.urlExpiraEm]);
+
+  async function renovarMidia() {
+    if (semLiberacao || renovando) return;
+    setRenovando(true);
+    try {
+      const novo = await refetch();
+      if (novo.data?.url) {
+        setMidiaExpirada(false);
+        setTocando(false);
+        toast.success("Mídia liberada novamente. Você pode continuar.");
+      } else {
+        setSemLiberacao(true);
+        toast.error("Esta prática não está mais liberada para você.");
+      }
+    } catch {
+      setSemLiberacao(true);
+      toast.error("Não foi possível renovar o acesso à mídia.");
+    } finally {
+      setRenovando(false);
+    }
+  }
+
   async function registrar(status: "em_andamento" | "concluido") {
+    if (midiaExpirada || semLiberacao) return;
     await salvarProgresso({ data: { conteudoId, status } });
     queryClient.invalidateQueries({ queryKey: ["biblioteca"] });
     queryClient.invalidateQueries({ queryKey: ["conteudo", conteudoId] });
@@ -56,7 +103,7 @@ function Player() {
 
   function alternar() {
     const el = mediaRef.current;
-    if (!el) return;
+    if (!el || midiaExpirada || semLiberacao) return;
     if (el.paused) {
       void el.play();
       if (data?.status === "nao_iniciado") void registrar("em_andamento");
@@ -71,10 +118,15 @@ function Player() {
   }
 
   async function concluir() {
+    if (midiaExpirada || semLiberacao) {
+      toast.error("Acesso à mídia expirado. Renove antes de concluir a prática.");
+      return;
+    }
     await registrar("concluido");
     setConcluido(true);
     toast.success("Prática concluída. Que tal registrar no diário?");
   }
+
 
   return (
     <div>
