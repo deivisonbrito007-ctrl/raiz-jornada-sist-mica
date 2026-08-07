@@ -242,15 +242,26 @@ export const equipeAuditoria = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
 
     return {
-      registros: (data ?? []).map((r) => ({
-        id: r.id,
-        acao: r.acao,
-        alvoTipo: r.alvo_tipo,
-        alvoId: r.alvo_id,
-        alvoEmail: r.alvo_email,
-        detalhes: (r.detalhes ?? {}) as Record<string, unknown>,
-        atorEmail: r.ator_email,
-        quando: r.created_at,
-      })),
+      registros: (data ?? []).map((r) => {
+        const det = (r.detalhes ?? {}) as {
+          permissoes?: string[];
+          anteriores?: string[];
+          titulo?: string;
+          agendadoPara?: string;
+        };
+        return {
+          id: r.id,
+          acao: r.acao,
+          alvoTipo: r.alvo_tipo,
+          alvoId: r.alvo_id,
+          alvoEmail: r.alvo_email,
+          permissoes: det.permissoes ?? [],
+          anteriores: det.anteriores ?? [],
+          titulo: det.titulo ?? "",
+          agendadoPara: det.agendadoPara ?? "",
+          atorEmail: r.ator_email,
+          quando: r.created_at,
+        };
+      }),
     };
   });
