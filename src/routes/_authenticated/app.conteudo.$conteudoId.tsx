@@ -426,6 +426,15 @@ function Player() {
           </div>
         </>
       )}
+
+      {!conteudo && !isLoading && bloqueio === "revogado" && (
+        <AvisoMidiaBloqueada
+          motivo="revogado"
+          renovando={renovando}
+          emEspera={emEspera}
+          onRenovar={renovarMidia}
+        />
+      )}
     </div>
   );
 }
