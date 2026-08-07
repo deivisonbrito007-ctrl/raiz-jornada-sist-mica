@@ -207,10 +207,45 @@ async def main() -> None:
                 afirmar_bloqueio(res, f"sessão sem permissão ({res['permissao']})")
             print(f"sessão autenticada: {len(resultados)} funções sem permissão bloqueadas ✔")
         else:
-            print(
-                "a sessão injetada é terapeuta/tem todas as permissões: "
-                "cenário autenticado sem permissão NÃO VERIFICADO"
-            )
+            # A sessão injetada é a da terapeuta: para cobrir o cenário
+            # autenticado-sem-permissão, entre com uma conta de cliente/admin
+            # limitado informando E2E_EMAIL_SEM_PERMISSAO / E2E_SENHA_SEM_PERMISSAO.
+            email = os.environ.get("E2E_EMAIL_SEM_PERMISSAO")
+            senha = os.environ.get("E2E_SENHA_SEM_PERMISSAO")
+            if email and senha:
+                pagina2 = await (await browser.new_context(
+                    viewport={"width": 1280, "height": 1800}
+                )).new_page()
+                await pagina2.goto(BASE_URL, wait_until="networkidle")
+                entrou = await pagina2.evaluate(
+                    """async ({ email, senha }) => {
+                        const m = await import('/src/integrations/supabase/client.ts');
+                        const { error } = await m.supabase.auth.signInWithPassword({ email, password: senha });
+                        return error ? error.message : null;
+                    }""",
+                    {"email": email, "senha": senha},
+                )
+                assert entrou is None, f"login da conta sem permissão falhou: {entrou}"
+                await pagina2.reload(wait_until="networkidle")
+                info2 = await pagina2.evaluate(SCRIPT_CONTEXTO)
+                assert info2.get("ok"), f"contexto da conta sem permissão: {info2.get('erro')}"
+                p2 = set(info2["ctx"].get("permissoes") or [])
+                papel2 = info2["ctx"].get("papel")
+                alvo2 = [f for f in FUNCOES if papel2 != "terapeuta" and f[2] not in p2]
+                resultados = await pagina2.evaluate(SCRIPT_CHAMADAS, {"funcoes": alvo2})
+                for res in resultados:
+                    afirmar_bloqueio(res, f"conta sem permissão ({res['permissao']})")
+                print(
+                    f"conta autenticada sem permissão ({papel2}): "
+                    f"{len(resultados)} funções bloqueadas no servidor ✔"
+                )
+            else:
+                print(
+                    "a sessão injetada é terapeuta/tem todas as permissões: "
+                    "cenário autenticado sem permissão NÃO VERIFICADO "
+                    "(informe E2E_EMAIL_SEM_PERMISSAO/E2E_SENHA_SEM_PERMISSAO)"
+                )
+
 
         for rota in ROTAS_ADMIN:
             await page.goto(f"{BASE_URL}{rota}", wait_until="networkidle")
