@@ -32,11 +32,15 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 vi.mock("@tanstack/react-start", () => ({
-  useServerFn: (fn: unknown) => (fn === getConteudoMock ? fetchConteudo : salvarProgresso),
+  useServerFn: (fn: unknown) =>
+    fn === getConteudoMock ? fetchConteudo : fn === salvarPosicaoMock ? salvarPosicaoFn : salvarProgresso,
 }));
 
 const getConteudoMock = Symbol("getConteudo");
+const salvarPosicaoMock = Symbol("salvarPosicao");
+const salvarPosicaoFn = vi.fn(async () => ({ ok: true }));
 vi.mock("@/lib/raiz.functions", () => ({
+  salvarPosicao: salvarPosicaoMock,
   getConteudo: getConteudoMock,
   marcarProgresso: Symbol("marcarProgresso"),
 }));
