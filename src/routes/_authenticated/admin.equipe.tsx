@@ -102,7 +102,9 @@ function SeletorPermissoes({
           </span>
         </label>
       ))}
+      </div>
     </div>
+
   );
 }
 
