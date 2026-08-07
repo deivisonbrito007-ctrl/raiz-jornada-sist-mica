@@ -107,6 +107,17 @@ export function AvisoMidiaBloqueada({
               </Link>
             )}
           </div>
+
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground" aria-live="polite">
+            {renovando
+              ? "Estamos pedindo um novo link seguro ao servidor e conferindo se a prática segue liberada."
+              : emEspera
+                ? `Aguarde ${segundos > 0 ? `${segundos}s` : "um instante"} antes de tentar de novo: o botão fica em espera para evitar pedidos repetidos ao servidor. Ele volta a funcionar sozinho.`
+                : "Ao tocar em “" +
+                  cfg.botao +
+                  "”, pedimos um link seguro novo e verificamos a liberação. Se continuar bloqueada, o botão espera alguns segundos antes de permitir outra tentativa."}
+          </p>
+
         </div>
       </div>
     </div>
