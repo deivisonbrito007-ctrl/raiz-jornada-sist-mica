@@ -1,13 +1,15 @@
 """E2E: cada rota/ação do painel do terapeuta bloqueia no SERVIDOR sem permissão.
 
-O teste não confia na UI: ele descobre os endpoints reais das server functions
-administrativas (`admin*` e `equipe*`) lendo os módulos servidos pelo dev server
-e os chama diretamente por HTTP.
+O teste não confia na UI. Ele importa, dentro do navegador, os módulos reais de
+server functions do painel (`admin*` e `equipe*`) e os invoca pelo caminho real
+cliente -> servidor (mesma serialização e mesmo middleware de autenticação).
+Toda função administrativa precisa falhar no servidor com "Acesso restrito"
+(ou "Unauthorized" sem sessão) e nunca devolver dados sensíveis.
 
 Cenários cobertos:
-  1. Sem sessão: toda função administrativa deve ser recusada pelo servidor.
-  2. Com sessão real (injetada pelo sandbox) que NÃO tem a permissão exigida:
-     a função continua recusada no servidor (nenhum dado sensível no corpo).
+  1. Sem sessão: todas as funções administrativas são recusadas no servidor.
+  2. Com a sessão real injetada pelo sandbox: as funções cuja permissão o
+     usuário NÃO possui continuam recusadas no servidor.
   3. Navegação: cada rota /admin/* redireciona quem não pode administrar.
 
 Requisitos de ambiente (injetados pelo sandbox da Lovable):
@@ -19,198 +21,217 @@ Uso: python3 e2e/painel_terapeuta_permissoes_e2e.py
 import asyncio
 import json
 import os
-import re
 from pathlib import Path
 
-import requests
 from playwright.async_api import async_playwright
 
 BASE_URL = os.environ.get("E2E_BASE_URL", "http://localhost:8080")
 SCREENSHOTS = Path(__file__).parent / "screenshots"
 SCREENSHOTS.mkdir(parents=True, exist_ok=True)
 
-MODULOS = ["/src/lib/raiz.functions.ts", "/src/lib/equipe.functions.ts"]
+UUID = "11111111-1111-4111-8111-111111111111"
 
-# Permissão exigida no servidor por função administrativa.
-PERMISSAO_POR_FUNCAO = {
-    "adminResumo": "ver_clientes",
-    "adminGetCliente": "ver_clientes",
-    "adminDefinirLiberacao": "gerenciar_liberacoes",
-    "adminSalvarConteudo": "gerenciar_conteudos",
-    "adminApagarConteudo": "gerenciar_conteudos",
-    "adminSalvarEixo": "gerenciar_conteudos",
-    "adminListarConteudos": "gerenciar_conteudos",
-    "adminSalvarPacote": "gerenciar_pacotes",
-    "adminVincularPacote": "gerenciar_pacotes",
-    "adminAtualizarPagamento": "gerenciar_pacotes",
-    "equipeListar": "gerenciar_equipe",
-    "equipeConvidar": "gerenciar_equipe",
-    "equipeCancelarConvite": "gerenciar_equipe",
-    "equipeDefinirPermissoes": "gerenciar_equipe",
-    "equipeRemover": "gerenciar_equipe",
-    "equipeAuditoria": "gerenciar_equipe",
-}
-
-# Rotas do painel e a permissão que as sustenta.
-ROTAS_ADMIN = [
-    ("/admin", "ver_clientes"),
-    ("/admin/conteudos", "gerenciar_conteudos"),
-    ("/admin/pacotes", "gerenciar_pacotes"),
-    ("/admin/equipe", "gerenciar_equipe"),
+# Cada função administrativa: módulo, permissão exigida no servidor e payload
+# válido (para o bloqueio ser de permissão, nunca de validação de entrada).
+FUNCOES = [
+    ("raiz", "adminResumo", "ver_clientes", None),
+    ("raiz", "adminGetCliente", "ver_clientes", {"clienteId": UUID}),
+    ("raiz", "adminListarConteudos", "gerenciar_conteudos", None),
+    (
+        "raiz",
+        "adminDefinirLiberacao",
+        "gerenciar_liberacoes",
+        {"clienteId": UUID, "eixoId": UUID, "liberar": True, "motivo": "teste e2e"},
+    ),
+    (
+        "raiz",
+        "adminSalvarConteudo",
+        "gerenciar_conteudos",
+        {"eixoId": UUID, "tipo": "texto", "titulo": "E2E não deve gravar"},
+    ),
+    ("raiz", "adminApagarConteudo", "gerenciar_conteudos", {"id": UUID}),
+    ("raiz", "adminSalvarEixo", "gerenciar_conteudos", {"nome": "E2E não deve gravar"}),
+    (
+        "raiz",
+        "adminSalvarPacote",
+        "gerenciar_pacotes",
+        {"nome": "E2E não deve gravar", "tipoCobranca": "pagamento_unico"},
+    ),
+    ("raiz", "adminVincularPacote", "gerenciar_pacotes", {"clienteId": UUID, "pacoteId": UUID}),
+    (
+        "raiz",
+        "adminAtualizarPagamento",
+        "gerenciar_pacotes",
+        {"id": UUID, "statusPagamento": "pago"},
+    ),
+    ("equipe", "equipeListar", "gerenciar_equipe", None),
+    (
+        "equipe",
+        "equipeConvidar",
+        "gerenciar_equipe",
+        {"email": "e2e-bloqueado@example.com", "permissoes": ["ver_clientes"]},
+    ),
+    ("equipe", "equipeCancelarConvite", "gerenciar_equipe", {"conviteId": UUID}),
+    (
+        "equipe",
+        "equipeDefinirPermissoes",
+        "gerenciar_equipe",
+        {"alvoId": UUID, "permissoes": ["ver_clientes"]},
+    ),
+    ("equipe", "equipeRemover", "gerenciar_equipe", {"alvoId": UUID}),
+    ("equipe", "equipeAuditoria", "gerenciar_equipe", None),
 ]
 
-# Chaves que jamais podem aparecer no corpo de uma resposta bloqueada.
-CHAVES_SENSIVEIS = ("clientes", "admins", "convites", "eventos", "conteudos", "pacotes")
+ROTAS_ADMIN = ["/admin", "/admin/conteudos", "/admin/pacotes", "/admin/equipe"]
 
-PADRAO_RPC = re.compile(
-    r'export const (\w+) = createServerFn\(\{ method: "(GET|POST)" \}\)'
-    r'[\s\S]*?createClientRpc\("([^"]+)"\)'
-)
+# Chaves que jamais podem voltar de uma chamada bloqueada.
+CHAVES_SENSIVEIS = ("clientes", "admins", "convites", "eventos", "conteudos", "pacotes", "diario")
+
+SCRIPT_CHAMADAS = """
+async ({ funcoes }) => {
+  const mods = {
+    raiz: await import('/src/lib/raiz.functions.ts'),
+    equipe: await import('/src/lib/equipe.functions.ts'),
+  };
+  const saida = [];
+  for (const [mod, nome, permissao, payload] of funcoes) {
+    const fn = mods[mod][nome];
+    if (typeof fn !== 'function') {
+      saida.push({ nome, permissao, existe: false });
+      continue;
+    }
+    try {
+      const r = await (payload === null ? fn() : fn({ data: payload }));
+      saida.push({ nome, permissao, existe: true, ok: true, corpo: JSON.stringify(r).slice(0, 800) });
+    } catch (e) {
+      saida.push({
+        nome,
+        permissao,
+        existe: true,
+        ok: false,
+        erro: String((e && (e.message || e.statusText)) || e).slice(0, 300),
+        status: (e && e.status) || null,
+      });
+    }
+  }
+  return saida;
+}
+"""
+
+SCRIPT_CONTEXTO = """
+async () => {
+  const mod = await import('/src/lib/raiz.functions.ts');
+  try {
+    return { ok: true, ctx: await mod.getMeuContexto() };
+  } catch (e) {
+    return { ok: false, erro: String((e && e.message) || e) };
+  }
+}
+"""
 
 
-def descobrir_endpoints() -> dict:
-    """Lê os módulos transformados pelo dev server e extrai id + método das RPCs."""
-    encontrados = {}
-    for caminho in MODULOS:
-        resp = requests.get(f"{BASE_URL}{caminho}", timeout=30)
-        resp.raise_for_status()
-        for nome, metodo, rpc_id in PADRAO_RPC.findall(resp.text):
-            if nome in PERMISSAO_POR_FUNCAO:
-                encontrados[nome] = {
-                    "metodo": metodo,
-                    "url": f"{BASE_URL}/_serverFn/{rpc_id}",
-                    "permissao": PERMISSAO_POR_FUNCAO[nome],
-                }
-    faltando = sorted(set(PERMISSAO_POR_FUNCAO) - set(encontrados))
-    assert not faltando, f"funções administrativas não encontradas no bundle: {faltando}"
-    return encontrados
-
-
-def chamar(endpoint: dict, token: str | None) -> tuple[int, str]:
-    headers = {"Origin": BASE_URL, "Referer": f"{BASE_URL}/admin"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    if endpoint["metodo"] == "GET":
-        resp = requests.get(endpoint["url"], headers=headers, timeout=30)
-    else:
-        headers["Content-Type"] = "application/json"
-        resp = requests.post(endpoint["url"], headers=headers, data="{}", timeout=30)
-    return resp.status_code, resp.text[:2000]
-
-
-def afirmar_bloqueado(nome: str, status: int, corpo: str, contexto: str) -> None:
-    assert status >= 400, f"{contexto}: {nome} respondeu {status} (deveria bloquear)"
-    baixo = corpo.lower()
+def afirmar_bloqueio(res: dict, cenario: str) -> None:
+    nome = res["nome"]
+    assert res.get("existe"), f"{cenario}: função {nome} não existe mais no módulo"
+    assert not res.get("ok"), (
+        f"{cenario}: {nome} respondeu com sucesso sem a permissão "
+        f"{res['permissao']} — corpo={res.get('corpo')}"
+    )
+    erro = (res.get("erro") or "").lower()
+    assert (
+        "acesso restrito" in erro
+        or "unauthorized" in erro
+        or "não autenticado" in erro
+        or "nao autenticado" in erro
+    ), f"{cenario}: {nome} falhou por outro motivo (esperado bloqueio): {res.get('erro')}"
     for chave in CHAVES_SENSIVEIS:
-        assert f'"{chave}"' not in baixo, (
-            f'{contexto}: {nome} devolveu dado sensível ("{chave}") mesmo bloqueando'
-        )
+        assert f'"{chave}"' not in erro, f"{cenario}: {nome} vazou dado sensível no erro"
 
 
-def contexto_do_usuario(token: str) -> dict:
-    """Lê getMeuContexto com a sessão injetada para saber o que ela pode fazer."""
-    resp = requests.get(f"{BASE_URL}{MODULOS[0]}", timeout=30)
-    resp.raise_for_status()
-    achado = re.search(
-        r'export const getMeuContexto[\s\S]*?createClientRpc\("([^"]+)"\)', resp.text
-    )
-    assert achado, "getMeuContexto não encontrado no bundle"
-    r = requests.get(
-        f"{BASE_URL}/_serverFn/{achado.group(1)}",
-        headers={"Origin": BASE_URL, "Authorization": f"Bearer {token}"},
-        timeout=30,
-    )
-    if r.status_code >= 400:
-        return {}
-    dados = r.json()
-    return dados.get("result", dados) if isinstance(dados, dict) else {}
+async def main() -> None:
+    session_json = os.environ.get("LOVABLE_BROWSER_SUPABASE_SESSION_JSON")
+    storage_key = os.environ.get("LOVABLE_BROWSER_SUPABASE_STORAGE_KEY")
+    cookies_json = os.environ.get("LOVABLE_BROWSER_SUPABASE_COOKIES_JSON")
 
-
-async def navegacao_bloqueada(session_json: str | None, storage_key: str | None,
-                              cookies_json: str | None, pode_administrar: bool) -> None:
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=True)
         context = await browser.new_context(viewport={"width": 1280, "height": 1800})
         page = await context.new_page()
 
-        # 1) Sem sessão: toda rota do painel manda para /auth.
-        for rota, _perm in ROTAS_ADMIN:
+        # ---------- Cenário 1: sem sessão ----------
+        await page.goto(BASE_URL, wait_until="domcontentloaded")
+        resultados = await page.evaluate(SCRIPT_CHAMADAS, {"funcoes": FUNCOES})
+        assert len(resultados) == len(FUNCOES)
+        for res in resultados:
+            afirmar_bloqueio(res, "sem sessão")
+        print(f"sem sessão: {len(resultados)} funções administrativas bloqueadas no servidor ✔")
+
+        for rota in ROTAS_ADMIN:
             await page.goto(f"{BASE_URL}{rota}", wait_until="networkidle")
             assert "/auth" in page.url, f"sem sessão, {rota} não redirecionou (url={page.url})"
         print("sem sessão: /admin/* redireciona para /auth ✔")
 
-        if session_json and storage_key:
-            if cookies_json:
-                cookies = json.loads(cookies_json)
-                for c in cookies:
-                    c["url"] = BASE_URL
-                await context.add_cookies(cookies)
-            await page.goto(BASE_URL)
-            await page.evaluate(
-                f"window.localStorage.setItem({json.dumps(storage_key)}, {json.dumps(session_json)})"
-            )
-            for rota, _perm in ROTAS_ADMIN:
-                await page.goto(f"{BASE_URL}{rota}", wait_until="networkidle")
-                if pode_administrar:
-                    assert "/auth" not in page.url, f"admin legítimo expulso de {rota}"
-                else:
-                    # o guard é client-side: aguarda a saída da rota protegida
-                    for _ in range(20):
-                        if rota not in page.url:
-                            break
-                        await page.wait_for_timeout(500)
-                    assert rota not in page.url, (
-                        f"sessão sem acesso administrativo permaneceu em {rota} (url={page.url})"
-                    )
+        # ---------- Cenário 2: sessão real do sandbox ----------
+        if not (session_json and storage_key):
+            print("sem sessão injetada: cenário autenticado NÃO VERIFICADO")
+            await browser.close()
+            return
 
-            estado = "com acesso" if pode_administrar else "sem acesso"
-            print(f"sessão {estado}: navegação coerente em /admin/* ✔")
-            await page.screenshot(path=str(SCREENSHOTS / "painel_permissoes.png"))
+        if cookies_json:
+            cookies = json.loads(cookies_json)
+            for c in cookies:
+                c["url"] = BASE_URL
+            await context.add_cookies(cookies)
+        await page.goto(BASE_URL, wait_until="domcontentloaded")
+        await page.evaluate(
+            f"window.localStorage.setItem({json.dumps(storage_key)}, {json.dumps(session_json)})"
+        )
+        await page.reload(wait_until="domcontentloaded")
 
-        await browser.close()
-
-
-def main() -> None:
-    endpoints = descobrir_endpoints()
-    print(f"{len(endpoints)} funções administrativas descobertas no bundle")
-
-    # Cenário 1 — sem sessão nenhuma.
-    for nome, ep in sorted(endpoints.items()):
-        status, corpo = chamar(ep, None)
-        afirmar_bloqueado(nome, status, corpo, "sem sessão")
-    print("sem sessão: todas as funções administrativas bloqueadas no servidor ✔")
-
-    session_json = os.environ.get("LOVABLE_BROWSER_SUPABASE_SESSION_JSON")
-    storage_key = os.environ.get("LOVABLE_BROWSER_SUPABASE_STORAGE_KEY")
-    cookies_json = os.environ.get("LOVABLE_BROWSER_SUPABASE_COOKIES_JSON")
-
-    pode_administrar = False
-    if session_json:
-        token = json.loads(session_json)["access_token"]
-        ctx = contexto_do_usuario(token)
+        info = await page.evaluate(SCRIPT_CONTEXTO)
+        assert info.get("ok"), f"sessão injetada inválida: {info.get('erro')}"
+        ctx = info["ctx"]
         papel = ctx.get("papel")
         permissoes = set(ctx.get("permissoes") or [])
         pode_administrar = bool(ctx.get("podeAdministrar"))
         print(f"sessão injetada: papel={papel} permissoes={sorted(permissoes)}")
 
-        # Cenário 2 — sessão real sem a permissão exigida continua bloqueada.
-        checadas = 0
-        for nome, ep in sorted(endpoints.items()):
-            if papel == "terapeuta" or ep["permissao"] in permissoes:
-                continue  # tem direito: não é o caso sob teste
-            status, corpo = chamar(ep, token)
-            afirmar_bloqueado(nome, status, corpo, f"sessão sem {ep['permissao']}")
-            checadas += 1
-        if checadas:
-            print(f"sessão autenticada: {checadas} funções sem permissão bloqueadas ✔")
+        alvo = [
+            f
+            for f in FUNCOES
+            if papel != "terapeuta" and f[2] not in permissoes
+        ]
+        if alvo:
+            resultados = await page.evaluate(SCRIPT_CHAMADAS, {"funcoes": alvo})
+            for res in resultados:
+                afirmar_bloqueio(res, f"sessão sem permissão ({res['permissao']})")
+            print(f"sessão autenticada: {len(resultados)} funções sem permissão bloqueadas ✔")
         else:
-            print("sessão injetada é terapeuta/tem todas as permissões: cenário 2 NÃO VERIFICADO")
-    else:
-        print("sem sessão injetada: cenário autenticado NÃO VERIFICADO")
+            print(
+                "a sessão injetada é terapeuta/tem todas as permissões: "
+                "cenário autenticado sem permissão NÃO VERIFICADO"
+            )
 
-    asyncio.run(navegacao_bloqueada(session_json, storage_key, cookies_json, pode_administrar))
+        for rota in ROTAS_ADMIN:
+            await page.goto(f"{BASE_URL}{rota}", wait_until="networkidle")
+            if pode_administrar:
+                assert "/auth" not in page.url, f"admin legítimo expulso de {rota}"
+            else:
+                for _ in range(20):
+                    if rota not in page.url:
+                        break
+                    await page.wait_for_timeout(500)
+                assert rota not in page.url, (
+                    f"sessão sem acesso administrativo permaneceu em {rota} (url={page.url})"
+                )
+        estado = "com acesso" if pode_administrar else "sem acesso"
+        print(f"sessão {estado}: navegação coerente em /admin/* ✔")
+        await page.screenshot(path=str(SCREENSHOTS / "painel_permissoes.png"))
+
+        await browser.close()
+
     print("\nOK: painel do terapeuta bloqueia no servidor sem permissão.")
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
