@@ -8,7 +8,7 @@ export const getMeuContexto = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [perfil, papeis, pacotes] = await Promise.all([
+    const [perfil, papeis, pacotes, permissoes] = await Promise.all([
       supabase
         .from("profiles")
         .select("id, nome, email, created_at, meta_semanal")
@@ -20,15 +20,21 @@ export const getMeuContexto = createServerFn({ method: "GET" })
         .select("id, status_pagamento, created_at, pacotes(id, nome, descricao, tipo_cobranca)")
         .eq("cliente_id", userId)
         .order("created_at", { ascending: false }),
+      supabase.from("equipe_permissoes").select("permissao").eq("user_id", userId),
     ]);
 
     const roles = (papeis.data ?? []).map((r) => r.role);
+    const ehTerapeuta = roles.includes("terapeuta");
+    const minhasPermissoes = (permissoes.data ?? []).map((p) => p.permissao);
     return {
       perfil: perfil.data,
-      papel: roles.includes("terapeuta") ? ("terapeuta" as const) : ("cliente" as const),
+      papel: ehTerapeuta ? ("terapeuta" as const) : ("cliente" as const),
+      permissoes: minhasPermissoes,
+      podeAdministrar: ehTerapeuta || minhasPermissoes.length > 0,
       pacotes: pacotes.data ?? [],
     };
   });
+
 
 export const getMinhaBiblioteca = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -335,11 +341,8 @@ export const adminResumo = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { data: ehTerapeuta } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "terapeuta",
-    });
-    if (!ehTerapeuta) negarAcesso({ acao: "adminResumo", userId, tabela: "user_roles" });
+    const { data: podeVer } = await supabase.rpc("pode", { _permissao: "ver_clientes" });
+    if (podeVer !== true) negarAcesso({ acao: "adminResumo", userId, tabela: "user_roles" });
 
     const [papeis, perfis, conteudos, liberacoes, progresso, pacotes, vinculos, eixos] =
       await Promise.all([
@@ -440,11 +443,9 @@ export const adminGetCliente = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ clienteId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: ehTerapeuta } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "terapeuta",
-    });
-    if (!ehTerapeuta) {
+    const { data: podeVer } = await supabase.rpc("pode", { _permissao: "ver_clientes" });
+    const { data: podeVerDiario } = await supabase.rpc("pode", { _permissao: "ver_diario" });
+    if (podeVer !== true) {
       negarAcesso({
         acao: "adminGetCliente",
         userId,
@@ -488,7 +489,8 @@ export const adminGetCliente = createServerFn({ method: "GET" })
       conteudos: conteudos.data ?? [],
       liberacoes: liberacoes.data ?? [],
       progresso: progresso.data ?? [],
-      diario: diario.data ?? [],
+      diario: podeVerDiario === true ? (diario.data ?? []) : [],
+      podeVerDiario: podeVerDiario === true,
       vinculos: vinculos.data ?? [],
       pacotes: pacotes.data ?? [],
     };
@@ -510,11 +512,10 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: ehTerapeuta } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "terapeuta",
+    const { data: podeLiberar } = await supabase.rpc("pode", {
+      _permissao: "gerenciar_liberacoes",
     });
-    if (!ehTerapeuta) {
+    if (podeLiberar !== true) {
       negarAcesso({
         acao: "adminDefinirLiberacao",
         userId,

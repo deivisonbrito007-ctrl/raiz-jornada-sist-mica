@@ -37,6 +37,13 @@ function AuthPage() {
   const [souTerapeuta, setSouTerapeuta] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [confirmeEmail, setConfirmeEmail] = useState(false);
+  const [existeTerapeuta, setExisteTerapeuta] = useState(true);
+
+  useEffect(() => {
+    supabase.rpc("existe_terapeuta").then(({ data }) => {
+      setExisteTerapeuta(data !== false);
+    });
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -143,7 +150,7 @@ function AuthPage() {
                 required
               />
             </div>
-            {cadastro && (
+            {cadastro && !existeTerapeuta && (
               <label className="flex items-start gap-3 rounded-2xl bg-secondary p-4 text-sm text-muted-foreground">
                 <Checkbox
                   checked={souTerapeuta}
