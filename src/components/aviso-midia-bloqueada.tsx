@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { TimerOff, Lock, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export type MotivoBloqueio = "validade" | "revogado" | "falha";
@@ -8,11 +9,35 @@ interface Props {
   motivo: MotivoBloqueio;
   renovando: boolean;
   emEspera: boolean;
+  /** instante (ms) em que a nova tentativa volta a ser permitida */
+  esperaAte?: number | null;
   eixoId?: string;
   onRenovar: () => void;
 }
 
-export function AvisoMidiaBloqueada({ motivo, renovando, emEspera, eixoId, onRenovar }: Props) {
+/** Segundos que faltam para liberar o botão — atualiza a cada segundo. */
+function useContagem(esperaAte?: number | null) {
+  const [agora, setAgora] = useState(() => Date.now());
+  useEffect(() => {
+    if (!esperaAte) return;
+    setAgora(Date.now());
+    const id = setInterval(() => setAgora(Date.now()), 500);
+    return () => clearInterval(id);
+  }, [esperaAte]);
+  if (!esperaAte) return 0;
+  return Math.max(0, Math.ceil((esperaAte - agora) / 1000));
+}
+
+export function AvisoMidiaBloqueada({
+  motivo,
+  renovando,
+  emEspera,
+  esperaAte,
+  eixoId,
+  onRenovar,
+}: Props) {
+  const segundos = useContagem(emEspera ? esperaAte : null);
+
   const configs: Record<MotivoBloqueio, {
     icone: React.ReactNode;
     titulo: string;
@@ -82,6 +107,17 @@ export function AvisoMidiaBloqueada({ motivo, renovando, emEspera, eixoId, onRen
               </Link>
             )}
           </div>
+
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground" aria-live="polite">
+            {renovando
+              ? "Estamos pedindo um novo link seguro ao servidor e conferindo se a prática segue liberada."
+              : emEspera
+                ? `Aguarde ${segundos > 0 ? `${segundos}s` : "um instante"} antes de tentar de novo: o botão fica em espera para evitar pedidos repetidos ao servidor. Ele volta a funcionar sozinho.`
+                : "Ao tocar em “" +
+                  cfg.botao +
+                  "”, pedimos um link seguro novo e verificamos a liberação. Se continuar bloqueada, o botão espera alguns segundos antes de permitir outra tentativa."}
+          </p>
+
         </div>
       </div>
     </div>
