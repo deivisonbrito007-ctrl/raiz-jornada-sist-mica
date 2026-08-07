@@ -119,10 +119,12 @@ export const equipeDefinirPermissoes = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await garantirGerenciarEquipe(supabase, userId, "equipeDefinirPermissoes");
 
-    const { data: ehTerapeuta } = await supabase.rpc("has_role", {
-      _user_id: data.alvoId,
-      _role: "terapeuta",
-    });
+    const { data: ehTerapeuta } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("user_id", data.alvoId)
+      .eq("role", "terapeuta")
+      .maybeSingle();
     if (ehTerapeuta) {
       throw new Error("A terapeuta responsável já tem acesso total e não pode ser limitada.");
     }
