@@ -1,27 +1,29 @@
 import { createFileRoute, Outlet, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { RaizWordmark } from "@/components/raiz-logo";
+import { getMeuContexto } from "@/lib/raiz.functions";
+import type { Permissao } from "@/lib/permissoes";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/auth" });
-    const { data: papeis } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", data.user.id);
-    if (!(papeis ?? []).some((p) => p.role === "terapeuta")) throw redirect({ to: "/app" });
+    const { data: podeAdministrar } = await supabase.rpc("pode_administrar");
+    if (podeAdministrar !== true) throw redirect({ to: "/app" });
   },
   component: AdminLayout,
 });
 
-const links = [
-  { to: "/admin", label: "Clientes", exact: true },
-  { to: "/admin/conteudos", label: "Conteúdos", exact: false },
-  { to: "/admin/pacotes", label: "Pacotes", exact: false },
+const links: { to: string; label: string; exact: boolean; permissao: Permissao }[] = [
+  { to: "/admin", label: "Clientes", exact: true, permissao: "ver_clientes" },
+  { to: "/admin/conteudos", label: "Conteúdos", exact: false, permissao: "gerenciar_conteudos" },
+  { to: "/admin/pacotes", label: "Pacotes", exact: false, permissao: "gerenciar_pacotes" },
+  { to: "/admin/equipe", label: "Equipe", exact: false, permissao: "gerenciar_equipe" },
 ];
+
 
 function AdminLayout() {
   const navigate = useNavigate();
