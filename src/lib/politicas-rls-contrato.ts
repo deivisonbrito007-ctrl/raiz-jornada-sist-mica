@@ -47,8 +47,8 @@ export function auditarSql(sql: string): Desvio[] {
     desvios.push({ regra, alvo, mensagem });
 
   for (const match of sql.matchAll(RE_GRANT_FUNCAO)) {
-    const nome = match[1].toLowerCase();
-    const papeis = match[2].toLowerCase();
+    const nome = (match[1] ?? '').toLowerCase();
+    const papeis = (match[2] ?? '').toLowerCase();
     const paraApp = /\b(anon|authenticated|public)\b/.test(papeis);
 
     if ((FUNCOES_INTERNAS as readonly string[]).includes(nome) && paraApp) {
@@ -77,9 +77,9 @@ export function auditarSql(sql: string): Desvio[] {
   }
 
   for (const match of sql.matchAll(RE_POLICY)) {
-    const nome = match[1];
-    const tabela = match[2].toLowerCase();
-    const corpo = match[3];
+    const nome = match[1] ?? '';
+    const tabela = (match[2] ?? '').toLowerCase();
+    const corpo = match[3] ?? '';
     const alvo = `${tabela}:${nome}`;
 
     if (/\bto\s+(public|anon)\b/i.test(corpo)) {
