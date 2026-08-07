@@ -25,6 +25,7 @@ import {
 } from "@/lib/equipe.functions";
 import { PERMISSAO_DESCRICAO, PERMISSAO_LABEL, PERMISSOES, type Permissao } from "@/lib/permissoes";
 import { formatarData } from "@/lib/raiz-format";
+import { avisarMudancaPermissoes } from "@/hooks/use-vigia-permissoes";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -111,6 +112,7 @@ function AdminEquipe() {
   const mPromover = useMutation({
     mutationFn: (alvoId: string) => definir({ data: { alvoId, permissoes: permsPromover } }),
     onSuccess: () => {
+      avisarMudancaPermissoes();
       toast.success("Admin adicionado.");
       setEmailPromover("");
       recarregar();
@@ -121,6 +123,7 @@ function AdminEquipe() {
   const mAtualizar = useMutation({
     mutationFn: (alvoId: string) => definir({ data: { alvoId, permissoes: permsEdicao } }),
     onSuccess: () => {
+      avisarMudancaPermissoes();
       toast.success("Permissões atualizadas.");
       setEditando(null);
       recarregar();
@@ -142,6 +145,7 @@ function AdminEquipe() {
   const mRemover = useMutation({
     mutationFn: (alvoId: string) => remover({ data: { alvoId } }),
     onSuccess: () => {
+      avisarMudancaPermissoes();
       toast.success("Acesso removido.");
       recarregar();
     },
@@ -151,6 +155,7 @@ function AdminEquipe() {
   const mCancelar = useMutation({
     mutationFn: (conviteId: string) => cancelar({ data: { conviteId } }),
     onSuccess: () => {
+      avisarMudancaPermissoes();
       toast.success("Convite cancelado.");
       recarregar();
     },
