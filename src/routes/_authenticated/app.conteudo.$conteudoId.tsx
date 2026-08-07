@@ -66,6 +66,15 @@ function Player() {
     bloqueioRef.current = bloqueio;
   }, [bloqueio]);
 
+  // A prática voltou a aparecer na consulta: o acesso foi liberado de novo e o
+  // aviso de revogação sai sozinho, sem precisar recarregar a página.
+  useEffect(() => {
+    if (data?.conteudo && bloqueioRef.current === "revogado") {
+      setBloqueio(null);
+      toast.success("Esta prática foi liberada de novo pelo seu terapeuta.");
+    }
+  }, [data?.conteudo]);
+
   useEffect(() => {
     setConcluido(data?.status === "concluido");
     if (data?.status && data.status !== "nao_iniciado") progressoIniciadoRef.current = true;
