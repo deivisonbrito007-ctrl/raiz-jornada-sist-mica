@@ -92,7 +92,16 @@ def achar_midia_liberada(api: Api, uid: str) -> tuple[dict, bool] | None:
         "conteudos",
         {"select": "id,titulo,tipo,eixo_id,storage_path", "order": "ordem"},
     )
-    midias = [c for c in conteudos if c["tipo"] in ("audio", "video")]
+    concluidos = {
+        r["conteudo_id"]
+        for r in api.get(
+            "progresso",
+            {"select": "conteudo_id,status", "cliente_id": f"eq.{uid}", "status": "eq.concluido"},
+        )
+    }
+    midias = [
+        c for c in conteudos if c["tipo"] in ("audio", "video") and c["id"] not in concluidos
+    ]
     for c in midias:
         if c.get("storage_path"):
             return c, True
@@ -176,9 +185,6 @@ async def main() -> None:
 
     antes = progresso_atual(api, uid, conteudo["id"])
     print("progresso antes:", antes)
-    if antes and antes["status"] == "concluido":
-        print("SKIP: prática já concluída; o bloqueio de progresso não seria observável.")
-        return
 
     falhas: list[str] = []
 
