@@ -13,6 +13,7 @@ const salvarProgresso = vi.fn<(args: any) => Promise<any>>();
 
 const toastError = vi.fn();
 const toastSuccess = vi.fn();
+const toastInfo = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => (options: Record<string, unknown>) => ({
