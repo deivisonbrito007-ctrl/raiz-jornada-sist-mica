@@ -3,6 +3,7 @@
 export const ACOES_AUDITORIA = [
   "convite_criado",
   "convite_cancelado",
+  "convite_permissoes_atualizadas",
   "permissoes_definidas",
   "permissoes_revogadas",
   "admin_removido",
