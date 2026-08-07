@@ -260,3 +260,32 @@ export const equipeAuditoria = createServerFn({ method: "GET" })
       }),
     };
   });
+
+/** Tentativas negadas por permissão — visível a quem gerencia a equipe. */
+export const equipeAcessosNegados = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await garantirGerenciarEquipe(supabase, userId, "equipeAcessosNegados");
+
+    const { data, error } = await supabase
+      .from("auditoria_acessos_negados")
+      .select("id, user_id, user_email, acao, permissao, tipo, alvo_id, rota, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw erroSeguro(error);
+
+    return {
+      registros: (data ?? []).map((r) => ({
+        id: r.id,
+        userId: r.user_id,
+        userEmail: r.user_email,
+        acao: r.acao,
+        permissao: r.permissao,
+        tipo: r.tipo,
+        alvoId: r.alvo_id,
+        rota: r.rota,
+        quando: r.created_at,
+      })),
+    };
+  });
