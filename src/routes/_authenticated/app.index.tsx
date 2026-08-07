@@ -16,6 +16,7 @@ import { getMeuContexto, getMinhaBiblioteca } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { calcularStreak, formatarData, formatarDuracao, TIPO_LABEL } from "@/lib/raiz-format";
 import { LembreteRetorno } from "@/components/lembrete-retorno";
+import { ContinuarDeOndeParei } from "@/components/continuar-de-onde-parei";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 
 export const Route = createFileRoute("/_authenticated/app/")({
@@ -91,6 +92,8 @@ function Biblioteca() {
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         Escolha um eixo para continuar. Os eixos ainda fechados mostram o caminho que vem a seguir.
       </p>
+
+      {!isLoading && data?.retomar && <ContinuarDeOndeParei pratica={data.retomar} />}
 
       {!isLoading && (
         <LembreteRetorno

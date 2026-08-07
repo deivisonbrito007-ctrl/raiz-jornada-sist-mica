@@ -22,6 +22,10 @@ import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 
 
 export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")({
+  // ?retomar=1 vem do botão "Continuar de onde parei" na trilha
+  validateSearch: (busca: Record<string, unknown>) => ({
+    retomar: busca["retomar"] === true || busca["retomar"] === "true" || busca["retomar"] === "1",
+  }),
   component: Player,
 });
 
@@ -31,6 +35,7 @@ function ehMidiaTipo(tipo?: string) {
 
 function Player() {
   const { conteudoId } = Route.useParams();
+  const { retomar: retomarAoAbrir } = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fetchConteudo = useServerFn(getConteudo);
@@ -52,6 +57,8 @@ function Player() {
   const tocandoAntesRef = useRef(false);
   /** deve dar play sozinho quando a nova mídia carregar? */
   const retomarAutoRef = useRef(false);
+  /** o pedido de retomada automática (vindo da trilha) já foi consumido? */
+  const retomadaPedidaRef = useRef(false);
   /** o "em andamento" desta sessão já foi registrado — não repetir na retomada */
   const progressoIniciadoRef = useRef(false);
   const [tocando, setTocando] = useState(false);
@@ -100,6 +107,12 @@ function Player() {
     if (posicaoRestauradaRef.current) return;
     if (typeof data?.posicaoSegundos !== "number") return;
     posicaoRestauradaRef.current = true;
+    // vindo do botão "Continuar de onde parei": já volta a tocar sozinho
+    if (retomarAoAbrir && !retomadaPedidaRef.current && data.posicaoSegundos > 0) {
+      retomadaPedidaRef.current = true;
+      retomarAutoRef.current = true;
+      tocandoAntesRef.current = true;
+    }
     if (data.posicaoSegundos > 0) {
       posicaoRef.current = data.posicaoSegundos;
       ultimaSalvaRef.current = data.posicaoSegundos;
@@ -107,7 +120,7 @@ function Player() {
       const el = mediaRef.current;
       if (el && el.readyState > 0) el.currentTime = data.posicaoSegundos;
     }
-  }, [data?.posicaoSegundos]);
+  }, [data?.posicaoSegundos, retomarAoAbrir]);
 
   /** Grava no backend onde a pessoa parou (no máximo uma gravação a cada 5s). */
   function guardarPosicao(agora = false) {
