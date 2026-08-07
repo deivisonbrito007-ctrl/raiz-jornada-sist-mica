@@ -453,13 +453,15 @@ function Player() {
             <StatusMidiaBadge status="revogada" />
           </div>
           <AvisoMidiaBloqueada
-          motivo="revogado"
-          renovando={renovando}
-          emEspera={emEspera}
-          esperaAte={esperaAte}
-          onRenovar={renovarMidia}
-        />
+            motivo="revogado"
+            renovando={renovando}
+            emEspera={emEspera}
+            esperaAte={esperaAte}
+            onRenovar={renovarMidia}
+          />
+        </>
       )}
+
     </div>
   );
 }
