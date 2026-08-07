@@ -104,18 +104,17 @@ function Player() {
         staleTime: 0,
       });
       if (novo?.url) {
-        setSemLiberacao(false);
-        setMidiaExpirada(false);
+        setBloqueio(null);
         setTocando(false);
         setTerminou(false);
         toast.success("Mídia liberada novamente. Você pode continuar de onde parou.");
       } else {
-        setSemLiberacao(true);
+        setBloqueio("revogado");
         segurarNovaTentativa();
         toast.error("Esta prática não está mais liberada para você.");
       }
     } catch {
-      setSemLiberacao(true);
+      setBloqueio("falha");
       segurarNovaTentativa();
       toast.error("Não foi possível renovar o acesso à mídia.");
     } finally {
@@ -124,6 +123,7 @@ function Player() {
       queryClient.invalidateQueries({ queryKey: ["trilha"] });
     }
   }
+
 
   /** Pequena espera entre tentativas — o botão nunca fica travado para sempre. */
   function segurarNovaTentativa() {
