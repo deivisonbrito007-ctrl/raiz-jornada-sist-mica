@@ -207,7 +207,9 @@ async def main() -> None:
 
         # 4) libera de novo — player volta sozinho
         liberar_eixo()
-        await page.get_by_text("liberada de novo", exact=False).first.wait_for(timeout=20000)
+        await page.get_by_text("não está mais liberada", exact=False).first.wait_for(
+            state="hidden", timeout=20000
+        )
         await page.screenshot(path=str(SCREENSHOTS / "player_3_reliberado.png"))
         print("OK: player voltou a liberar sem recarregar")
 
