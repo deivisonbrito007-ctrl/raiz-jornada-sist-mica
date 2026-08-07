@@ -12,7 +12,7 @@ import {
   RotateCw,
   NotebookPen,
 } from "lucide-react";
-import { getConteudo, marcarProgresso } from "@/lib/raiz.functions";
+import { getConteudo, marcarProgresso, salvarPosicao } from "@/lib/raiz.functions";
 import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
