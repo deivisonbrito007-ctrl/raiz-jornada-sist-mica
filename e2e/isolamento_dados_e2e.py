@@ -218,7 +218,9 @@ async def rodar_cenarios(page, rotulo: str) -> None:
     gravacoes = await page.evaluate(SCRIPT_GRAVACOES, {"outro": OUTRO})
     for g in gravacoes:
         assert g["linhas"] == 0, f"{rotulo}: '{g['nome']}' afetou {g['linhas']} linha(s) alheia(s)"
-        if g["nome"] in ("insert diario alheio", "insert progresso alheio", "promover papel", "virar terapeuta"):
+        # INSERT sem política é recusado com erro; UPDATE/DELETE simplesmente
+        # não encontram a linha alheia (0 linhas afetadas, já garantido acima).
+        if g["nome"].startswith("insert") or g["nome"] == "promover papel":
             assert g["erro"], f"{rotulo}: '{g['nome']}' não foi recusado pelo banco"
     print(f"[{rotulo}] {len(gravacoes)} gravações em nome de outro usuário recusadas ✔")
 
