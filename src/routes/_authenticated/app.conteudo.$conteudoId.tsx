@@ -282,6 +282,7 @@ function Player() {
       } else if (novo?.url) {
         // só volta a tocar sozinho se estava tocando quando o link venceu
         retomarAutoRef.current = tocandoAntesRef.current;
+        bloqueioRef.current = null;
         setBloqueio(null);
         setTocando(false);
         setTerminou(false);
@@ -290,6 +291,8 @@ function Player() {
             ? "Mídia liberada novamente. Voltando de onde você parou."
             : "Mídia liberada novamente. Você pode continuar de onde parou.",
         );
+        // acesso de volta: o que ficou guardado no aparelho vai para o backend
+        await reenviarProgressoLocal();
       } else {
         setBloqueio("revogado");
         segurarNovaTentativa();
