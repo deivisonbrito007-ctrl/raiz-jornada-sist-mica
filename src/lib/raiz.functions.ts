@@ -206,27 +206,55 @@ export const getConteudo = createServerFn({ method: "GET" })
         url: null,
         urlExpiraEm: null,
         status: "nao_iniciado" as const,
+        limitado: false,
+        esperarSegundos: 0,
       };
 
     let url: string | null = null;
     let urlExpiraEm: string | null = null;
+    let limitado = false;
+    let esperarSegundos = 0;
     const VALIDADE_SEGUNDOS = 60 * 60;
     if (conteudo.storage_path) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const signed = auditarResultado(
-        await supabaseAdmin.storage
-          .from("midias")
-          .createSignedUrl(conteudo.storage_path, VALIDADE_SEGUNDOS),
-        {
-          acao: "getConteudo:signedUrl",
+      // Proteção contra abuso: no máximo 5 links assinados por minuto por pessoa.
+      const { consumirLimite } = await import("./limite-uso.server");
+      const limite = await consumirLimite(userId, "midia:url-assinada");
+      if (!limite.permitido) {
+        limitado = true;
+        esperarSegundos = limite.esperarSegundos;
+        registrarAcessoNegado({
+          acao: "getConteudo:limiteExcedido",
           userId,
           tabela: "storage.midias",
-          recurso: conteudo.storage_path,
-        },
-      );
-      url = signed.data?.signedUrl ?? null;
-      if (url) urlExpiraEm = new Date(Date.now() + VALIDADE_SEGUNDOS * 1000).toISOString();
+          recurso: data.conteudoId,
+        });
+        const { persistirAcessoNegado } = await import("./auditoria-negados.server");
+        void persistirAcessoNegado({
+          acao: "getConteudo:limiteExcedido",
+          userId,
+          tipo: "limite",
+          alvoId: data.conteudoId,
+          rota: "/app/conteudo/$conteudoId",
+          detalhes: { usados: limite.usados, limite: limite.limite, esperarSegundos },
+        });
+      } else {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const signed = auditarResultado(
+          await supabaseAdmin.storage
+            .from("midias")
+            .createSignedUrl(conteudo.storage_path, VALIDADE_SEGUNDOS),
+          {
+            acao: "getConteudo:signedUrl",
+            userId,
+            tabela: "storage.midias",
+            recurso: conteudo.storage_path,
+          },
+        );
+        url = signed.data?.signedUrl ?? null;
+        if (url) urlExpiraEm = new Date(Date.now() + VALIDADE_SEGUNDOS * 1000).toISOString();
+      }
     }
+
 
     const { data: prog } = await supabase
       .from("progresso")
