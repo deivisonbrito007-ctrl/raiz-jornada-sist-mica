@@ -170,6 +170,8 @@ async def main() -> None:
         page = await context.new_page()
         erros: list[str] = []
         page.on("console", lambda m: erros.append(m.text) if m.type == "error" else None)
+        if os.environ.get("E2E_DEBUG"):
+            page.on("console", lambda m: print("CONSOLE:", m.text[:160]))
 
         await restaurar_sessao(context, page, session, storage_key, cookies_json)
 
