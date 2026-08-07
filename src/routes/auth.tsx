@@ -143,7 +143,7 @@ function AuthPage() {
                 required
               />
             </div>
-            {cadastro && (
+            {cadastro && !existeTerapeuta && (
               <label className="flex items-start gap-3 rounded-2xl bg-secondary p-4 text-sm text-muted-foreground">
                 <Checkbox
                   checked={souTerapeuta}
