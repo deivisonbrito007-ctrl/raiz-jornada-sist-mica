@@ -13,6 +13,7 @@ export type RegistroAuditoriaUI = {
   anteriores: string[];
   titulo: string;
   agendadoPara: string;
+  motivo: string;
   atorEmail: string;
   quando: string;
 };
@@ -65,7 +66,7 @@ export function HistoricoAuditoria({
         <History className="h-5 w-5 text-salvia" /> Histórico de auditoria
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Convites, permissões, liberações e revogações — com data e quem fez.
+        Convites, promoções, permissões e liberações — com data, quem fez e o motivo.
       </p>
 
       {carregando && <Skeleton className="mt-4 h-32 rounded-2xl" />}
@@ -102,6 +103,11 @@ export function HistoricoAuditoria({
                   {r.alvoEmail ? ` · alvo: ${r.alvoEmail}` : ""}
                 </p>
                 {extra && <p className="mt-1 text-xs text-muted-foreground">{extra}</p>}
+                {r.motivo && (
+                  <p className="mt-2 rounded-xl bg-secondary px-3 py-2 text-xs text-floresta">
+                    Motivo: {r.motivo}
+                  </p>
+                )}
               </li>
             );
           })}

@@ -98,6 +98,9 @@ function AdminEquipe() {
   const [permsPromover, setPermsPromover] = useState<Permissao[]>(["ver_clientes"]);
   const [editando, setEditando] = useState<string | null>(null);
   const [permsEdicao, setPermsEdicao] = useState<Permissao[]>([]);
+  const [motivoConvite, setMotivoConvite] = useState("");
+  const [motivoPromover, setMotivoPromover] = useState("");
+  const [motivoEdicao, setMotivoEdicao] = useState("");
 
   function recarregar() {
     queryClient.invalidateQueries({ queryKey: ["equipe"] });
@@ -105,11 +108,15 @@ function AdminEquipe() {
   }
 
   const mConvidar = useMutation({
-    mutationFn: () => convidar({ data: { email: emailConvite, permissoes: permsConvite } }),
+    mutationFn: () =>
+      convidar({
+        data: { email: emailConvite, permissoes: permsConvite, motivo: motivoConvite },
+      }),
     onSuccess: (r) => {
       if (r.ok) {
         toast.success("Convite criado. Ao criar a conta, a pessoa já entra como admin.");
         setEmailConvite("");
+        setMotivoConvite("");
         recarregar();
       } else {
         toast.error("Esse e-mail já tem conta. Use o bloco “Promover conta existente”.");
@@ -119,32 +126,38 @@ function AdminEquipe() {
   });
 
   const mPromover = useMutation({
-    mutationFn: (alvoId: string) => definir({ data: { alvoId, permissoes: permsPromover } }),
+    mutationFn: (alvoId: string) =>
+      definir({ data: { alvoId, permissoes: permsPromover, motivo: motivoPromover } }),
     onSuccess: () => {
       avisarMudancaPermissoes();
       toast.success("Admin adicionado.");
       setEmailPromover("");
+      setMotivoPromover("");
       recarregar();
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const mAtualizar = useMutation({
-    mutationFn: (alvoId: string) => definir({ data: { alvoId, permissoes: permsEdicao } }),
+    mutationFn: (alvoId: string) =>
+      definir({ data: { alvoId, permissoes: permsEdicao, motivo: motivoEdicao } }),
     onSuccess: () => {
       avisarMudancaPermissoes();
       toast.success("Permissões atualizadas.");
       setEditando(null);
+      setMotivoEdicao("");
       recarregar();
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const mRevogar = useMutation({
-    mutationFn: (alvoId: string) => definir({ data: { alvoId, permissoes: [] } }),
+    mutationFn: (alvoId: string) =>
+      definir({ data: { alvoId, permissoes: [], motivo: motivoEdicao } }),
     onSuccess: () => {
       toast.success("Permissões revogadas. O painel dessa pessoa é bloqueado na hora.");
       setEditando(null);
+      setMotivoEdicao("");
       recarregar();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -152,17 +165,18 @@ function AdminEquipe() {
 
 
   const mRemover = useMutation({
-    mutationFn: (alvoId: string) => remover({ data: { alvoId } }),
+    mutationFn: (alvoId: string) => remover({ data: { alvoId, motivo: motivoEdicao } }),
     onSuccess: () => {
       avisarMudancaPermissoes();
       toast.success("Acesso removido.");
+      setMotivoEdicao("");
       recarregar();
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const mCancelar = useMutation({
-    mutationFn: (conviteId: string) => cancelar({ data: { conviteId } }),
+    mutationFn: (conviteId: string) => cancelar({ data: { conviteId, motivo: motivoEdicao } }),
     onSuccess: () => {
       avisarMudancaPermissoes();
       toast.success("Convite cancelado.");
@@ -231,6 +245,19 @@ function AdminEquipe() {
 
           {(data?.membros ?? []).map((m) => (
             <div key={m.userId} className="rounded-2xl border border-border p-4">
+              <div className="mb-3">
+                <Label htmlFor={`motivo-${m.userId}`} className="text-xs text-muted-foreground">
+                  Motivo (registrado no histórico)
+                </Label>
+                <Input
+                  id={`motivo-${m.userId}`}
+                  value={editando === m.userId || true ? motivoEdicao : ""}
+                  onChange={(e) => setMotivoEdicao(e.target.value)}
+                  placeholder="Ex.: saiu da equipe, mudança de função…"
+                  maxLength={300}
+                  className="mt-1 max-w-md rounded-full"
+                />
+              </div>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-medium text-floresta">{m.nome || m.email}</p>
@@ -352,6 +379,17 @@ function AdminEquipe() {
             onChange={setPermsConvite}
             idPrefixo="convite"
           />
+          <div className="space-y-2">
+            <Label htmlFor="motivo-convite">Motivo do convite (registrado no histórico)</Label>
+            <Input
+              id="motivo-convite"
+              value={motivoConvite}
+              onChange={(e) => setMotivoConvite(e.target.value)}
+              placeholder="Ex.: vai apoiar as liberações semanais"
+              maxLength={300}
+              className="max-w-md rounded-full"
+            />
+          </div>
           <Button
             onClick={() => mConvidar.mutate()}
             disabled={!emailConvite || permsConvite.length === 0 || mConvidar.isPending}
