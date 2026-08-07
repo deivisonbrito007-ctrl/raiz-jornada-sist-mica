@@ -68,16 +68,35 @@ class Api:
         return r.json()
 
 
-def achar_midia_liberada(api: Api, uid: str) -> dict | None:
-    """Primeira prática de áudio/vídeo com mídia enviada e liberada para o usuário."""
+# WAV de 30s em silêncio, usado só quando o acervo ainda não tem mídia enviada
+def wav_de_silencio(segundos: int = 30, taxa: int = 8000) -> str:
+    import base64
+    import struct
+
+    quadros = segundos * taxa
+    dados = b"\x80" * quadros
+    cabecalho = b"RIFF" + struct.pack("<I", 36 + len(dados)) + b"WAVE"
+    cabecalho += b"fmt " + struct.pack("<IHHIIHH", 16, 1, 1, taxa, taxa, 1, 8)
+    cabecalho += b"data" + struct.pack("<I", len(dados))
+    return "data:audio/wav;base64," + base64.b64encode(cabecalho + dados).decode()
+
+
+def achar_midia_liberada(api: Api, uid: str) -> tuple[dict, bool] | None:
+    """Prática de áudio/vídeo liberada; o bool diz se a mídia é real ou simulada.
+
+    A leitura passa pela RLS, então só vêm práticas realmente liberadas para a
+    sessão. Sem nenhum arquivo enviado ainda, o teste segue com uma mídia
+    simulada no navegador — o fluxo de expiração exercitado é o mesmo.
+    """
     conteudos = api.get(
         "conteudos",
         {"select": "id,titulo,tipo,eixo_id,storage_path", "order": "ordem"},
     )
-    for c in conteudos:
-        if c["tipo"] in ("audio", "video") and c.get("storage_path"):
-            return c
-    return None
+    midias = [c for c in conteudos if c["tipo"] in ("audio", "video")]
+    for c in midias:
+        if c.get("storage_path"):
+            return c, True
+    return (midias[0], False) if midias else None
 
 
 def progresso_atual(api: Api, uid: str, conteudo_id: str) -> dict | None:
@@ -92,8 +111,12 @@ def progresso_atual(api: Api, uid: str, conteudo_id: str) -> dict | None:
     return linhas[0] if linhas else None
 
 
-async def encurtar_validade(page, segundos: int) -> None:
-    """Reescreve `urlExpiraEm` nas respostas do backend para vencer logo."""
+async def encurtar_validade(page, segundos: int, url_simulada: str | None = None) -> None:
+    """Reescreve `urlExpiraEm` nas respostas do backend para vencer logo.
+
+    Com `url_simulada`, também preenche a URL da mídia quando o acervo ainda não
+    tem arquivo enviado, mantendo o resto do fluxo real.
+    """
 
     async def handler(route):
         try:
@@ -102,7 +125,7 @@ async def encurtar_validade(page, segundos: int) -> None:
         except Exception:
             await route.continue_()
             return
-        if "urlExpiraEm" not in corpo:
+        if "urlExpiraEm" not in corpo and "posicaoSegundos" not in corpo:
             await route.fulfill(response=resposta, body=corpo)
             return
         novo_prazo = (datetime.now(timezone.utc) + timedelta(seconds=segundos)).isoformat()
@@ -114,8 +137,11 @@ async def encurtar_validade(page, segundos: int) -> None:
 
         def ajustar(no):
             if isinstance(no, dict):
-                if "urlExpiraEm" in no and no["urlExpiraEm"]:
-                    no["urlExpiraEm"] = novo_prazo.replace("+00:00", "Z")
+                if "urlExpiraEm" in no:
+                    if url_simulada and not no.get("url"):
+                        no["url"] = url_simulada
+                    if no.get("url"):
+                        no["urlExpiraEm"] = novo_prazo.replace("+00:00", "Z")
                 for v in no.values():
                     ajustar(v)
             elif isinstance(no, list):
@@ -136,11 +162,17 @@ async def main() -> None:
     api = Api(session["access_token"])
     uid = session["user"]["id"]
 
-    conteudo = achar_midia_liberada(api, uid)
-    if not conteudo:
-        print("SKIP: nenhuma prática de áudio/vídeo liberada com mídia enviada.")
+    achado = achar_midia_liberada(api, uid)
+    if not achado:
+        print("SKIP: nenhuma prática de áudio/vídeo liberada para esta sessão.")
         return
-    print("prática de teste:", conteudo["titulo"], f"({conteudo['tipo']})")
+    conteudo, midia_real = achado
+    url_simulada = None if midia_real else wav_de_silencio()
+    print(
+        "prática de teste:",
+        conteudo["titulo"],
+        f"({conteudo['tipo']}, mídia {'enviada' if midia_real else 'simulada no navegador'})",
+    )
 
     antes = progresso_atual(api, uid, conteudo["id"])
     print("progresso antes:", antes)
@@ -171,7 +203,7 @@ async def main() -> None:
             f"window.localStorage.setItem({json.dumps(storage_key)}, {json.dumps(json.dumps(session))})"
         )
 
-        await encurtar_validade(page, VALIDADE_CURTA_S)
+        await encurtar_validade(page, VALIDADE_CURTA_S, url_simulada)
         await page.goto(
             f"{BASE_URL}/app/conteudo/{conteudo['id']}", wait_until="domcontentloaded"
         )
@@ -244,7 +276,9 @@ async def main() -> None:
         await page.screenshot(path=str(SCREENSHOTS / "exp_3_progresso_bloqueado.png"))
 
         # 5: renovar traz o player de volta a partir do ponto onde parou
+        # a partir daqui a validade volta ao normal (mídia simulada segue presente)
         await page.unroute("**/*")
+        await encurtar_validade(page, 600, url_simulada)
         botao = page.get_by_role("button", name="Renovar acesso")
         for _ in range(30):
             if await botao.is_enabled():
