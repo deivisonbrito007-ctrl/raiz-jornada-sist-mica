@@ -116,7 +116,6 @@ async def main() -> None:
         # 1. escreve a reflexão pela UI
         await page.goto(f"{BASE_URL}/app/diario", wait_until="domcontentloaded")
         await page.get_by_role("heading", name="Diário de reflexão").wait_for(timeout=30000)
-        campo = page.get_by_label(re.compile(r".+"), exact=False).nth(0)
         campo = page.locator("#campo-reflexao")
         await campo.fill(f"{MARCA} — esta reflexão precisa sobreviver ao recarregamento.")
         await page.get_by_role("button", name="Salvar reflexão").click()
