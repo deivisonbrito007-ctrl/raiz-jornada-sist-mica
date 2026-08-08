@@ -17,6 +17,7 @@ import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bloqueada";
+import { useFocoRetorno } from "@/hooks/use-foco-retorno";
 import { StatusMidiaBadge } from "@/components/status-midia";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 
@@ -72,6 +73,10 @@ function Player() {
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   /** link de saída: recebe o foco quando a pessoa pressiona Esc no aviso */
   const voltarRef = useRef<HTMLAnchorElement | null>(null);
+  /** botão principal do player: destino do foco quando o acesso é liberado */
+  const playRef = useRef<HTMLButtonElement | null>(null);
+  /** último eixo conhecido: mantém o caminho de volta mesmo após a revogação */
+  const eixoConhecidoRef = useRef<string | null>(null);
   const posicaoRef = useRef(0);
   /** estava tocando no instante em que o link venceu? */
   const tocandoAntesRef = useRef(false);
@@ -98,11 +103,25 @@ function Player() {
   /** quando a nova tentativa volta a ser permitida (usado na contagem do aviso) */
   const [esperaAte, setEsperaAte] = useState<number | null>(null);
 
+  // Foco: guarda quem estava focado quando o aviso apareceu e devolve o foco
+  // depois que o acesso é liberado — de volta ao controle original ou, se ele
+  // foi desmontado durante o bloqueio, ao botão de reprodução recriado.
+  const { registrarOrigem } = useFocoRetorno(bloqueio !== null, {
+    alternativo: () => playRef.current,
+    fallback: () => voltarRef.current,
+  });
+
 
 
   useEffect(() => {
     bloqueioRef.current = bloqueio;
   }, [bloqueio]);
+
+  // guarda o eixo enquanto ele é conhecido, para o aviso oferecer o caminho de volta
+  useEffect(() => {
+    if (data?.conteudo?.eixo_id) eixoConhecidoRef.current = data.conteudo.eixo_id;
+  }, [data?.conteudo?.eixo_id]);
+
 
   // A prática voltou a aparecer na consulta: o acesso foi liberado de novo e o
   // aviso de revogação sai sozinho, sem precisar recarregar a página.
@@ -509,7 +528,10 @@ function Player() {
                 interrupção.
               </p>
               <Button
-                onClick={renovarMidia}
+                onClick={(e) => {
+                  registrarOrigem(e.currentTarget);
+                  renovarMidia();
+                }}
                 disabled={renovando || emEspera}
                 className="rounded-full bg-floresta px-5 text-floresta-foreground hover:bg-floresta/90"
               >
@@ -608,6 +630,7 @@ function Player() {
                   <RotateCcw className="h-6 w-6" />
                 </button>
                 <button
+                  ref={playRef}
                   onClick={alternar}
                   className="rounded-full bg-terracota p-4 text-terracota-foreground focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label={tocando ? "Pausar" : "Reproduzir"}
@@ -698,7 +721,9 @@ function Player() {
             renovando={renovando}
             emEspera={emEspera}
             esperaAte={esperaAte}
+            {...(eixoConhecidoRef.current ? { eixoId: eixoConhecidoRef.current } : {})}
             onRenovar={renovarMidia}
+            onSair={() => voltarRef.current?.focus()}
           />
         </>
       )}
