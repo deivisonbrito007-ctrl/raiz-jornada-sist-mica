@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bloqueada";
 import { StatusMidiaBadge } from "@/components/status-midia";
+import { RegiaoAnuncio } from "@/components/regiao-anuncio";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 import { useFocoPlayer } from "@/hooks/use-foco-player";
 import { useFocoTrocaConteudo } from "@/hooks/use-foco-troca-conteudo";
@@ -476,8 +477,11 @@ function Player() {
           )}
 
           {(ehMidia || bloqueio === "revogado" || bloqueio === "removido") && (
-            <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-              {bloqueio === "removido"
+            <RegiaoAnuncio
+              nivel={bloqueio ? "importante" : "rotina"}
+              semFallbackVisivel
+              texto={
+              bloqueio === "removido"
                 ? "Player indisponível: esta prática foi removida pelo terapeuta."
                 : bloqueio === "revogado"
                   ? "Player indisponível: esta prática não está mais liberada."

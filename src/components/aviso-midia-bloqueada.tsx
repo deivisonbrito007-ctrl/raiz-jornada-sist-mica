@@ -3,6 +3,7 @@ import { TimerOff, Lock, AlertCircle, Hourglass } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { rolarParaVista } from "@/lib/rolar-para-vista";
+import { RegiaoAnuncio } from "@/components/regiao-anuncio";
 
 export type MotivoBloqueio = "validade" | "revogado" | "removido" | "falha" | "limite";
 

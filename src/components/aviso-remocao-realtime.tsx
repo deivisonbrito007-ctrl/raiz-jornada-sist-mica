@@ -8,6 +8,7 @@ import {
 } from "@/hooks/use-sincronizar-liberacoes";
 import { useFocoOrigem } from "@/hooks/use-foco-origem";
 import { rolarParaVista } from "@/lib/rolar-para-vista";
+import { deveAnunciar, usePreferenciaAnuncios } from "@/lib/preferencia-anuncios";
 
 type Aviso = {
   titulo: string;
@@ -59,6 +60,9 @@ export function AvisoRemocaoRealtime() {
   const [aviso, setAviso] = useState<Aviso | null>(null);
   const caixaRef = useRef<HTMLDivElement | null>(null);
   const { devolverFoco } = useFocoOrigem(Boolean(aviso));
+  const preferenciaAnuncios = usePreferenciaAnuncios();
+  // O aviso já é visível; com anúncios desativados apenas silenciamos a fala.
+  const anunciar = deveAnunciar(preferenciaAnuncios, "importante");
 
   useSincronizarLiberacoes((mudanca) => {
     const novo = avisoDaMudanca(mudanca);
@@ -87,8 +91,8 @@ export function AvisoRemocaoRealtime() {
   return (
     <div
       ref={caixaRef}
-      role="alert"
-      aria-live="assertive"
+      role={anunciar ? "alert" : "group"}
+      aria-live={anunciar ? "assertive" : "off"}
       aria-labelledby="aviso-remocao-titulo"
       aria-describedby="aviso-remocao-orientacao"
       tabIndex={-1}

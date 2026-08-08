@@ -8,6 +8,7 @@ import { getConteudo, listarDiario, salvarDiario } from "@/lib/raiz.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatarData } from "@/lib/raiz-format";
+import { RegiaoAnuncio } from "@/components/regiao-anuncio";
 
 export const Route = createFileRoute("/_authenticated/app/diario")({
   validateSearch: z.object({ conteudoId: z.string().uuid().optional() }),
@@ -70,9 +71,7 @@ function Diario() {
         Um espaço privado entre você e quem acompanha o seu processo.
       </p>
 
-      <p aria-live="polite" role="status" className="sr-only">
-        {anuncio}
-      </p>
+      <RegiaoAnuncio texto={anuncio} nivel="rotina" />
 
       <section aria-labelledby="titulo-nova-reflexao" className="mt-7 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
         <h2 id="titulo-nova-reflexao" className="sr-only">
