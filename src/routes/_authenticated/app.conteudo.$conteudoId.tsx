@@ -344,6 +344,16 @@ function Player() {
     }
   }
 
+  /** Para a mídia guardando o ponto atual — usado quando o acesso cai. */
+  function pararMidia() {
+    const el = mediaRef.current;
+    if (el) {
+      posicaoRef.current = el.currentTime || posicaoRef.current;
+      el.pause();
+    }
+    setTocando(false);
+  }
+
   /** Pequena espera entre tentativas — o botão nunca fica travado para sempre. */
   function segurarNovaTentativa(espera = 5000) {
     setEmEspera(true);
