@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { auditarResultado, negarAcesso, registrarAcessoNegado } from "./auditoria-acesso";
 import { atorAuditoria, registrarAuditoria } from "./auditoria-equipe";
+import { planejarLiberacao } from "./renovacao-liberacao";
 import { garantirConteudoLiberado } from "./liberacao-guard";
 import { garantirPermissao, temPermissao } from "./permissao-guard";
 
@@ -634,8 +635,6 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
       .eq("cliente_id", data.clienteId)
       .eq(data.conteudoId ? "conteudo_id" : "eixo_id", (data.conteudoId ?? data.eixoId) as string);
     const existente = await (data.conteudoId ? alvo : alvo.is("conteudo_id", null)).maybeSingle();
-    /** liberar algo que estava bloqueado é uma renovação de acesso, não uma estreia */
-    const ehRenovacao = existente.data?.status === "bloqueado";
 
     const alvoAuditoria = {
       alvoTipo: "liberacao" as const,
