@@ -126,7 +126,14 @@ function AdminEquipe() {
   const remover = useServerFn(equipeRemover);
   const auditoria = useServerFn(equipeAuditoria);
 
-  const { data, isLoading } = useQuery({ queryKey: ["equipe"], queryFn: () => listar() });
+  const { pode, carregando: carregandoPermissoes } = useMinhasPermissoes();
+  const podeGerenciar = pode("gerenciar_equipe");
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["equipe"],
+    queryFn: () => listar(),
+    enabled: podeGerenciar,
+  });
   const auditoriaQuery = useQuery({
     queryKey: ["equipe-auditoria"],
     queryFn: () => auditoria(),
