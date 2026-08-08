@@ -1,3 +1,4 @@
+import type React from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -35,7 +36,7 @@ vi.mock("@/hooks/use-sincronizar-liberacoes", () => ({
 }));
 
 const { Route } = await import("./app.historico");
-const Historico = (Route as any).component as () => JSX.Element;
+const Historico = (Route as any).component as () => React.ReactElement;
 
 const HISTORICO = {
   trilhas: [
