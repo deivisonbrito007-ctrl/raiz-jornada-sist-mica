@@ -3,7 +3,7 @@ import { TimerOff, Lock, AlertCircle, Hourglass } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export type MotivoBloqueio = "validade" | "revogado" | "falha" | "limite";
+export type MotivoBloqueio = "validade" | "revogado" | "removido" | "falha" | "limite";
 
 
 interface Props {
