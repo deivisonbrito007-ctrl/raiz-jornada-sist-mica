@@ -119,6 +119,13 @@ async def interceptar(page, segundos: int, url_simulada: str | None, remover: bo
     validade do link para o vencimento acontecer durante o teste.
     """
 
+    async def entregar(route, resposta, corpo):
+        try:
+            await route.fulfill(response=resposta, body=corpo)
+        except Exception:
+            # a rota pode ter sido trocada no meio do caminho (unroute) — ignorável
+            pass
+
     async def handler(route):
         try:
             resposta = await route.fetch()
@@ -127,7 +134,7 @@ async def interceptar(page, segundos: int, url_simulada: str | None, remover: bo
             await route.continue_()
             return
         if "urlExpiraEm" not in corpo:
-            await route.fulfill(response=resposta, body=corpo)
+            await entregar(route, resposta, corpo)
             return
         prazo = (
             (datetime.now(timezone.utc) + timedelta(seconds=segundos))
@@ -137,7 +144,7 @@ async def interceptar(page, segundos: int, url_simulada: str | None, remover: bo
         try:
             dados = json.loads(corpo)
         except json.JSONDecodeError:
-            await route.fulfill(response=resposta, body=corpo)
+            await entregar(route, resposta, corpo)
             return
 
         def ajustar(no):
@@ -168,11 +175,7 @@ async def interceptar(page, segundos: int, url_simulada: str | None, remover: bo
                     ajustar(v)
 
         ajustar(dados)
-        try:
-            await route.fulfill(response=resposta, body=json.dumps(dados))
-        except Exception:
-            # a rota pode ter sido trocada no meio do caminho (unroute) — ignorável
-            pass
+        await entregar(route, resposta, json.dumps(dados))
 
     await page.route("**/_serverFn/**", handler)
 
