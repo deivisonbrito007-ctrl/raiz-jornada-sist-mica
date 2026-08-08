@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Flame, Sprout, Target, Check, Minus, Plus, FileDown, Loader2 } from "lucide-react";
@@ -13,6 +13,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { gerarRelatorioPdf } from "@/lib/raiz-relatorio";
 import { LembreteRetorno } from "@/components/lembrete-retorno";
+import { RegiaoAnuncio } from "@/components/regiao-anuncio";
+import { useAnuncio } from "@/hooks/use-anuncio";
 import { MapaCalor, NIVEIS_MAPA_CALOR } from "@/components/mapa-calor";
 import {
   calcularStreak,
@@ -74,6 +76,19 @@ function Progresso() {
   const proximaPratica = (data?.praticas ?? []).find((p) => p.status !== "concluido") ?? null;
   const lembrete = avaliarLembrete(datasConclusao, streak);
 
+  // Mesmo escopo do player: uma conclusão já falada lá não é repetida aqui.
+  const { texto: anuncioProgresso, anunciar: anunciarProgresso } = useAnuncio("progresso");
+
+  // Meta e sequência da semana: só fala quando os números mudam de verdade.
+  useEffect(() => {
+    if (isLoading) return;
+    anunciarProgresso(
+      `Meta semanal de ${meta.meta} ${meta.meta === 1 ? "prática" : "práticas"}. ` +
+        `${meta.concluidasSemana} ${meta.concluidasSemana === 1 ? "concluída" : "concluídas"} esta semana. ` +
+        `Sequência atual de ${streak} ${streak === 1 ? "dia" : "dias"}.`,
+    );
+  }, [isLoading, meta.meta, meta.concluidasSemana, streak, anunciarProgresso]);
+
   const fetchDiario = useServerFn(listarDiario);
   const [gerando, setGerando] = useState(false);
 
@@ -99,6 +114,8 @@ function Progresso() {
 
   return (
     <div>
+      <RegiaoAnuncio texto={anuncioProgresso} nivel="rotina" />
+
       <h1 className="text-3xl text-floresta">Seu caminho</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         Progresso não é pressa. É o que você já foi capaz de olhar.
