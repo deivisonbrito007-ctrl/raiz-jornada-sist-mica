@@ -31,9 +31,13 @@ export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")
   component: Player,
 });
 
+/** Antecedência do aviso "prestes a expirar" antes do fim do link seguro. */
+export const AVISO_ANTECEDENCIA_MS = 60_000;
+
 function ehMidiaTipo(tipo?: string) {
   return tipo === "video" || tipo === "audio";
 }
+
 
 function Player() {
   const { conteudoId } = Route.useParams();
