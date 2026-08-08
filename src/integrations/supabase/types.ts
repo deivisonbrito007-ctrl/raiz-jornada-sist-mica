@@ -239,6 +239,36 @@ export type Database = {
           },
         ]
       }
+      dispositivos_push: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_agent: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_agent?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_agent?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       eixos: {
         Row: {
           created_at: string
@@ -301,6 +331,36 @@ export type Database = {
           created_at?: string
           id?: string
           permissao?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lembretes_enviados: {
+        Row: {
+          canal: string
+          chave_dedupe: string
+          created_at: string
+          id: string
+          status: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          canal?: string
+          chave_dedupe: string
+          created_at?: string
+          id?: string
+          status?: string
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          canal?: string
+          chave_dedupe?: string
+          created_at?: string
+          id?: string
+          status?: string
+          tipo?: string
           user_id?: string
         }
         Relationships: []
@@ -425,6 +485,45 @@ export type Database = {
           nome?: string
           preco_centavos?: number
           tipo_cobranca?: Database["public"]["Enums"]["tipo_cobranca"]
+        }
+        Relationships: []
+      }
+      preferencias_lembretes: {
+        Row: {
+          ativo: boolean
+          canal_email: boolean
+          canal_push: boolean
+          definido_por: string
+          dia_semana: number
+          dias_inatividade: number
+          fuso: string
+          hora_local: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          canal_email?: boolean
+          canal_push?: boolean
+          definido_por?: string
+          dia_semana?: number
+          dias_inatividade?: number
+          fuso?: string
+          hora_local?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          canal_email?: boolean
+          canal_push?: boolean
+          definido_por?: string
+          dia_semana?: number
+          dias_inatividade?: number
+          fuso?: string
+          hora_local?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
