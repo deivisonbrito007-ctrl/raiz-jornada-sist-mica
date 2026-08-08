@@ -19,7 +19,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bloqueada";
 import { StatusMidiaBadge } from "@/components/status-midia";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
-import { useFocoPlayer } from "@/hooks/use-foco-player";
 import { useAnuncio } from "@/hooks/use-anuncio";
 import { RegiaoAnuncio } from "@/components/regiao-anuncio";
 
