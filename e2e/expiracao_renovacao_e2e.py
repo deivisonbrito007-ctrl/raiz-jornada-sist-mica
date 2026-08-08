@@ -397,7 +397,12 @@ async def main() -> None:
         # ============ Fase 3: cliente renova e retoma ============
         estado["segundos"] = VALIDADE_LONGA_S
         await cta.first.click()
-        await page.get_by_role("button", name="Reproduzir").wait_for(timeout=30000)
+        try:
+            await page.get_by_role("button", name="Reproduzir").wait_for(timeout=30000)
+        except Exception:
+            corpo = " ".join((await page.locator("body").inner_text()).split())
+            print("DEBUG tela após renovar:", corpo[:600])
+            raise
         selo = await selo_texto(page)
         if "Mídia liberada" not in selo:
             falhas.append(f"selo não voltou a 'Mídia liberada' após renovar (veio: {selo!r})")
