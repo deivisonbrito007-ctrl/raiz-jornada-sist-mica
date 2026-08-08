@@ -81,13 +81,16 @@ function Progresso() {
 
   // Meta e sequência da semana: só fala quando os números mudam de verdade.
   useEffect(() => {
-    if (isLoading) return;
+    // Só anuncia com os dois carregamentos prontos: anunciar um número
+    // provisório criaria uma fala a mais e furaria a deduplicação ao voltar
+    // para a tela.
+    if (isLoading || !data || !contexto) return;
     anunciarProgresso(
       `Meta semanal de ${meta.meta} ${meta.meta === 1 ? "prática" : "práticas"}. ` +
         `${meta.concluidasSemana} ${meta.concluidasSemana === 1 ? "concluída" : "concluídas"} esta semana. ` +
         `Sequência atual de ${streak} ${streak === 1 ? "dia" : "dias"}.`,
     );
-  }, [isLoading, meta.meta, meta.concluidasSemana, streak, anunciarProgresso]);
+  }, [isLoading, data, contexto, meta.meta, meta.concluidasSemana, streak, anunciarProgresso]);
 
   const fetchDiario = useServerFn(listarDiario);
   const [gerando, setGerando] = useState(false);
