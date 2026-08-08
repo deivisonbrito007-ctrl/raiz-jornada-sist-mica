@@ -37,6 +37,19 @@ export const Route = createFileRoute("/_authenticated/app/etapa/$conteudoId")({
 
 type Fase = "checkin" | "pratica" | "checkout";
 
+/** Materiais e sensibilidades podem vir como texto livre ou lista. */
+function paraLista(valor: unknown): string[] {
+  if (Array.isArray(valor)) return valor.map((v) => String(v)).filter(Boolean);
+  if (typeof valor === "string") {
+    return valor
+      .split(/\r?\n|;/)
+      .map((v) => v.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+
 function EtapaTrilha() {
   const { conteudoId } = Route.useParams();
   const navigate = useNavigate();
