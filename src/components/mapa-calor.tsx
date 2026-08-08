@@ -89,7 +89,11 @@ export function MapaCalor({
                         className={`${classes} transition hover:ring-2 hover:ring-floresta/40`}
                       />
                     </PopoverTrigger>
-                    <PopoverContent align="center" className="w-64 rounded-2xl p-4">
+                    <PopoverContent
+                      align="center"
+                      className="w-64 rounded-2xl p-4"
+                      aria-label={`Detalhe do dia ${dia.label}`}
+                    >
                       <p className="text-sm text-floresta">{dia.label}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {vazio

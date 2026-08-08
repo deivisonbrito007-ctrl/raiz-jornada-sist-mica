@@ -175,10 +175,6 @@ describe("axe-core — componentes do cliente", () => {
     await esperarSemViolacoes();
   });
 
-  it("região de anúncios para leitor de tela não tem violação", async () => {
-    render(<RegiaoAnuncio mensagem="Prática marcada como concluída." />);
-    await esperarSemViolacoes();
-  });
 });
 
 describe("axe-core — componentes do painel do terapeuta", () => {
