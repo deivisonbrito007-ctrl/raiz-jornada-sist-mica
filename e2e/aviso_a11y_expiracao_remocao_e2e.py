@@ -168,7 +168,11 @@ async def interceptar(page, segundos: int, url_simulada: str | None, remover: bo
                     ajustar(v)
 
         ajustar(dados)
-        await route.fulfill(response=resposta, body=json.dumps(dados))
+        try:
+            await route.fulfill(response=resposta, body=json.dumps(dados))
+        except Exception:
+            # a rota pode ter sido trocada no meio do caminho (unroute) — ignorável
+            pass
 
     await page.route("**/_serverFn/**", handler)
 
