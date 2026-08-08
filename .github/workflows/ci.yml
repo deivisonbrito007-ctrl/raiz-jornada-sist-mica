@@ -168,6 +168,8 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Verificar contraste de ícones, textos e estados do player
         run: bun run test:contraste
+      - name: Acessibilidade (axe) das telas do Diário de Reflexão
+        run: bun run test:a11y
 
   seguranca:
     name: Testes de segurança (RLS) com mínimo de cobertura
