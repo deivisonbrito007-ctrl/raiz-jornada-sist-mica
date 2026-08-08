@@ -260,29 +260,38 @@ async def main() -> None:
     )
     eixos_liberados = {l["eixo_id"] for l in liberadas}
 
-    alvo = next(
-        (
-            (e, c)
-            for e in eixos
-            if e["id"] not in eixos_liberados
-            for c in conteudos
-            if c["eixo_id"] == e["id"] and c["tipo"] in ("audio", "video")
-        ),
-        None,
-    )
+    # o teste começa do zero: prefere um eixo ainda bloqueado, mas qualquer eixo
+    # com prática de áudio/vídeo serve — a liberação dele é recolhida no início e
+    # o estado original é devolvido no fim.
+    def escolher(bloqueado_apenas: bool):
+        return next(
+            (
+                (e, c)
+                for e in eixos
+                if not bloqueado_apenas or e["id"] not in eixos_liberados
+                for c in conteudos
+                if c["eixo_id"] == e["id"] and c["tipo"] in ("audio", "video")
+            ),
+            None,
+        )
+
+    alvo = escolher(True) or escolher(False)
     if not alvo:
-        print("SKIP: nenhum eixo bloqueado com prática de áudio/vídeo para testar.")
+        print("SKIP: nenhum eixo com prática de áudio/vídeo para testar.")
         return
     eixo, conteudo = alvo
+    estava_liberado = eixo["id"] in eixos_liberados
     midia_real = bool(conteudo.get("storage_path"))
     estado = {
         "segundos": VALIDADE_CURTA_S,
         "url": None if midia_real else wav_de_silencio(),
+        "revogado": False,
     }
     print(
         "eixo:", eixo["nome"], "| prática:", conteudo["titulo"],
         f"(mídia {'enviada' if midia_real else 'simulada no navegador'})",
     )
+
 
     def liberar() -> None:
         existente = api.get(
