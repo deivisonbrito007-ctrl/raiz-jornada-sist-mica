@@ -51,6 +51,7 @@ function Diario() {
       await salvar({ data: { texto, conteudoId: conteudoId ?? null } });
       setTexto("");
       queryClient.invalidateQueries({ queryKey: ["diario"] });
+      queryClient.invalidateQueries({ queryKey: ["historico"] });
       toast.success("Reflexão guardada.");
       setAnuncio("Reflexão guardada.");
     } catch (erro) {
