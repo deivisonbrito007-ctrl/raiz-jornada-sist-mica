@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { auditarResultado, negarAcesso, registrarAcessoNegado } from "./auditoria-acesso";
 import { atorAuditoria, registrarAuditoria } from "./auditoria-equipe";
+import { planejarLiberacao } from "./renovacao-liberacao";
 import { garantirConteudoLiberado } from "./liberacao-guard";
 import { garantirPermissao, temPermissao } from "./permissao-guard";
 
@@ -630,7 +631,7 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
 
     const alvo = supabase
       .from("liberacoes")
-      .select("id")
+      .select("id, status")
       .eq("cliente_id", data.clienteId)
       .eq(data.conteudoId ? "conteudo_id" : "eixo_id", (data.conteudoId ?? data.eixoId) as string);
     const existente = await (data.conteudoId ? alvo : alvo.is("conteudo_id", null)).maybeSingle();
@@ -680,23 +681,30 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
       if (error) throw erroSeguro(error);
     }
 
-    const agendadoParaFuturo = Boolean(data.liberarEm && new Date(data.liberarEm) > new Date());
-    await registrarAuditoria(supabase, atorAuditoria(context), {
-      acao: agendadoParaFuturo ? "liberacao_agendada" : "conteudo_liberado",
-      ...alvoAuditoria,
-      detalhes: { ...alvoAuditoria.detalhes, agendadoPara: data.liberarEm ?? "" },
+    const plano = planejarLiberacao({
+      statusAtual: (existente.data?.status as "liberado" | "bloqueado" | undefined) ?? null,
+      liberarEm: data.liberarEm ?? null,
+      titulo: data.titulo ?? null,
     });
-    if (agendadoParaFuturo) return { ok: true, agendado: true };
+
+    await registrarAuditoria(supabase, atorAuditoria(context), {
+      acao: plano.acao,
+      ...alvoAuditoria,
+      detalhes: {
+        ...alvoAuditoria.detalhes,
+        agendadoPara: data.liberarEm ?? "",
+        renovacao: plano.renovacao,
+      },
+    });
+    if (!plano.notificacao) return { ok: true, agendado: true, renovada: plano.renovacao };
 
     await supabase.from("notificacoes").insert({
       cliente_id: data.clienteId,
-      titulo: "Novo conteúdo liberado",
-      mensagem: data.titulo
-        ? `"${data.titulo}" já está disponível na sua biblioteca.`
-        : "Há algo novo esperando por você na sua biblioteca.",
+      titulo: plano.notificacao.titulo,
+      mensagem: plano.notificacao.mensagem,
     });
 
-    return { ok: true };
+    return { ok: true, renovada: plano.renovacao };
   });
 
 export const adminSalvarConteudo = createServerFn({ method: "POST" })

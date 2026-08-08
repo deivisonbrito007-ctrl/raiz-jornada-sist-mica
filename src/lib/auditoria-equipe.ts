@@ -9,6 +9,7 @@ export const ACOES_AUDITORIA = [
   "admin_removido",
   "conteudo_liberado",
   "liberacao_agendada",
+  "liberacao_renovada",
   "liberacao_revogada",
 ] as const;
 
@@ -23,6 +24,7 @@ export const ACAO_LABEL: Record<AcaoAuditoria, string> = {
   admin_removido: "Acesso de admin removido",
   conteudo_liberado: "Conteúdo liberado",
   liberacao_agendada: "Liberação agendada",
+  liberacao_renovada: "Acesso renovado",
   liberacao_revogada: "Liberação revogada",
 };
 
