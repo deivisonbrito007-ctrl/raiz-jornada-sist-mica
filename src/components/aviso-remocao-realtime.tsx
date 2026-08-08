@@ -6,6 +6,8 @@ import {
   useSincronizarLiberacoes,
   type MudancaSincronia,
 } from "@/hooks/use-sincronizar-liberacoes";
+import { useFocoOrigem } from "@/hooks/use-foco-origem";
+import { rolarParaVista } from "@/lib/rolar-para-vista";
 
 type Aviso = {
   titulo: string;
@@ -126,12 +128,6 @@ export function AvisoRemocaoRealtime() {
               Entendi, dispensar aviso
             </button>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
         </div>
       </div>
     </div>
