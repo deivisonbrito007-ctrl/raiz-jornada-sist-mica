@@ -99,6 +99,13 @@ function Player() {
     bloqueioRef.current = bloqueio;
   }, [bloqueio]);
 
+  // Devolve o foco ao mesmo controle do player depois que o acesso volta —
+  // inclusive quando a pessoa precisa reautenticar e a página monta de novo.
+  useFocoPlayer(conteudoId, {
+    bloqueado: Boolean(bloqueio),
+    liberado: Boolean(data?.url) && !bloqueio,
+  });
+
   // A prática voltou a aparecer na consulta: o acesso foi liberado de novo e o
   // aviso de revogação sai sozinho, sem precisar recarregar a página.
   useEffect(() => {
@@ -561,6 +568,7 @@ function Player() {
                   onClick={() => pular(-15)}
                   className="rounded-full text-floresta-foreground/80 hover:text-ocre focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label="Voltar 15 segundos"
+                  data-foco-player="voltar15"
                 >
                   <RotateCcw className="h-6 w-6" />
                 </button>
@@ -568,6 +576,7 @@ function Player() {
                   onClick={alternar}
                   className="rounded-full bg-terracota p-4 text-terracota-foreground focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label={tocando ? "Pausar" : "Reproduzir"}
+                  data-foco-player="play"
                   aria-pressed={tocando}
                 >
                   {tocando ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7" />}
@@ -576,6 +585,7 @@ function Player() {
                   onClick={() => pular(15)}
                   className="rounded-full text-floresta-foreground/80 hover:text-ocre focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label="Avançar 15 segundos"
+                  data-foco-player="avancar15"
                 >
                   <RotateCw className="h-6 w-6" />
                 </button>
