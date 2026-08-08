@@ -254,14 +254,15 @@ async def main() -> None:
         await page.goto(f"{BASE_URL}/app", wait_until="domcontentloaded")
         await page.get_by_role("link").filter(has_text=eixo["nome"]).first.wait_for(timeout=20000)
         await page.evaluate("() => document.body.focus()")
-        link_eixo = await tab_ate(page, lambda f: eixo["nome"].lower() in f["rotulo"].lower())
+        no_eixo = lambda f: (f["href"] or "").endswith(f"/app/eixo/{eixo['id']}")
+        link_eixo = await tab_ate(page, no_eixo)
         await page.screenshot(path=str(SCREENSHOTS / "teclado_1_biblioteca.png"))
         print("OK: eixo alcançado por teclado na biblioteca:", link_eixo["rotulo"][:50])
 
         # Shift+Tab volta a uma parada anterior válida (navegação nos dois sentidos)
         anterior = await tab_ate(page, lambda f: True, limite=1, tecla="Shift+Tab")
         assert anterior["rotulo"], "Shift+Tab deveria manter o foco em um controle nomeado"
-        await tab_ate(page, lambda f: eixo["nome"].lower() in f["rotulo"].lower(), limite=3)
+        await tab_ate(page, no_eixo, limite=3)
 
         # 2) Enter navega para a trilha
         await page.keyboard.press("Enter")
@@ -270,7 +271,7 @@ async def main() -> None:
         )
         assert "/app/eixo/" in page.url, f"Enter não navegou para a trilha: {page.url}"
         await page.evaluate("() => document.body.focus()")
-        await tab_ate(page, lambda f: conteudo["titulo"].lower() in f["rotulo"].lower())
+        await tab_ate(page, lambda f: (f["href"] or "").endswith(f"/app/conteudo/{conteudo['id']}"))
         await page.screenshot(path=str(SCREENSHOTS / "teclado_2_trilha.png"))
         print("OK: prática alcançada por teclado na trilha")
 
@@ -327,7 +328,7 @@ async def main() -> None:
         # 6) Volta para a biblioteca só com teclado, estado coerente com o servidor
         await page.goto(f"{BASE_URL}/app", wait_until="domcontentloaded")
         await page.evaluate("() => document.body.focus()")
-        await tab_ate(page, lambda f: eixo["nome"].lower() in f["rotulo"].lower())
+        await tab_ate(page, no_eixo)
         print("OK: biblioteca continua navegável por teclado depois do ciclo")
 
         graves = [e for e in erros if "Warning" not in e]
