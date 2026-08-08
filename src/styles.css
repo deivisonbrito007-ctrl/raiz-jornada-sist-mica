@@ -65,6 +65,9 @@
   --color-salvia-foreground: var(--salvia-foreground);
   --color-ocre: var(--ocre);
   --color-ocre-forte: var(--ocre-forte);
+  --color-palco: var(--palco);
+  --color-palco-foreground: var(--palco-foreground);
+  --color-palco-realce: var(--palco-realce);
   --color-ocre-foreground: var(--ocre-foreground);
   --color-floresta: var(--floresta);
   --color-floresta-foreground: var(--floresta-foreground);
@@ -102,6 +105,11 @@
   --ocre-foreground: oklch(0.268 0.033 148.5);
   /* Variante escura do ocre para ícones e textos sobre fundos claros (WCAG AA). */
   --ocre-forte: oklch(0.482 0.113 84.5);
+  /* Palco do player: superfície escura fixa nos dois temas, com realce de
+     contraste garantido para trilho, tempos e ícones de controle. */
+  --palco: oklch(0.268 0.033 148.5);
+  --palco-foreground: oklch(0.972 0.017 88.5);
+  --palco-realce: oklch(0.762 0.126 84.5);
   --floresta: oklch(0.268 0.033 148.5);
   --floresta-foreground: oklch(0.941 0.026 88.5);
   --pergaminho: oklch(0.941 0.026 88.5);
@@ -165,6 +173,9 @@
   --floresta: oklch(0.902 0.032 148.5);
   --floresta-foreground: oklch(0.208 0.042 265.755);
   --pergaminho: oklch(0.208 0.042 265.755);
+  --palco: oklch(0.222 0.033 148.5);
+  --palco-foreground: oklch(0.972 0.017 88.5);
+  --palco-realce: oklch(0.762 0.126 84.5);
 }
 
 @layer base {

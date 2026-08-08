@@ -485,7 +485,7 @@ function Player() {
 
           {ehMidia && data?.url && !bloqueio && (
 
-            <div className="mt-6 overflow-hidden rounded-3xl bg-floresta p-4">
+            <div className="mt-6 overflow-hidden rounded-3xl bg-palco p-4">
               {conteudo.tipo === "video" ? (
                 <video
                   ref={mediaRef as React.RefObject<HTMLVideoElement>}
@@ -510,7 +510,7 @@ function Player() {
                   onError={expirarMidia}
                 />
               ) : (
-                <div className="flex h-40 items-center justify-center rounded-2xl bg-floresta-foreground/5">
+                <div className="flex h-40 items-center justify-center rounded-2xl bg-palco-foreground/5">
                   <audio
                     ref={mediaRef as React.RefObject<HTMLAudioElement>}
                     src={data.url}
@@ -532,7 +532,7 @@ function Player() {
                     onError={expirarMidia}
                   />
 
-                  <p className="font-display text-lg text-floresta-foreground/70">
+                  <p className="font-display text-lg text-palco-foreground/70">
                     Feche os olhos e apenas escute.
                   </p>
                 </div>
@@ -540,7 +540,7 @@ function Player() {
 
               <div className="mt-4 px-1">
                 <div
-                  className="h-1.5 overflow-hidden rounded-full bg-floresta-foreground/20"
+                  className="h-1.5 overflow-hidden rounded-full bg-palco-foreground/20"
                   role="progressbar"
                   aria-label="Progresso da reprodução"
                   aria-valuemin={0}
@@ -549,11 +549,11 @@ function Player() {
                   aria-valuetext={`${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}`}
                 >
                   <div
-                    className="h-full rounded-full bg-ocre transition-all"
+                    className="h-full rounded-full bg-palco-realce transition-all"
                     style={{ width: `${total ? (tempo / total) * 100 : 0}%` }}
                   />
                 </div>
-                <div className="mt-2 flex justify-between text-[11px] text-floresta-foreground/60">
+                <div className="mt-2 flex justify-between text-[11px] text-palco-foreground/60">
                   <span>{formatarDuracao(Math.floor(tempo))}</span>
                   <span>{formatarDuracao(Math.floor(total))}</span>
                 </div>
@@ -566,7 +566,7 @@ function Player() {
               >
                 <button
                   onClick={() => pular(-15)}
-                  className="rounded-full text-floresta-foreground/80 hover:text-ocre focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
+                  className="rounded-full text-palco-foreground/80 hover:text-palco-realce focus-visible:ring-2 focus-visible:ring-palco-realce focus-visible:ring-offset-2"
                   aria-label="Voltar 15 segundos"
                   data-foco-player="voltar15"
                 >
@@ -574,7 +574,7 @@ function Player() {
                 </button>
                 <button
                   onClick={alternar}
-                  className="rounded-full bg-terracota p-4 text-terracota-foreground focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
+                  className="rounded-full bg-terracota p-4 text-terracota-foreground focus-visible:ring-2 focus-visible:ring-palco-realce focus-visible:ring-offset-2"
                   aria-label={tocando ? "Pausar" : "Reproduzir"}
                   data-foco-player="play"
                   aria-pressed={tocando}
@@ -583,7 +583,7 @@ function Player() {
                 </button>
                 <button
                   onClick={() => pular(15)}
-                  className="rounded-full text-floresta-foreground/80 hover:text-ocre focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
+                  className="rounded-full text-palco-foreground/80 hover:text-palco-realce focus-visible:ring-2 focus-visible:ring-palco-realce focus-visible:ring-offset-2"
                   aria-label="Avançar 15 segundos"
                   data-foco-player="avancar15"
                 >
