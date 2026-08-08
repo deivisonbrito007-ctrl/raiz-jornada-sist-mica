@@ -37,6 +37,7 @@ import { Route as AuthenticatedAppProgressoRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminClienteClienteIdRouteImport } from './routes/_authenticated/admin.cliente.$clienteId'
 import { Route as AuthenticatedAppConteudoConteudoIdRouteImport } from './routes/_authenticated/app.conteudo.$conteudoId'
 import { Route as AuthenticatedAppEixoEixoIdRouteImport } from './routes/_authenticated/app.eixo.$eixoId'
+import { Route as AuthenticatedAppEtapaConteudoIdRouteImport } from './routes/_authenticated/app.etapa.$conteudoId'
 import { Route as ApiPublicHooksLembretesRouteImport } from './routes/api/public/hooks/lembretes'
 
 const IndexRoute = IndexRouteImport.update({
@@ -193,6 +194,12 @@ const AuthenticatedAppEixoEixoIdRoute =
     path: '/eixo/$eixoId',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppEtapaConteudoIdRoute =
+  AuthenticatedAppEtapaConteudoIdRouteImport.update({
+    id: '/etapa/$conteudoId',
+    path: '/etapa/$conteudoId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const ApiPublicHooksLembretesRoute = ApiPublicHooksLembretesRouteImport.update({
   id: '/api/public/hooks/lembretes',
   path: '/api/public/hooks/lembretes',
@@ -227,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
   '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
+  '/app/etapa/$conteudoId': typeof AuthenticatedAppEtapaConteudoIdRoute
   '/api/public/hooks/lembretes': typeof ApiPublicHooksLembretesRoute
 }
 export interface FileRoutesByTo {
@@ -255,6 +263,7 @@ export interface FileRoutesByTo {
   '/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
   '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
+  '/app/etapa/$conteudoId': typeof AuthenticatedAppEtapaConteudoIdRoute
   '/api/public/hooks/lembretes': typeof ApiPublicHooksLembretesRoute
 }
 export interface FileRoutesById {
@@ -287,6 +296,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
   '/_authenticated/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/_authenticated/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
+  '/_authenticated/app/etapa/$conteudoId': typeof AuthenticatedAppEtapaConteudoIdRoute
   '/api/public/hooks/lembretes': typeof ApiPublicHooksLembretesRoute
 }
 export interface FileRouteTypes {
@@ -319,6 +329,7 @@ export interface FileRouteTypes {
     | '/admin/cliente/$clienteId'
     | '/app/conteudo/$conteudoId'
     | '/app/eixo/$eixoId'
+    | '/app/etapa/$conteudoId'
     | '/api/public/hooks/lembretes'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -347,6 +358,7 @@ export interface FileRouteTypes {
     | '/admin/cliente/$clienteId'
     | '/app/conteudo/$conteudoId'
     | '/app/eixo/$eixoId'
+    | '/app/etapa/$conteudoId'
     | '/api/public/hooks/lembretes'
   id:
     | '__root__'
@@ -378,6 +390,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/cliente/$clienteId'
     | '/_authenticated/app/conteudo/$conteudoId'
     | '/_authenticated/app/eixo/$eixoId'
+    | '/_authenticated/app/etapa/$conteudoId'
     | '/api/public/hooks/lembretes'
   fileRoutesById: FileRoutesById
 }
@@ -591,6 +604,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppEixoEixoIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/etapa/$conteudoId': {
+      id: '/_authenticated/app/etapa/$conteudoId'
+      path: '/etapa/$conteudoId'
+      fullPath: '/app/etapa/$conteudoId'
+      preLoaderRoute: typeof AuthenticatedAppEtapaConteudoIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/api/public/hooks/lembretes': {
       id: '/api/public/hooks/lembretes'
       path: '/api/public/hooks/lembretes'
@@ -638,6 +658,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppConteudoConteudoIdRoute: typeof AuthenticatedAppConteudoConteudoIdRoute
   AuthenticatedAppEixoEixoIdRoute: typeof AuthenticatedAppEixoEixoIdRoute
+  AuthenticatedAppEtapaConteudoIdRoute: typeof AuthenticatedAppEtapaConteudoIdRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
@@ -650,6 +671,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppConteudoConteudoIdRoute:
     AuthenticatedAppConteudoConteudoIdRoute,
   AuthenticatedAppEixoEixoIdRoute: AuthenticatedAppEixoEixoIdRoute,
+  AuthenticatedAppEtapaConteudoIdRoute: AuthenticatedAppEtapaConteudoIdRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =
