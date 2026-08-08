@@ -321,13 +321,8 @@ function Player() {
       // a liberação é o que define o acesso; mídia ainda não enviada tem aviso próprio
       const liberado = Boolean(novo?.conteudo);
       if (!liberado) {
-        const el = mediaRef.current;
-        if (el) {
-          posicaoRef.current = el.currentTime || posicaoRef.current;
-          el.pause();
-        }
-        setTocando(false);
-        if (bloqueioRef.current !== "revogado") {
+        pararMidia();
+        if (bloqueioRef.current !== "revogado" && bloqueioRef.current !== "removido") {
           bloqueioRef.current = "revogado";
           setBloqueio("revogado");
           toast.error("Esta prática não está mais liberada para você.");
