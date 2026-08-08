@@ -640,16 +640,18 @@ function Player() {
         </>
       )}
 
-      {!conteudo && !isLoading && bloqueio === "revogado" && (
+      {!conteudo && !isLoading && (bloqueio === "revogado" || bloqueio === "removido") && (
         <>
           <div>
             <StatusMidiaBadge status="revogada" />
           </div>
           <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-            Player indisponível: o terapeuta recolheu o acesso a esta prática.
+            {bloqueio === "removido"
+              ? "Player indisponível: esta prática foi removida pelo terapeuta."
+              : "Player indisponível: o terapeuta recolheu o acesso a esta prática."}
           </p>
           <AvisoMidiaBloqueada
-            motivo="revogado"
+            motivo={bloqueio}
             renovando={renovando}
             emEspera={emEspera}
             esperaAte={esperaAte}
