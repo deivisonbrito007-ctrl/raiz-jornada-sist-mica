@@ -177,13 +177,21 @@ async def interceptar(page, estado: dict) -> None:
                     valores = pares["v"]
                     i_url = chaves.index("url")
                     i_prazo = chaves.index("urlExpiraEm")
-                    atual = valores[i_url]
-                    tem_url = isinstance(atual, dict) and atual.get("t") == 1
-                    if estado.get("url") and not tem_url:
-                        valores[i_url] = texto_seroval(estado["url"])
-                        tem_url = True
-                    if tem_url:
-                        valores[i_prazo] = texto_seroval(prazo)
+                    if estado.get("revogado"):
+                        # forma que o backend devolve para quem perdeu o acesso
+                        if "conteudo" in chaves:
+                            valores[chaves.index("conteudo")] = NULO
+                        valores[i_url] = NULO
+                        valores[i_prazo] = NULO
+                    else:
+                        atual = valores[i_url]
+                        tem_url = isinstance(atual, dict) and atual.get("t") == 1
+                        if estado.get("url") and not tem_url:
+                            valores[i_url] = texto_seroval(estado["url"])
+                            tem_url = True
+                        if tem_url:
+                            valores[i_prazo] = texto_seroval(prazo)
+
                 for v in no.values():
                     ajustar(v)
             elif isinstance(no, list):
