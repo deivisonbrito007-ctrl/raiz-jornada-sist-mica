@@ -27,6 +27,7 @@ import { Route as AuthenticatedAdminEquipeRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminPacotesRouteImport } from './routes/_authenticated/admin.pacotes'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppDiarioRouteImport } from './routes/_authenticated/app.diario'
+import { Route as AuthenticatedAppHistoricoRouteImport } from './routes/_authenticated/app.historico'
 import { Route as AuthenticatedAppPerfilRouteImport } from './routes/_authenticated/app.perfil'
 import { Route as AuthenticatedAppProgressoRouteImport } from './routes/_authenticated/app.progresso'
 import { Route as AuthenticatedAdminClienteClienteIdRouteImport } from './routes/_authenticated/admin.cliente.$clienteId'
@@ -129,6 +130,12 @@ const AuthenticatedAppDiarioRoute = AuthenticatedAppDiarioRouteImport.update({
   path: '/diario',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppHistoricoRoute =
+  AuthenticatedAppHistoricoRouteImport.update({
+    id: '/historico',
+    path: '/historico',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppPerfilRoute = AuthenticatedAppPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -175,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/admin/equipe': typeof AuthenticatedAdminEquipeRoute
   '/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
+  '/app/historico': typeof AuthenticatedAppHistoricoRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/progresso': typeof AuthenticatedAppProgressoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -197,6 +205,7 @@ export interface FileRoutesByTo {
   '/admin/equipe': typeof AuthenticatedAdminEquipeRoute
   '/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
+  '/app/historico': typeof AuthenticatedAppHistoricoRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/progresso': typeof AuthenticatedAppProgressoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -223,6 +232,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/equipe': typeof AuthenticatedAdminEquipeRoute
   '/_authenticated/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
   '/_authenticated/app/diario': typeof AuthenticatedAppDiarioRoute
+  '/_authenticated/app/historico': typeof AuthenticatedAppHistoricoRoute
   '/_authenticated/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/_authenticated/app/progresso': typeof AuthenticatedAppProgressoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -249,6 +259,7 @@ export interface FileRouteTypes {
     | '/admin/equipe'
     | '/admin/pacotes'
     | '/app/diario'
+    | '/app/historico'
     | '/app/perfil'
     | '/app/progresso'
     | '/admin/'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
     | '/admin/equipe'
     | '/admin/pacotes'
     | '/app/diario'
+    | '/app/historico'
     | '/app/perfil'
     | '/app/progresso'
     | '/admin'
@@ -296,6 +308,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/equipe'
     | '/_authenticated/admin/pacotes'
     | '/_authenticated/app/diario'
+    | '/_authenticated/app/historico'
     | '/_authenticated/app/perfil'
     | '/_authenticated/app/progresso'
     | '/_authenticated/admin/'
@@ -444,6 +457,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppDiarioRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/historico': {
+      id: '/_authenticated/app/historico'
+      path: '/historico'
+      fullPath: '/app/historico'
+      preLoaderRoute: typeof AuthenticatedAppHistoricoRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/perfil': {
       id: '/_authenticated/app/perfil'
       path: '/perfil'
@@ -506,6 +526,7 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppDiarioRoute: typeof AuthenticatedAppDiarioRoute
+  AuthenticatedAppHistoricoRoute: typeof AuthenticatedAppHistoricoRoute
   AuthenticatedAppPerfilRoute: typeof AuthenticatedAppPerfilRoute
   AuthenticatedAppProgressoRoute: typeof AuthenticatedAppProgressoRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
@@ -515,6 +536,7 @@ interface AuthenticatedAppRouteChildren {
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppDiarioRoute: AuthenticatedAppDiarioRoute,
+  AuthenticatedAppHistoricoRoute: AuthenticatedAppHistoricoRoute,
   AuthenticatedAppPerfilRoute: AuthenticatedAppPerfilRoute,
   AuthenticatedAppProgressoRoute: AuthenticatedAppProgressoRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
