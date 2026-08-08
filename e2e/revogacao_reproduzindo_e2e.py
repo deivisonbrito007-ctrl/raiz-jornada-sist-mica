@@ -240,7 +240,12 @@ async def dar_play(page, falhas: list[str], rotulo: str) -> bool:
 
 async def conferir_estado_bloqueado(page, falhas: list[str], rotulo: str, tocava: bool) -> None:
     """Player parado, sem mídia montada e sem nenhum controle ou tempo na tela."""
-    await page.get_by_text("não está mais liberada", exact=False).first.wait_for(timeout=25000)
+    try:
+        await page.get_by_text("não está mais liberada", exact=False).first.wait_for(timeout=25000)
+    except Exception:
+        corpo = " ".join((await page.locator("body").inner_text()).split())
+        falhas.append(f"[{rotulo}] player não trocou para o estado bloqueado; tela: {corpo[:400]}")
+        return
 
     if await page.locator("audio, video").count() != 0:
         falhas.append(f"[{rotulo}] a mídia continuou montada no player após a revogação")
