@@ -608,7 +608,7 @@ function Player() {
             <StatusMidiaBadge status="revogada" />
           </div>
           <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-            Player indisponível: esta prática não está mais liberada.
+            Player indisponível: o terapeuta recolheu o acesso a esta prática.
           </p>
           <AvisoMidiaBloqueada
             motivo="revogado"
