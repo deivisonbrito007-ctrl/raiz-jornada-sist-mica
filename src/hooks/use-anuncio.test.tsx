@@ -48,8 +48,9 @@ describe("useAnuncio: deduplicação de anúncios entre telas", () => {
   });
 
   it("mantém escopos independentes", () => {
-    render(<Tela escopo="progresso" />);
+    const primeira = render(<Tela escopo="progresso" />);
     act(() => anunciar("Texto igual."));
+    primeira.unmount();
     const { getByTestId } = render(<Tela escopo="diario" />);
     act(() => anunciar("Texto igual."));
     expect(getByTestId("anuncio-live")).toHaveTextContent("Texto igual.");
