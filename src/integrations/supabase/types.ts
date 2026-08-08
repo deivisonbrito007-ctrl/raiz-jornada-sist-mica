@@ -14,6 +14,128 @@ export type Database = {
   }
   public: {
     Tables: {
+      atribuicao_etapas: {
+        Row: {
+          atribuicao_id: string
+          concluida_em: string | null
+          conteudo_id: string
+          created_at: string
+          id: string
+          obrigatoria: boolean
+          ordem: number
+        }
+        Insert: {
+          atribuicao_id: string
+          concluida_em?: string | null
+          conteudo_id: string
+          created_at?: string
+          id?: string
+          obrigatoria?: boolean
+          ordem?: number
+        }
+        Update: {
+          atribuicao_id?: string
+          concluida_em?: string | null
+          conteudo_id?: string
+          created_at?: string
+          id?: string
+          obrigatoria?: boolean
+          ordem?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atribuicao_etapas_atribuicao_id_fkey"
+            columns: ["atribuicao_id"]
+            isOneToOne: false
+            referencedRelation: "atribuicoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atribuicao_etapas_conteudo_id_fkey"
+            columns: ["conteudo_id"]
+            isOneToOne: false
+            referencedRelation: "conteudos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      atribuicoes: {
+        Row: {
+          audio_path: string | null
+          cliente_id: string
+          created_at: string
+          data_inicio: string
+          data_revisao: string | null
+          exige_acompanhamento: boolean
+          frequencia: string
+          id: string
+          mensagem: string
+          nivel: Database["public"]["Enums"]["nivel_profundidade"]
+          objetivo: string
+          observacoes: string
+          orientacoes_especiais: string
+          permite_repetir: boolean
+          pode_sozinho: boolean
+          somente_em_sessao: boolean
+          status: Database["public"]["Enums"]["atribuicao_status"]
+          terapeuta_id: string | null
+          trilha_id: string
+          updated_at: string
+        }
+        Insert: {
+          audio_path?: string | null
+          cliente_id: string
+          created_at?: string
+          data_inicio?: string
+          data_revisao?: string | null
+          exige_acompanhamento?: boolean
+          frequencia?: string
+          id?: string
+          mensagem?: string
+          nivel?: Database["public"]["Enums"]["nivel_profundidade"]
+          objetivo?: string
+          observacoes?: string
+          orientacoes_especiais?: string
+          permite_repetir?: boolean
+          pode_sozinho?: boolean
+          somente_em_sessao?: boolean
+          status?: Database["public"]["Enums"]["atribuicao_status"]
+          terapeuta_id?: string | null
+          trilha_id: string
+          updated_at?: string
+        }
+        Update: {
+          audio_path?: string | null
+          cliente_id?: string
+          created_at?: string
+          data_inicio?: string
+          data_revisao?: string | null
+          exige_acompanhamento?: boolean
+          frequencia?: string
+          id?: string
+          mensagem?: string
+          nivel?: Database["public"]["Enums"]["nivel_profundidade"]
+          objetivo?: string
+          observacoes?: string
+          orientacoes_especiais?: string
+          permite_repetir?: boolean
+          pode_sozinho?: boolean
+          somente_em_sessao?: boolean
+          status?: Database["public"]["Enums"]["atribuicao_status"]
+          terapeuta_id?: string | null
+          trilha_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atribuicoes_trilha_id_fkey"
+            columns: ["trilha_id"]
+            isOneToOne: false
+            referencedRelation: "trilhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auditoria_acessos_negados: {
         Row: {
           acao: string
@@ -92,6 +214,105 @@ export type Database = {
         }
         Relationships: []
       }
+      checkins: {
+        Row: {
+          aprendizado: string
+          atribuicao_id: string | null
+          clareza: number | null
+          cliente_id: string
+          condicoes_continuar: boolean
+          conteudo_id: string | null
+          created_at: string
+          emocao: string
+          id: string
+          intencao: string
+          intensidade: number
+          local_corpo: string
+          momento: Database["public"]["Enums"]["momento_checkin"]
+          precisa_contato: boolean
+          presenca: boolean | null
+        }
+        Insert: {
+          aprendizado?: string
+          atribuicao_id?: string | null
+          clareza?: number | null
+          cliente_id: string
+          condicoes_continuar?: boolean
+          conteudo_id?: string | null
+          created_at?: string
+          emocao?: string
+          id?: string
+          intencao?: string
+          intensidade?: number
+          local_corpo?: string
+          momento: Database["public"]["Enums"]["momento_checkin"]
+          precisa_contato?: boolean
+          presenca?: boolean | null
+        }
+        Update: {
+          aprendizado?: string
+          atribuicao_id?: string | null
+          clareza?: number | null
+          cliente_id?: string
+          condicoes_continuar?: boolean
+          conteudo_id?: string | null
+          created_at?: string
+          emocao?: string
+          id?: string
+          intencao?: string
+          intensidade?: number
+          local_corpo?: string
+          momento?: Database["public"]["Enums"]["momento_checkin"]
+          precisa_contato?: boolean
+          presenca?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkins_atribuicao_id_fkey"
+            columns: ["atribuicao_id"]
+            isOneToOne: false
+            referencedRelation: "atribuicoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkins_conteudo_id_fkey"
+            columns: ["conteudo_id"]
+            isOneToOne: false
+            referencedRelation: "conteudos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clientes_acesso: {
+        Row: {
+          created_at: string
+          observacoes: string
+          status: Database["public"]["Enums"]["acesso_status"]
+          telefone: string
+          terapeuta_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          observacoes?: string
+          status?: Database["public"]["Enums"]["acesso_status"]
+          telefone?: string
+          terapeuta_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          observacoes?: string
+          status?: Database["public"]["Enums"]["acesso_status"]
+          telefone?: string
+          terapeuta_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clientes_pacotes: {
         Row: {
           cliente_id: string
@@ -124,45 +345,123 @@ export type Database = {
           },
         ]
       }
+      configuracoes_terapeuta: {
+        Row: {
+          contatos_emergencia: Json
+          created_at: string
+          prazo_resposta_horas: number
+          terapeuta_id: string
+          updated_at: string
+        }
+        Insert: {
+          contatos_emergencia?: Json
+          created_at?: string
+          prazo_resposta_horas?: number
+          terapeuta_id: string
+          updated_at?: string
+        }
+        Update: {
+          contatos_emergencia?: Json
+          created_at?: string
+          prazo_resposta_horas?: number
+          terapeuta_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      consentimentos: {
+        Row: {
+          aceito_em: string
+          id: string
+          tipo: string
+          user_id: string
+          versao: string
+        }
+        Insert: {
+          aceito_em?: string
+          id?: string
+          tipo: string
+          user_id: string
+          versao?: string
+        }
+        Update: {
+          aceito_em?: string
+          id?: string
+          tipo?: string
+          user_id?: string
+          versao?: string
+        }
+        Relationships: []
+      }
       conteudos: {
         Row: {
           corpo_texto: string | null
           created_at: string
+          criterios_interrupcao: string
           descricao: string
           duracao_segundos: number
           eixo_id: string
           id: string
+          legendas_path: string | null
+          local_recomendado: string
+          materiais: string
+          obrigatoria: boolean
           ordem: number
+          permite_repetir: boolean
+          sensibilidades: string
           storage_path: string | null
           thumbnail_path: string | null
           tipo: Database["public"]["Enums"]["conteudo_tipo"]
+          tipo_etapa: Database["public"]["Enums"]["etapa_tipo"] | null
           titulo: string
+          transcricao: string
+          trilha_id: string | null
         }
         Insert: {
           corpo_texto?: string | null
           created_at?: string
+          criterios_interrupcao?: string
           descricao?: string
           duracao_segundos?: number
           eixo_id: string
           id?: string
+          legendas_path?: string | null
+          local_recomendado?: string
+          materiais?: string
+          obrigatoria?: boolean
           ordem?: number
+          permite_repetir?: boolean
+          sensibilidades?: string
           storage_path?: string | null
           thumbnail_path?: string | null
           tipo?: Database["public"]["Enums"]["conteudo_tipo"]
+          tipo_etapa?: Database["public"]["Enums"]["etapa_tipo"] | null
           titulo: string
+          transcricao?: string
+          trilha_id?: string | null
         }
         Update: {
           corpo_texto?: string | null
           created_at?: string
+          criterios_interrupcao?: string
           descricao?: string
           duracao_segundos?: number
           eixo_id?: string
           id?: string
+          legendas_path?: string | null
+          local_recomendado?: string
+          materiais?: string
+          obrigatoria?: boolean
           ordem?: number
+          permite_repetir?: boolean
+          sensibilidades?: string
           storage_path?: string | null
           thumbnail_path?: string | null
           tipo?: Database["public"]["Enums"]["conteudo_tipo"]
+          tipo_etapa?: Database["public"]["Enums"]["etapa_tipo"] | null
           titulo?: string
+          transcricao?: string
+          trilha_id?: string | null
         }
         Relationships: [
           {
@@ -172,7 +471,56 @@ export type Database = {
             referencedRelation: "eixos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "conteudos_trilha_id_fkey"
+            columns: ["trilha_id"]
+            isOneToOne: false
+            referencedRelation: "trilhas"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      convites_clientes: {
+        Row: {
+          aceito_em: string | null
+          cliente_id: string | null
+          created_at: string
+          email: string
+          expira_em: string
+          id: string
+          nome: string
+          status: string
+          telefone: string
+          terapeuta_id: string | null
+          token: string
+        }
+        Insert: {
+          aceito_em?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          email: string
+          expira_em?: string
+          id?: string
+          nome?: string
+          status?: string
+          telefone?: string
+          terapeuta_id?: string | null
+          token?: string
+        }
+        Update: {
+          aceito_em?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          email?: string
+          expira_em?: string
+          id?: string
+          nome?: string
+          status?: string
+          telefone?: string
+          terapeuta_id?: string | null
+          token?: string
+        }
+        Relationships: []
       }
       convites_equipe: {
         Row: {
@@ -212,27 +560,46 @@ export type Database = {
       }
       diario: {
         Row: {
+          atribuicao_id: string | null
           cliente_id: string
+          compartilhado_em: string | null
+          compartilhamento_revogado_em: string | null
           conteudo_id: string | null
           created_at: string
           id: string
           texto: string
+          visibilidade: Database["public"]["Enums"]["diario_visibilidade"]
         }
         Insert: {
+          atribuicao_id?: string | null
           cliente_id: string
+          compartilhado_em?: string | null
+          compartilhamento_revogado_em?: string | null
           conteudo_id?: string | null
           created_at?: string
           id?: string
           texto: string
+          visibilidade?: Database["public"]["Enums"]["diario_visibilidade"]
         }
         Update: {
+          atribuicao_id?: string | null
           cliente_id?: string
+          compartilhado_em?: string | null
+          compartilhamento_revogado_em?: string | null
           conteudo_id?: string | null
           created_at?: string
           id?: string
           texto?: string
+          visibilidade?: Database["public"]["Enums"]["diario_visibilidade"]
         }
         Relationships: [
+          {
+            foreignKeyName: "diario_atribuicao_id_fkey"
+            columns: ["atribuicao_id"]
+            isOneToOne: false
+            referencedRelation: "atribuicoes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "diario_conteudo_id_fkey"
             columns: ["conteudo_id"]
@@ -598,6 +965,174 @@ export type Database = {
           },
         ]
       }
+      revisoes: {
+        Row: {
+          acoes: string
+          aprendizados: string
+          atribuicao_id: string
+          autonomia: number | null
+          clareza: number | null
+          cliente_id: string
+          created_at: string
+          devolutiva: string
+          estado_atual: string
+          estado_inicial: string
+          id: string
+          precisa_acompanhamento: string
+        }
+        Insert: {
+          acoes?: string
+          aprendizados?: string
+          atribuicao_id: string
+          autonomia?: number | null
+          clareza?: number | null
+          cliente_id: string
+          created_at?: string
+          devolutiva?: string
+          estado_atual?: string
+          estado_inicial?: string
+          id?: string
+          precisa_acompanhamento?: string
+        }
+        Update: {
+          acoes?: string
+          aprendizados?: string
+          atribuicao_id?: string
+          autonomia?: number | null
+          clareza?: number | null
+          cliente_id?: string
+          created_at?: string
+          devolutiva?: string
+          estado_atual?: string
+          estado_inicial?: string
+          id?: string
+          precisa_acompanhamento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revisoes_atribuicao_id_fkey"
+            columns: ["atribuicao_id"]
+            isOneToOne: false
+            referencedRelation: "atribuicoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      solicitacoes_apoio: {
+        Row: {
+          atribuicao_id: string | null
+          cliente_id: string
+          created_at: string
+          id: string
+          intensidade: number | null
+          mensagem: string
+          origem: string
+          respondido_em: string | null
+          respondido_por: string | null
+          resposta: string
+          status: Database["public"]["Enums"]["apoio_status"]
+        }
+        Insert: {
+          atribuicao_id?: string | null
+          cliente_id: string
+          created_at?: string
+          id?: string
+          intensidade?: number | null
+          mensagem?: string
+          origem?: string
+          respondido_em?: string | null
+          respondido_por?: string | null
+          resposta?: string
+          status?: Database["public"]["Enums"]["apoio_status"]
+        }
+        Update: {
+          atribuicao_id?: string | null
+          cliente_id?: string
+          created_at?: string
+          id?: string
+          intensidade?: number | null
+          mensagem?: string
+          origem?: string
+          respondido_em?: string | null
+          respondido_por?: string | null
+          resposta?: string
+          status?: Database["public"]["Enums"]["apoio_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solicitacoes_apoio_atribuicao_id_fkey"
+            columns: ["atribuicao_id"]
+            isOneToOne: false
+            referencedRelation: "atribuicoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trilhas: {
+        Row: {
+          alertas: string
+          autor_id: string | null
+          created_at: string
+          eixo_id: string
+          id: string
+          nivel: Database["public"]["Enums"]["nivel_profundidade"]
+          nome: string
+          objetivo: string
+          ordem: number
+          orientacoes_pausa: string
+          prerequisitos: string
+          resumo: string
+          revisor_id: string | null
+          status: Database["public"]["Enums"]["trilha_status"]
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          alertas?: string
+          autor_id?: string | null
+          created_at?: string
+          eixo_id: string
+          id?: string
+          nivel?: Database["public"]["Enums"]["nivel_profundidade"]
+          nome: string
+          objetivo?: string
+          ordem?: number
+          orientacoes_pausa?: string
+          prerequisitos?: string
+          resumo?: string
+          revisor_id?: string | null
+          status?: Database["public"]["Enums"]["trilha_status"]
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          alertas?: string
+          autor_id?: string | null
+          created_at?: string
+          eixo_id?: string
+          id?: string
+          nivel?: Database["public"]["Enums"]["nivel_profundidade"]
+          nome?: string
+          objetivo?: string
+          ordem?: number
+          orientacoes_pausa?: string
+          prerequisitos?: string
+          resumo?: string
+          revisor_id?: string | null
+          status?: Database["public"]["Enums"]["trilha_status"]
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trilhas_eixo_id_fkey"
+            columns: ["eixo_id"]
+            isOneToOne: false
+            referencedRelation: "eixos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -622,6 +1157,7 @@ export type Database = {
     }
     Functions: {
       aceitar_convite_equipe: { Args: { _token: string }; Returns: string }
+      acompanha_cliente: { Args: { _cliente: string }; Returns: boolean }
       consumir_limite: {
         Args: {
           _acao: string
@@ -644,20 +1180,40 @@ export type Database = {
         Returns: boolean
       }
       is_terapeuta: { Args: never; Returns: boolean }
+      minha_atribuicao: { Args: { _atribuicao: string }; Returns: boolean }
       pode: { Args: { _permissao: string }; Returns: boolean }
       pode_administrar: { Args: never; Returns: boolean }
       tem_permissao: {
         Args: { _permissao: string; _user_id: string }
         Returns: boolean
       }
+      trilha_atribuida: { Args: { _trilha: string }; Returns: boolean }
     }
     Enums: {
+      acesso_status: "ativo" | "pausado" | "encerrado"
+      apoio_status: "aberta" | "em_atendimento" | "respondida" | "encerrada"
       app_role: "terapeuta" | "cliente"
+      atribuicao_status: "ativa" | "pausada" | "concluida" | "encerrada"
       conteudo_tipo: "video" | "audio" | "exercicio" | "texto" | "tarefa"
+      diario_visibilidade: "somente_eu" | "compartilhado"
+      etapa_tipo:
+        | "orientacao"
+        | "preparacao"
+        | "checkin_inicial"
+        | "compreensao"
+        | "aterramento"
+        | "meditacao"
+        | "movimento"
+        | "integracao"
+        | "acao"
+        | "checkout"
       liberacao_status: "bloqueado" | "liberado"
+      momento_checkin: "inicial" | "final"
+      nivel_profundidade: "leve" | "intermediario" | "profundo"
       pagamento_status: "pendente" | "pago" | "cancelado"
       progresso_status: "nao_iniciado" | "em_andamento" | "concluido"
       tipo_cobranca: "pagamento_unico" | "assinatura"
+      trilha_status: "rascunho" | "em_revisao" | "publicado" | "arquivado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -785,12 +1341,31 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      acesso_status: ["ativo", "pausado", "encerrado"],
+      apoio_status: ["aberta", "em_atendimento", "respondida", "encerrada"],
       app_role: ["terapeuta", "cliente"],
+      atribuicao_status: ["ativa", "pausada", "concluida", "encerrada"],
       conteudo_tipo: ["video", "audio", "exercicio", "texto", "tarefa"],
+      diario_visibilidade: ["somente_eu", "compartilhado"],
+      etapa_tipo: [
+        "orientacao",
+        "preparacao",
+        "checkin_inicial",
+        "compreensao",
+        "aterramento",
+        "meditacao",
+        "movimento",
+        "integracao",
+        "acao",
+        "checkout",
+      ],
       liberacao_status: ["bloqueado", "liberado"],
+      momento_checkin: ["inicial", "final"],
+      nivel_profundidade: ["leve", "intermediario", "profundo"],
       pagamento_status: ["pendente", "pago", "cancelado"],
       progresso_status: ["nao_iniciado", "em_andamento", "concluido"],
       tipo_cobranca: ["pagamento_unico", "assinatura"],
+      trilha_status: ["rascunho", "em_revisao", "publicado", "arquivado"],
     },
   },
 } as const
