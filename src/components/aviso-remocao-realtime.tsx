@@ -56,6 +56,7 @@ export function avisoDaMudanca(mudanca?: MudancaSincronia): Aviso | null {
 export function AvisoRemocaoRealtime() {
   const [aviso, setAviso] = useState<Aviso | null>(null);
   const caixaRef = useRef<HTMLDivElement | null>(null);
+  const { devolverFoco } = useFocoOrigem(Boolean(aviso));
 
   useSincronizarLiberacoes((mudanca) => {
     const novo = avisoDaMudanca(mudanca);
@@ -65,8 +66,19 @@ export function AvisoRemocaoRealtime() {
   });
 
   useEffect(() => {
-    if (aviso) caixaRef.current?.focus();
+    if (!aviso) return;
+    caixaRef.current?.focus();
+    rolarParaVista(caixaRef.current, "center");
   }, [aviso]);
+
+  /**
+   * Dispensa o aviso e devolve o foco ao elemento de origem. `manterFoco` é
+   * usado nos atalhos que navegam (o destino manda no foco, não nós).
+   */
+  const dispensar = (manterFoco = false) => {
+    setAviso(null);
+    if (!manterFoco) devolverFoco();
+  };
 
   if (!aviso) return null;
 
@@ -78,6 +90,14 @@ export function AvisoRemocaoRealtime() {
       aria-labelledby="aviso-remocao-titulo"
       aria-describedby="aviso-remocao-orientacao"
       tabIndex={-1}
+      onKeyDown={(evento) => {
+        // Escape dispensa: o aviso é inline, sem armadilha de foco, então Tab
+        // continua fluindo para o resto da página normalmente.
+        if (evento.key === "Escape") {
+          evento.stopPropagation();
+          dispensar();
+        }
+      }}
       className="mx-auto mb-4 max-w-2xl rounded-2xl border border-terracota/40 bg-terracota/10 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
     >
       <div className="flex items-start gap-3">
@@ -93,19 +113,25 @@ export function AvisoRemocaoRealtime() {
           <div className="flex flex-wrap gap-2 pt-1">
             <Link
               to="/app"
-              onClick={() => setAviso(null)}
+              onClick={() => dispensar(true)}
               className="rounded-full bg-floresta px-4 py-2 text-xs font-medium text-floresta-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
             >
               Ver minha biblioteca
             </Link>
             <button
               type="button"
-              onClick={() => setAviso(null)}
+              onClick={() => dispensar()}
               className="rounded-full px-4 py-2 text-xs font-medium text-floresta hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
             >
               Entendi, dispensar aviso
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
         </div>
       </div>
     </div>
