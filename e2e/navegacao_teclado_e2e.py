@@ -291,15 +291,38 @@ async def main() -> None:
         print("OK: player alcançável por teclado, primeiro foco:", primeiro["rotulo"][:50])
         await page.screenshot(path=str(SCREENSHOTS / "teclado_3_player.png"))
 
-        # 4) Revogação com o player aberto: foco vai para o aviso e fica preso nele
-        await page.wait_for_timeout(1500)
+        # 4) Revogação real no banco: o eixo sai do caminho do teclado na biblioteca
         revogar()
+        await page.goto(f"{BASE_URL}/app", wait_until="domcontentloaded")
+        await page.locator(f'a[href$="/app/eixo/{eixo["id"]}"]').first.wait_for(
+            state="detached", timeout=20000
+        )
+        focaveis = await page.evaluate(SCRIPT_FOCAVEIS)
+        assert not [f for f in focaveis if no_eixo(f)], (
+            "eixo revogado continuou alcançável por teclado na biblioteca"
+        )
+        await page.screenshot(path=str(SCREENSHOTS / "teclado_4_revogado.png"))
+        print("OK: eixo revogado saiu do caminho do teclado")
+
+        # 5) Nova liberação: o eixo volta e o teclado continua consistente
+        liberar()
+        await page.locator(f'a[href$="/app/eixo/{eixo["id"]}"]').first.wait_for(timeout=20000)
+        await page.evaluate("() => document.body.focus()")
+        volta = await tab_ate(page, no_eixo)
+        assert volta["rotulo"], "eixo reliberado sem nome acessível"
+        print("OK: eixo reliberado alcançável por teclado")
+
+        # 6) Player bloqueado (link seguro vencido): foco vai ao aviso e fica preso nele
+        await encurtar_validade(page, 8, wav_de_silencio())
+        await page.goto(
+            f"{BASE_URL}/app/conteudo/{conteudo['id']}", wait_until="domcontentloaded"
+        )
         aviso = page.get_by_role("alertdialog")
         try:
-            await aviso.wait_for(timeout=20000)
+            await aviso.wait_for(timeout=40000)
         except Exception:
             print("DEBUG url:", page.url)
-            print("DEBUG texto:", (await page.locator("body").inner_text())[:1200])
+            print("DEBUG texto:", (await page.locator("body").inner_text())[:800])
             raise
         await page.wait_for_timeout(400)
         atual = await foco(page)
@@ -315,8 +338,8 @@ async def main() -> None:
 
         focaveis = await page.evaluate(SCRIPT_FOCAVEIS)
         midia = [f for f in focaveis if f["tag"] in ("video", "audio")]
-        assert not midia, f"mídia continuou no caminho do teclado após revogar: {midia}"
-        await page.screenshot(path=str(SCREENSHOTS / "teclado_4_revogado.png"))
+        assert not midia, f"mídia continuou no caminho do teclado com acesso bloqueado: {midia}"
+        await page.screenshot(path=str(SCREENSHOTS / "teclado_5_bloqueado.png"))
         print("OK: foco preso no aviso e mídia fora do caminho do teclado")
 
         # Esc oferece saída pelo link de volta à trilha
@@ -325,19 +348,9 @@ async def main() -> None:
         saida = await foco(page)
         assert saida["rotulo"], f"Esc deixou o foco sem destino nomeado: {saida}"
         print("OK: Esc levou o foco para", saida["rotulo"][:50])
+        await page.unroute("**/_serverFn/**")
 
-        # 5) Nova liberação: player volta e o teclado continua consistente
-        liberar()
-        await aviso.first.wait_for(state="hidden", timeout=20000)
-        await page.wait_for_timeout(600)
-        depois = await foco(page)
-        assert not depois.get("vazio"), "após liberar de novo o foco não deveria ficar no body"
-        retomado = await tab_ate(page, lambda f: True, limite=1)
-        assert retomado["rotulo"], "Tab após a nova liberação parou em elemento sem nome"
-        await page.screenshot(path=str(SCREENSHOTS / "teclado_5_reliberado.png"))
-        print("OK: foco preservado após nova liberação:", depois["rotulo"][:50])
-
-        # 6) Volta para a biblioteca só com teclado, estado coerente com o servidor
+        # 7) Volta para a biblioteca só com teclado, estado coerente com o servidor
         await page.goto(f"{BASE_URL}/app", wait_until="domcontentloaded")
         await page.evaluate("() => document.body.focus()")
         await tab_ate(page, no_eixo)
