@@ -23,11 +23,20 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const links: { to: string; label: string; exact: boolean; permissao: Permissao }[] = [
   { to: "/admin", label: "Clientes", exact: true, permissao: "ver_clientes" },
+  { to: "/admin/clientes", label: "Atribuições", exact: false, permissao: "ver_clientes" },
+  { to: "/admin/trilhas", label: "Trilhas", exact: false, permissao: "gerenciar_conteudos" },
+  {
+    to: "/admin/acompanhamento",
+    label: "Acompanhamento",
+    exact: false,
+    permissao: "ver_clientes",
+  },
   { to: "/admin/conteudos", label: "Conteúdos", exact: false, permissao: "gerenciar_conteudos" },
   { to: "/admin/pacotes", label: "Pacotes", exact: false, permissao: "gerenciar_pacotes" },
   { to: "/admin/equipe", label: "Equipe", exact: false, permissao: "gerenciar_equipe" },
   { to: "/admin/auditoria", label: "Auditoria", exact: false, permissao: "gerenciar_equipe" },
 ];
+
 
 
 function AdminLayout() {
