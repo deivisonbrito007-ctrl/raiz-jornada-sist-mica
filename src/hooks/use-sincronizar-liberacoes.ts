@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const CANAL_LIBERACOES = "raiz-liberacoes";
 export const CANAL_CONTEUDOS = "raiz-conteudos";
+export const CANAL_EIXOS = "raiz-eixos";
 
 /** chaves de cache que dependem de liberações e do acervo de práticas */
 const CHAVES_DEPENDENTES = ["biblioteca", "trilha", "conteudo", "contexto", "progresso"];
