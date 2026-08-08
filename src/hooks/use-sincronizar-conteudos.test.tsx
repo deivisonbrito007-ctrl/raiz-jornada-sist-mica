@@ -37,7 +37,7 @@ const { useSincronizarLiberacoes } = await import("./use-sincronizar-liberacoes"
 
 let removida = false;
 
-function Tela({ onMudanca }: { onMudanca?: () => void }) {
+function Tela({ onMudanca }: { onMudanca?: (() => void) | undefined }) {
   useSincronizarLiberacoes(onMudanca);
 
   const trilha = useQuery({
