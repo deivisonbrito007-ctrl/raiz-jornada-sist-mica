@@ -104,6 +104,7 @@ const espera = (ms: number) => new Promise((r) => setTimeout(r, ms));
 function abrirDeepLink() {
   cleanup();
   handlers = [];
+  fetchConteudo.mockResolvedValue(revogado());
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const tela = render(
     <QueryClientProvider client={queryClient}>
