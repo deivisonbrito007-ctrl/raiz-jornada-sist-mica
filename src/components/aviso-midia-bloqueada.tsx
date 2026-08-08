@@ -228,7 +228,7 @@ export function AvisoMidiaBloqueada({
               {renovando ? "Renovando..." : cfg.botao}
             </Button>
 
-            {motivo === "revogado" && eixoId && (
+            {(motivo === "revogado" || motivo === "removido") && eixoId && (
               <Link
                 to="/app/eixo/$eixoId"
                 params={{ eixoId }}
