@@ -155,13 +155,17 @@ export function useSincronizarLiberacoes(onMudanca?: () => void) {
       );
 
       // liberações agendadas já existentes: programa a virada de cada uma
-      const { data: agendadas } = await supabase
-        .from("liberacoes")
-        .select("liberar_em")
-        .eq("cliente_id", uid)
-        .not("liberar_em", "is", null);
-      if (!ativo) return;
-      for (const linha of agendadas ?? []) agendarVirada(linha.liberar_em);
+      try {
+        const { data: agendadas } = await supabase
+          .from("liberacoes")
+          .select("liberar_em")
+          .eq("cliente_id", uid)
+          .not("liberar_em", "is", null);
+        if (!ativo) return;
+        for (const linha of agendadas ?? []) agendarVirada(linha.liberar_em);
+      } catch {
+        // sem agendamentos legíveis agora: o Realtime ainda cobre as mudanças
+      }
     }
 
     void assinar();
