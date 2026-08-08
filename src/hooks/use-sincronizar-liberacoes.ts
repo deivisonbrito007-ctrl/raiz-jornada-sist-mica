@@ -117,7 +117,7 @@ export function useSincronizarLiberacoes(onMudanca?: (mudanca?: MudancaSincronia
               // sequências, metas e heatmap também dependem das liberações
               invalidarTudo(queryClient);
               agendarVirada(evento?.new?.liberar_em ?? null);
-              onMudanca?.();
+              onMudanca?.({ tipo: "liberacao" });
             },
           )
           .subscribe(),
@@ -133,10 +133,11 @@ export function useSincronizarLiberacoes(onMudanca?: (mudanca?: MudancaSincronia
               const antigo = evento?.old ?? null;
               if (evento?.eventType === "DELETE" && antigo?.id) {
                 removerPraticaDoCache(queryClient, antigo.id);
-              } else {
-                invalidarTudo(queryClient);
+                onMudanca?.({ tipo: "removido", conteudoId: antigo.id });
+                return;
               }
-              onMudanca?.();
+              invalidarTudo(queryClient);
+              onMudanca?.({ tipo: "liberacao" });
             },
           )
           .subscribe(),
@@ -152,10 +153,11 @@ export function useSincronizarLiberacoes(onMudanca?: (mudanca?: MudancaSincronia
               const antigo = evento?.old ?? null;
               if (evento?.eventType === "DELETE" && antigo?.id) {
                 removerSequenciaDoCache(queryClient, antigo.id);
-              } else {
-                invalidarTudo(queryClient);
+                onMudanca?.({ tipo: "sequencia-removida", eixoId: antigo.id });
+                return;
               }
-              onMudanca?.();
+              invalidarTudo(queryClient);
+              onMudanca?.({ tipo: "liberacao" });
             },
           )
           .subscribe(),
