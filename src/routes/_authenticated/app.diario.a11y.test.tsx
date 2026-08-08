@@ -98,7 +98,7 @@ describe("Diário de reflexão — acessibilidade", () => {
     search.conteudoId = "c-1";
     fetchDiario.mockResolvedValue(entradas);
     const { container } = renderizar();
-    await screen.findByText(/Respiração da raiz/);
+    await screen.findByLabelText(/Depois de/);
     await esperarSemViolacoes(container);
   });
 
