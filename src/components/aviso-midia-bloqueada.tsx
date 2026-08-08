@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { TimerOff, Lock, AlertCircle, Hourglass } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { rolarParaVista } from "@/lib/rolar-para-vista";
 
 export type MotivoBloqueio = "validade" | "revogado" | "removido" | "falha" | "limite";
 
@@ -127,7 +128,7 @@ export function AvisoMidiaBloqueada({
   // até a vista, para quem enxerga acompanhar a mesma mudança.
   useEffect(() => {
     (botaoRef.current ?? caixaRef.current)?.focus();
-    caixaRef.current?.scrollIntoView?.({ block: "center" });
+    rolarParaVista(caixaRef.current, "center");
   }, [motivo, chave]);
 
   // Anúncio imediato (assertivo) do que acabou de acontecer com a prática: só

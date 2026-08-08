@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import { rolarParaVista } from "@/lib/rolar-para-vista";
 
 /**
  * Guarda qual controle do player estava em foco quando o acesso caiu (link
@@ -92,6 +93,9 @@ export function useFocoPlayer(conteudoId: string, opcoes: { bloqueado: boolean; 
     if (!alvo) return;
     jaRestauradoRef.current = true;
     alvo.focus();
+    // o controle pode estar fora da vista (a página mudou de tamanho enquanto o
+    // aviso estava aberto): trazemos ele para a tela junto com o foco
+    rolarParaVista(alvo, "center");
     gravar(conteudoId, null);
   }, [bloqueado, liberado, conteudoId]);
 
