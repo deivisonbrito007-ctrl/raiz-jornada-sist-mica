@@ -177,10 +177,9 @@ describe("ARIA live region — botão de nova tentativa", () => {
     );
   }
 
-  /** Avança o relógio e os intervalos da contagem juntos. */
+  /** Avança o relógio falso (que também move Date.now) e os intervalos. */
   function avancar(ms: number) {
     act(() => {
-      vi.setSystemTime(Date.now() + ms);
       vi.advanceTimersByTime(ms);
     });
   }
