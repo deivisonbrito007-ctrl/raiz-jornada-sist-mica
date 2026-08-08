@@ -25,28 +25,28 @@ afterEach(() => {
 });
 
 describe("rolarParaVista", () => {
-  it("rola o elemento até o centro da tela com animação suave", () => {
+  it("rola até o centro da tela com animação suave", () => {
     movimentoReduzido(false);
     const alvo = criarAlvo();
     rolarParaVista(alvo);
     expect(alvo.scrollIntoView).toHaveBeenCalledWith({ block: "center", behavior: "smooth" });
   });
 
-  it("aceita outro alinhamento (ex.: título no topo)", () => {
+  it("aceita outro alinhamento", () => {
     movimentoReduzido(false);
     const alvo = criarAlvo();
     rolarParaVista(alvo, "start");
     expect(alvo.scrollIntoView).toHaveBeenCalledWith({ block: "start", behavior: "smooth" });
   });
 
-  it("rola sem animação quando a pessoa pede movimento reduzido", () => {
+  it("rola sem animação com movimento reduzido", () => {
     movimentoReduzido(true);
     const alvo = criarAlvo();
     rolarParaVista(alvo);
     expect(alvo.scrollIntoView).toHaveBeenCalledWith({ block: "center", behavior: "auto" });
   });
 
-  it("não quebra quando não há elemento ou suporte a rolagem", () => {
+  it("não quebra sem elemento ou sem suporte a rolagem", () => {
     movimentoReduzido(false);
     expect(() => rolarParaVista(null)).not.toThrow();
     const semSuporte = document.createElement("div");

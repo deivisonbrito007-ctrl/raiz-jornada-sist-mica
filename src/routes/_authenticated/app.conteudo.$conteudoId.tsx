@@ -20,7 +20,6 @@ import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bl
 import { StatusMidiaBadge } from "@/components/status-midia";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 import { useFocoPlayer } from "@/hooks/use-foco-player";
-import { useFocoTrocaConteudo } from "@/hooks/use-foco-troca-conteudo";
 
 
 export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")({
@@ -70,8 +69,6 @@ function Player() {
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   /** link de saída: recebe o foco quando a pessoa pressiona Esc no aviso */
   const voltarRef = useRef<HTMLAnchorElement | null>(null);
-  /** título da prática: recebe o foco quando o cliente troca de conteúdo */
-  const tituloRef = useRef<HTMLHeadingElement | null>(null);
   const posicaoRef = useRef(0);
   /** estava tocando no instante em que o link venceu? */
   const tocandoAntesRef = useRef(false);
@@ -107,14 +104,6 @@ function Player() {
   useFocoPlayer(conteudoId, {
     bloqueado: Boolean(bloqueio),
     liberado: Boolean(data?.url) && !bloqueio,
-  });
-
-  // Troca de prática com o aviso de bloqueio aberto: o foco não pode se perder
-  // no body — ele volta para o título da prática que acabou de abrir.
-  useFocoTrocaConteudo(conteudoId, {
-    avisoAberto: Boolean(bloqueio),
-    tituloRef,
-    pronto: !isLoading && Boolean(data),
   });
 
   // A prática voltou a aparecer na consulta: o acesso foi liberado de novo e o
@@ -453,9 +442,7 @@ function Player() {
           <p className="mt-5 text-[11px] font-medium uppercase tracking-wider text-salvia">
             {conteudo.eixos?.nome} · {TIPO_LABEL[conteudo.tipo] ?? conteudo.tipo}
           </p>
-          <h1 ref={tituloRef} tabIndex={-1} className="mt-1 text-3xl text-floresta outline-none focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2">
-            {conteudo.titulo}
-          </h1>
+          <h1 className="mt-1 text-3xl text-floresta">{conteudo.titulo}</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{conteudo.descricao}</p>
 
           {(ehMidia || bloqueio === "revogado" || bloqueio === "removido") && (
@@ -613,7 +600,6 @@ function Player() {
               emEspera={emEspera}
               esperaAte={esperaAte}
               eixoId={conteudo.eixo_id}
-              chave={conteudoId}
               onRenovar={renovarMidia}
               onSair={() => voltarRef.current?.focus()}
             />
@@ -642,6 +628,7 @@ function Player() {
             <div className="mt-5 flex flex-wrap gap-3">
               <Button
                 onClick={concluir}
+                data-foco-player="concluir"
                 disabled={concluido}
                 className="rounded-full bg-salvia px-6 text-salvia-foreground hover:bg-salvia/90"
               >
@@ -675,7 +662,6 @@ function Player() {
             renovando={renovando}
             emEspera={emEspera}
             esperaAte={esperaAte}
-            chave={conteudoId}
             onRenovar={renovarMidia}
           />
         </>

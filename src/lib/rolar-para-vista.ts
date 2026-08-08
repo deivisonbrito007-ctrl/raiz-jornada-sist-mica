@@ -1,5 +1,5 @@
 /**
- * Rola um elemento até a área visível antes/depois de receber o foco.
+ * Rola um elemento até a área visível ao devolver o foco para ele.
  *
  * O foco por si só não garante visibilidade: quando o player estava bloqueado e
  * o acesso volta, o controle que recupera o foco pode estar fora da vista (a
@@ -23,7 +23,7 @@ export function rolarParaVista(
   try {
     alvo.scrollIntoView({ block: bloco, behavior: suave ? "smooth" : "auto" });
   } catch {
-    /* jsdom e navegadores antigos: assinatura sem opções */
+    /* navegadores antigos: assinatura sem opções */
     alvo.scrollIntoView();
   }
 }

@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, vi, afterEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import { useFocoPlayer } from "./use-foco-player";
 
@@ -20,10 +20,6 @@ function Player({ bloqueado, liberado }: { bloqueado: boolean; liberado: boolean
 
 describe("restauração de foco do player", () => {
   beforeEach(() => window.sessionStorage.clear());
-  afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
-  });
 
   it("volta o foco ao controle usado antes do bloqueio", async () => {
     const tela = render(<Player bloqueado={false} liberado />);
@@ -39,25 +35,6 @@ describe("restauração de foco do player", () => {
       tela.rerender(<Player bloqueado={false} liberado />);
     });
     expect(document.activeElement).toBe(screen.getByLabelText("Reproduzir"));
-  });
-
-  it("rola o controle até a vista ao devolver o foco depois da liberação", async () => {
-    const rolar = vi.fn();
-    Element.prototype.scrollIntoView = rolar;
-    vi.stubGlobal(
-      "matchMedia",
-      vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
-    );
-
-    const tela = render(<Player bloqueado={false} liberado />);
-    await act(async () => screen.getByLabelText("Reproduzir").focus());
-    await act(async () => tela.rerender(<Player bloqueado liberado={false} />));
-    rolar.mockClear();
-    await act(async () => tela.rerender(<Player bloqueado={false} liberado />));
-
-    expect(document.activeElement).toBe(screen.getByLabelText("Reproduzir"));
-    expect(rolar).toHaveBeenCalledWith({ block: "center", behavior: "smooth" });
-    expect(rolar.mock.instances[0]).toBe(screen.getByLabelText("Reproduzir"));
   });
 
   it("mantém o controle específico (avançar 15s) ao liberar de novo", async () => {

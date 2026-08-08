@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { TimerOff, Lock, AlertCircle, Hourglass } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { rolarParaVista } from "@/lib/rolar-para-vista";
 
 export type MotivoBloqueio = "validade" | "revogado" | "removido" | "falha" | "limite";
 
@@ -16,9 +15,6 @@ interface Props {
   onRenovar: () => void;
   /** Esc dentro do aviso: devolve o foco para fora (ex.: link "Voltar à trilha"). */
   onSair?: () => void;
-  /** identidade da prática: muda quando o cliente troca de conteúdo, para o
-   * aviso reposicionar o foco no novo contexto em vez de manter o anterior. */
-  chave?: string;
 }
 
 /** Segundos que faltam para liberar o botão — atualiza a cada segundo. */
@@ -42,7 +38,6 @@ export function AvisoMidiaBloqueada({
   eixoId,
   onRenovar,
   onSair,
-  chave,
 }: Props) {
   const segundos = useContagem(emEspera ? esperaAte : null);
 
@@ -128,8 +123,8 @@ export function AvisoMidiaBloqueada({
   // até a vista, para quem enxerga acompanhar a mesma mudança.
   useEffect(() => {
     (botaoRef.current ?? caixaRef.current)?.focus();
-    rolarParaVista(caixaRef.current, "center");
-  }, [motivo, chave]);
+    caixaRef.current?.scrollIntoView?.({ block: "center" });
+  }, [motivo]);
 
   // Anúncio imediato (assertivo) do que acabou de acontecer com a prática: só
   // dispara na virada de estado, para o leitor de tela interromper a leitura
@@ -146,7 +141,7 @@ export function AvisoMidiaBloqueada({
     };
     contadorRef.current += 1;
     setMudanca({ id: contadorRef.current, texto: anuncios[motivo] });
-  }, [motivo, chave]);
+  }, [motivo]);
 
   /** Tab circula entre os controles do aviso; Esc devolve o foco para fora. */
   const aoTeclar = useCallback(
