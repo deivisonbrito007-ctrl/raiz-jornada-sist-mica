@@ -30,8 +30,27 @@ export function useFocoTrocaConteudo(
   /** o aviso estava aberto (e com o foco dentro) quando a prática mudou? */
   const devolverRef = useRef(false);
 
-  // Enquanto o aviso está aberto, acompanhamos se o foco está dentro dele.
   const focoNoAvisoRef = useRef(false);
+  /** o aviso estava aberto na render anterior? */
+  const avisoAnteriorRef = useRef(avisoAberto);
+
+  // A prática mudou: marcamos que o foco precisa voltar e limpamos o registro
+  // de foco da prática anterior. Roda antes do observador de foco abaixo, para
+  // ainda ver o estado do aviso da prática que acabou de sair da tela.
+  useEffect(() => {
+    const anterior = anteriorRef.current;
+    if (anterior !== conteudoId) {
+      anteriorRef.current = conteudoId;
+      limparFocoPlayer(anterior);
+      if (focoNoAvisoRef.current || avisoAnteriorRef.current || avisoAberto) {
+        devolverRef.current = true;
+        focoNoAvisoRef.current = false;
+      }
+    }
+    avisoAnteriorRef.current = avisoAberto;
+  }, [conteudoId, avisoAberto]);
+
+  // Enquanto o aviso está aberto, acompanhamos se o foco está dentro dele.
   useEffect(() => {
     if (!avisoAberto) {
       focoNoAvisoRef.current = false;
@@ -46,18 +65,6 @@ export function useFocoTrocaConteudo(
     return () => document.removeEventListener("focusin", conferir);
   }, [avisoAberto]);
 
-  // A prática mudou: marcamos que o foco precisa voltar e limpamos o registro
-  // de foco da prática anterior.
-  useEffect(() => {
-    const anterior = anteriorRef.current;
-    if (anterior === conteudoId) return;
-    anteriorRef.current = conteudoId;
-    limparFocoPlayer(anterior);
-    if (focoNoAvisoRef.current || avisoAberto) {
-      devolverRef.current = true;
-      focoNoAvisoRef.current = false;
-    }
-  }, [conteudoId, avisoAberto]);
 
   // A nova prática carregou: o foco vai para o título, uma única vez por troca.
   useEffect(() => {
