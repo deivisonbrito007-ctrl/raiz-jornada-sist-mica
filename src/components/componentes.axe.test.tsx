@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { esperarSemViolacoes } from "@/test/axe";
+import type { ConclusaoDetalhe } from "@/lib/raiz-format";
 
 // Os componentes usam <Link> do roteador; nos testes ele vira uma âncora simples.
 vi.mock("@tanstack/react-router", () => ({
@@ -25,8 +26,7 @@ const { ContinuarDeOndeParei } = await import("./continuar-de-onde-parei");
 const { LembreteRetorno } = await import("./lembrete-retorno");
 const { AvisoPermissao } = await import("./aviso-permissao");
 const { MatrizPermissoes } = await import("./matriz-permissoes");
-const { RegiaoAnuncio } = await import("./regiao-anuncio");
-const { mapaCalorDiario, type ConclusaoDetalhe } = await import("@/lib/raiz-format");
+const { mapaCalorDiario } = await import("@/lib/raiz-format");
 
 const HOJE = new Date("2026-08-06T12:00:00.000Z");
 
@@ -198,8 +198,21 @@ describe("axe-core — componentes do painel do terapeuta", () => {
         <h1>Permissões</h1>
         <MatrizPermissoes
           linhas={[
-            { nome: "Ana", email: "ana@raiz.app", permissoes: ["liberar_conteudo"] },
-            { nome: "Bruno", email: "bruno@raiz.app", permissoes: [] },
+            {
+              id: "u1",
+              nome: "Ana",
+              email: "ana@raiz.app",
+              papel: "terapeuta",
+              permissoes: ["liberar_conteudo"],
+              total: true,
+            },
+            {
+              id: "u2",
+              nome: "Bruno",
+              email: "bruno@raiz.app",
+              papel: "convite",
+              permissoes: [],
+            },
           ]}
         />
       </main>,
