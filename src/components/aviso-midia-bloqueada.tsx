@@ -47,6 +47,7 @@ export function AvisoMidiaBloqueada({
     titulo: string;
     texto: string;
     botao: string;
+    estado: string;
     tom: "ocre" | "terracota" | "muted";
   }> = {
     validade: {
@@ -55,6 +56,7 @@ export function AvisoMidiaBloqueada({
       texto:
         "O link de reprodução desta mídia tem tempo de validade por segurança e acabou de encerrar. Não se preocupe: o ponto onde você parou está guardado e nenhum progresso foi perdido.",
       botao: "Renovar acesso",
+      estado: "Acesso expirado",
       tom: "ocre",
     },
     revogado: {
@@ -63,6 +65,7 @@ export function AvisoMidiaBloqueada({
       texto:
         "O terapeuta recolheu o acesso a esta prática por enquanto. A reprodução fica indisponível e nada novo é registrado até que ela seja liberada novamente. O que você já praticou permanece salvo.",
       botao: "Tentar novamente",
+      estado: "Acesso revogado",
       tom: "terracota",
     },
     falha: {
@@ -71,6 +74,7 @@ export function AvisoMidiaBloqueada({
       texto:
         "Aconteceu uma falha de conexão ao verificar o acesso. Aguarde um instante e tente de novo — o link anterior expirou, mas a prática ainda pode estar liberada.",
       botao: "Tentar novamente",
+      estado: "Falha de conexão",
       tom: "muted",
     },
     limite: {
@@ -79,6 +83,7 @@ export function AvisoMidiaBloqueada({
       texto:
         "Para proteger sua conta, limitamos quantos links seguros podem ser gerados por minuto. Você chegou nesse limite: aguarde alguns segundos e tente de novo. Nada foi perdido — seu progresso e o ponto onde você parou seguem salvos.",
       botao: "Tentar novamente",
+      estado: "Muitos pedidos",
       tom: "ocre",
     },
   };
@@ -99,12 +104,12 @@ export function AvisoMidiaBloqueada({
   const caixaRef = useRef<HTMLDivElement | null>(null);
   const botaoRef = useRef<HTMLButtonElement | null>(null);
 
-  // O aviso é o único caminho possível daqui: o foco vai para ele assim que
-  // aparece, para quem usa teclado ou leitor de tela não continuar em controles
-  // do player que já não funcionam.
+  // O aviso é o único caminho possível daqui: o foco vai para o botão de nova
+  // tentativa assim que aparece — inclusive durante a espera, porque ele
+  // continua focável (aria-disabled) para quem usa teclado ou leitor de tela
+  // acompanhar a contagem e saber quando pode acionar.
   useEffect(() => {
-    const alvo = botaoRef.current?.disabled ? caixaRef.current : botaoRef.current;
-    alvo?.focus();
+    (botaoRef.current ?? caixaRef.current)?.focus();
   }, [motivo]);
 
   /** Tab circula entre os controles do aviso; Esc devolve o foco para fora. */
@@ -136,11 +141,40 @@ export function AvisoMidiaBloqueada({
     [onSair],
   );
 
+  const bloqueado = renovando || emEspera;
+
+  /** Só renova quando o botão está realmente liberado. */
+  const tentarRenovar = useCallback(() => {
+    if (renovando || emEspera) return;
+    onRenovar();
+  }, [emEspera, onRenovar, renovando]);
+
+  /** Enter/Espaço no botão em espera não aciona nada, mas não "trava" o teclado. */
+  const aoTeclarBotao = useCallback(
+    (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      e.preventDefault();
+      tentarRenovar();
+    },
+    [tentarRenovar],
+  );
+
   const situacao = renovando
     ? "Estamos pedindo um novo link seguro ao servidor e conferindo se a prática segue liberada."
     : emEspera
       ? `Aguarde ${segundos > 0 ? `${segundos} segundos` : "um instante"} antes de tentar de novo: o botão fica em espera para evitar pedidos repetidos ao servidor. Ele volta a funcionar sozinho.`
       : `Ao acionar “${cfg.botao}”, pedimos um link seguro novo e verificamos a liberação. Se continuar bloqueada, o botão espera alguns segundos antes de permitir outra tentativa.`;
+
+  // Anúncio curto e sem repetição: o leitor de tela recebe o estado da mídia e
+  // marcos da contagem (10, 5, 3, 2, 1), em vez de uma fala a cada segundo.
+  const marco = emEspera && segundos > 0 && (segundos <= 3 || segundos % 5 === 0);
+  const anuncio = renovando
+    ? `${cfg.estado}. Renovando o acesso.`
+    : emEspera
+      ? marco
+        ? `${cfg.estado}. Botão “${cfg.botao}” em espera: ${segundos} ${segundos === 1 ? "segundo" : "segundos"}.`
+        : `${cfg.estado}. Botão “${cfg.botao}” em espera.`
+      : `${cfg.estado}. Botão “${cfg.botao}” disponível.`;
 
   return (
     <div
@@ -154,6 +188,11 @@ export function AvisoMidiaBloqueada({
       onKeyDown={aoTeclar}
       className={`mt-6 rounded-3xl border p-6 outline-none focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2 ${borda}`}
     >
+      {/* Estado do player e da contagem, para leitores de tela */}
+      <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {anuncio}
+      </p>
+
       <div className="flex items-start gap-3">
         {cfg.icone}
         <div className="flex-1">
@@ -167,10 +206,13 @@ export function AvisoMidiaBloqueada({
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Button
               ref={botaoRef}
-              onClick={onRenovar}
-              disabled={renovando || emEspera}
+              onClick={tentarRenovar}
+              onKeyDown={aoTeclarBotao}
+              aria-disabled={bloqueado}
               aria-describedby={idAjuda}
-              className="rounded-full bg-floresta px-6 text-floresta-foreground hover:bg-floresta/90 focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2"
+              className={`rounded-full bg-floresta px-6 text-floresta-foreground focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2 ${
+                bloqueado ? "cursor-not-allowed opacity-60" : "hover:bg-floresta/90"
+              }`}
             >
               {renovando ? "Renovando..." : cfg.botao}
             </Button>

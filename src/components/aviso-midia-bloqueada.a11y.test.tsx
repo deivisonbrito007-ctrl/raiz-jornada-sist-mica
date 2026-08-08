@@ -34,9 +34,12 @@ describe("acessibilidade do aviso de mídia bloqueada", () => {
     );
   });
 
-  it("foca o próprio diálogo quando o botão está em espera", async () => {
+  it("mantém o botão focável durante a espera, em vez de tirá-lo do teclado", async () => {
     montar({ emEspera: true, esperaAte: Date.now() + 5000 });
-    await waitFor(() => expect(screen.getByRole("alertdialog")).toHaveFocus());
+    const botao = screen.getByRole("button", { name: "Renovar acesso" });
+    await waitFor(() => expect(botao).toHaveFocus());
+    expect(botao).toHaveAttribute("aria-disabled", "true");
+    expect(botao).not.toHaveAttribute("disabled");
   });
 
   it("mantém o Tab circulando entre os controles do aviso", async () => {
