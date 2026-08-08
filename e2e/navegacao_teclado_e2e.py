@@ -198,9 +198,13 @@ async def main() -> None:
         return
 
     eixos = api.get("eixos", {"select": "id,nome", "order": "ordem"})
-    conteudos = api.get("conteudos", {"select": "id,titulo,eixo_id,tipo", "order": "ordem"})
+    conteudos = api.get(
+        "conteudos", {"select": "id,titulo,eixo_id,tipo,storage_path", "order": "ordem"}
+    )
+    # Prefere práticas com mídia real: só nelas o player monta controles de áudio/vídeo.
+    com_midia = [c for c in conteudos if c.get("storage_path")] or conteudos
     alvo = next(
-        ((e, c) for e in eixos for c in conteudos if c["eixo_id"] == e["id"]),
+        ((e, c) for e in eixos for c in com_midia if c["eixo_id"] == e["id"]),
         None,
     )
     if not alvo:
@@ -239,6 +243,8 @@ async def main() -> None:
             {"status": "bloqueado", "liberar_em": None},
         )
 
+    # Zera liberações do eixo para que a revogação do teste seja a única fonte de verdade.
+    api.delete("liberacoes", {"cliente_id": f"eq.{uid}", "eixo_id": f"eq.{eixo['id']}"})
     liberar()
 
     async with async_playwright() as playwright:
@@ -340,6 +346,7 @@ async def main() -> None:
         assert not graves, f"erros de console durante o fluxo: {graves[:3]}"
         await browser.close()
 
+    api.delete("liberacoes", {"cliente_id": f"eq.{uid}", "eixo_id": f"eq.{eixo['id']}"})
     print("E2E de navegação por teclado concluído.")
 
 
