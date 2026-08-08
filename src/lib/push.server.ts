@@ -46,10 +46,13 @@ export async function enviarPush(
         { endpoint: d.endpoint, expirationTime: null, keys: { p256dh: d.p256dh, auth: d.auth } },
         vapid,
       );
+      const headers = Object.fromEntries(
+        Object.entries(payload.headers).filter(([, v]) => typeof v === "string"),
+      ) as Record<string, string>;
       const res = await fetch(d.endpoint, {
         method: payload.method,
-        headers: payload.headers,
-        body: payload.body,
+        headers,
+        body: new Uint8Array(payload.body).slice().buffer as ArrayBuffer,
       });
       if (res.status === 404 || res.status === 410) {
         removidos.push(d.endpoint);
