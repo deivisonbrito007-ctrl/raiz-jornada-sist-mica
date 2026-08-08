@@ -64,7 +64,7 @@ describe("mensagens do aviso de mídia bloqueada", () => {
     expect(
       screen.getByRole("heading", { name: "Não conseguimos renovar agora" }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/falha de conexão/i)).toBeInTheDocument();
+    expect(screen.getByText(/Aconteceu uma falha de conexão/i)).toBeInTheDocument();
     expect(screen.queryByText(/não está mais liberada/i)).toBeNull();
     expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeInTheDocument();
   });
