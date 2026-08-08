@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { formatarData } from "@/lib/raiz-format";
 import {
-  lerPreferenciaAnuncios,
   salvarPreferenciaAnuncios,
   usePreferenciaAnuncios,
   type PreferenciaAnuncios,
@@ -146,9 +145,7 @@ function PreferenciaAnunciosCartao() {
         ))}
       </fieldset>
 
-      <p aria-live="polite" role="status" className="mt-3 text-xs text-salvia">
-        {atual === lerPreferenciaAnuncios() ? "Preferência salva neste dispositivo." : ""}
-      </p>
+      <p className="mt-3 text-xs text-salvia">Preferência salva neste dispositivo.</p>
     </section>
   );
 }
