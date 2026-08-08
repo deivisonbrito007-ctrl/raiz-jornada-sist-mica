@@ -113,7 +113,7 @@ function Player() {
   useEffect(() => {
     if (isLoading || !data) return;
     const semAcesso = !data.conteudo && !(data as { limitado?: boolean }).limitado;
-    if (semAcesso && bloqueioRef.current !== "revogado") {
+    if (semAcesso && bloqueioRef.current !== "revogado" && bloqueioRef.current !== "removido") {
       bloqueioRef.current = "revogado";
       setBloqueio("revogado");
     }
