@@ -117,6 +117,12 @@ function Player() {
     bloqueioRef.current = bloqueio;
   }, [bloqueio]);
 
+  // guarda o eixo enquanto ele é conhecido, para o aviso oferecer o caminho de volta
+  useEffect(() => {
+    if (data?.conteudo?.eixo_id) eixoConhecidoRef.current = data.conteudo.eixo_id;
+  }, [data?.conteudo?.eixo_id]);
+
+
   // A prática voltou a aparecer na consulta: o acesso foi liberado de novo e o
   // aviso de revogação sai sozinho, sem precisar recarregar a página.
   useEffect(() => {
