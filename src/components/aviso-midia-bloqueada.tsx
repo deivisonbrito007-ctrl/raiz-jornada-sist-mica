@@ -225,14 +225,17 @@ export function AvisoMidiaBloqueada({
       className={`mt-6 rounded-3xl border p-6 outline-none focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2 ${borda}`}
     >
       {/* Mudança que acabou de acontecer: anúncio assertivo, uma única vez */}
-      <div role="alert" aria-live="assertive" aria-atomic="true" className="sr-only">
-        {mudanca ? <span key={mudanca.id}>{mudanca.texto}</span> : null}
-      </div>
+      <RegiaoAnuncio
+        texto={mudanca?.texto}
+        chaveAnuncio={mudanca?.id}
+        nivel="importante"
+        assertivo
+        semFallbackVisivel
+      />
 
       {/* Estado do player e da contagem, para leitores de tela */}
-      <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-        {anuncio}
-      </p>
+      <RegiaoAnuncio texto={anuncio} nivel="rotina" />
+
 
       <div className="flex items-start gap-3">
         {cfg.icone}
