@@ -45,7 +45,7 @@ export function useFocoRetorno(
       const ativo = document.activeElement;
       origemRef.current =
         ativo instanceof HTMLElement && ativo !== document.body ? ativo : null;
-      return;
+      return undefined;
     }
 
     // fechou: devolve o foco no próximo ciclo, quando o destino já existe
@@ -60,6 +60,8 @@ export function useFocoRetorno(
       }, 0);
       return () => clearTimeout(id);
     }
+
+    return undefined;
   }, [aberto]);
 
   /** Permite registrar manualmente a origem antes de abrir o alerta. */
