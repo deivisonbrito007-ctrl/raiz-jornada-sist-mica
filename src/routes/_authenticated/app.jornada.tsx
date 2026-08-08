@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/app/jornada")({
       },
     ],
   }),
-  component: MinhaJornada;
+  component: MinhaJornada,
 });
 
 function MinhaJornada() {
