@@ -496,7 +496,8 @@ function Player() {
                           : tocando
                             ? `Reproduzindo, ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`
                             : `Pausado em ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`}
-            </p>
+            />
+
           )}
 
 
