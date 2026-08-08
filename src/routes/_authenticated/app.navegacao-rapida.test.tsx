@@ -97,6 +97,7 @@ const Player = (RotaPlayer as unknown as { component: () => React.ReactElement }
 // ---------------------------------------------------------------- utilitários
 
 const PRATICA = "Respiração da raiz";
+const CARD_LIBERADO = "0/1 concluídos";
 const SEM_ACESSO = "Este eixo será liberado quando for o momento do seu processo.";
 
 const conteudo = {
@@ -235,7 +236,7 @@ beforeEach(() => {
 describe("alternância rápida entre biblioteca, trilha e player com liberação/revogação em sequência", () => {
   it("ida e volta pelas três telas mostra a prática enquanto ela está liberada", async () => {
     navegarPara(Biblioteca);
-    expect(await screen.findByText(PRATICA)).toBeInTheDocument();
+    expect(await screen.findByText(CARD_LIBERADO)).toBeInTheDocument();
 
     navegarPara(Trilha);
     expect(await screen.findByText(PRATICA)).toBeInTheDocument();
@@ -244,12 +245,12 @@ describe("alternância rápida entre biblioteca, trilha e player com liberação
     expect(await screen.findByRole("heading", { name: PRATICA })).toBeInTheDocument();
 
     navegarPara(Biblioteca);
-    expect(await screen.findByText(PRATICA)).toBeInTheDocument();
+    expect(await screen.findByText(CARD_LIBERADO)).toBeInTheDocument();
   });
 
   it("após revogar, voltar do player para a trilha e para a biblioteca não reexibe do cache", async () => {
     navegarPara(Biblioteca);
-    await screen.findByText(PRATICA);
+    await screen.findByText(CARD_LIBERADO);
     navegarPara(Player);
     await screen.findByRole("heading", { name: PRATICA });
 
@@ -291,7 +292,7 @@ describe("alternância rápida entre biblioteca, trilha e player com liberação
     expect(await screen.findByRole("heading", { name: PRATICA })).toBeInTheDocument();
 
     navegarPara(Biblioteca);
-    expect(await screen.findByText(PRATICA)).toBeInTheDocument();
+    expect(await screen.findByText(CARD_LIBERADO)).toBeInTheDocument();
     expect(screen.queryByText(SEM_ACESSO)).not.toBeInTheDocument();
   });
 
