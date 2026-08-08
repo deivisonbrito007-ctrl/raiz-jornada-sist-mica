@@ -131,7 +131,7 @@ export function AvisoMidiaBloqueada({
   useEffect(() => {
     const anuncios: Record<MotivoBloqueio, string> = {
       validade: "O link seguro desta prática expirou. A reprodução foi interrompida.",
-      revogado: "Esta prática não está mais liberada. A reprodução foi interrompida.",
+      revogado: "O terapeuta recolheu o acesso agora. A reprodução foi interrompida.",
       removido: "Esta prática foi removida pelo terapeuta. A reprodução foi interrompida.",
       falha: "Não conseguimos verificar o acesso a esta prática agora.",
       limite: "Muitos pedidos de acesso em pouco tempo. Aguarde para tentar de novo.",
