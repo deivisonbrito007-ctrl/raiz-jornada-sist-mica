@@ -93,7 +93,7 @@ describe("avisos de prática prestes a expirar e removida", () => {
 
     expect(toastCalls.warning).toHaveBeenCalledTimes(1);
     expect(String(toastCalls.warning.mock.calls[0]?.[0])).toMatch(/expira em cerca de/i);
-    expect(screen.getByText(/prestes a expirar/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/prestes a expirar/i)[0]).toBeInTheDocument();
     // ainda liberada: os CTAs seguem na tela
     expect(screen.getByRole("button", { name: /Marcar como concluída/i })).toBeInTheDocument();
   });
@@ -113,7 +113,7 @@ describe("avisos de prática prestes a expirar e removida", () => {
     expect(String(toastCalls.error.mock.calls.at(-1)?.[0])).toMatch(/link seguro desta prática expirou/i);
     expect(screen.queryByRole("button", { name: /Marcar como concluída/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /Ir ao diário/i })).toBeNull();
-    expect(screen.queryByText(/prestes a expirar/i)).toBeNull();
+    expect(screen.queryAllByText(/prestes a expirar/i)).toHaveLength(0);
     expect(document.querySelector("audio")).toBeNull();
   });
 
