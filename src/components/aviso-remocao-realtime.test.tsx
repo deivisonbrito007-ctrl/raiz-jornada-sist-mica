@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -61,7 +61,9 @@ function montar() {
 
 async function emitir(tabela: string, evento: any) {
   await waitFor(() => expect(handlersPorTabela[tabela]?.length).toBeTruthy());
-  for (const h of handlersPorTabela[tabela]!) h(evento);
+  await act(async () => {
+    for (const h of handlersPorTabela[tabela]!) h(evento);
+  });
 }
 
 beforeEach(() => {
