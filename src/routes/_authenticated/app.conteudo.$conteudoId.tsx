@@ -458,11 +458,11 @@ function Player() {
           <h1 className="mt-1 text-3xl text-floresta">{conteudo.titulo}</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{conteudo.descricao}</p>
 
-          {(ehMidia || bloqueio === "revogado") && (
+          {(ehMidia || bloqueio === "revogado" || bloqueio === "removido") && (
             <div>
               <StatusMidiaBadge
                 status={
-                  bloqueio === "revogado"
+                  bloqueio === "revogado" || bloqueio === "removido"
                     ? "revogada"
                     : bloqueio === "limite"
                       ? "limitada"
@@ -475,25 +475,51 @@ function Player() {
             </div>
           )}
 
-          {(ehMidia || bloqueio === "revogado") && (
+          {(ehMidia || bloqueio === "revogado" || bloqueio === "removido") && (
             <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-              {bloqueio === "revogado"
-                ? "Player indisponível: esta prática não está mais liberada."
-                : bloqueio === "limite"
-                  ? "Player pausado: muitos pedidos de link em pouco tempo. Aguarde para renovar o acesso."
-                  : bloqueio
-                    ? `Player pausado: o link seguro expirou em ${formatarDuracao(Math.floor(tempo))}. Renove o acesso para continuar.`
-                    : renovando
-                      ? "Renovando o acesso à mídia."
-                      : terminou
-                        ? "Prática concluída até o fim."
-                        : tocando
-                          ? `Reproduzindo, ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`
-                          : `Pausado em ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`}
+              {bloqueio === "removido"
+                ? "Player indisponível: esta prática foi removida pelo terapeuta."
+                : bloqueio === "revogado"
+                  ? "Player indisponível: esta prática não está mais liberada."
+                  : bloqueio === "limite"
+                    ? "Player pausado: muitos pedidos de link em pouco tempo. Aguarde para renovar o acesso."
+                    : bloqueio
+                      ? `Player pausado: o link seguro expirou em ${formatarDuracao(Math.floor(tempo))}. Renove o acesso para continuar.`
+                      : renovando
+                        ? "Renovando o acesso à mídia."
+                        : prestesAExpirar
+                          ? "Atenção: o link seguro desta prática está prestes a expirar. Renove o acesso para não interromper."
+                          : terminou
+                            ? "Prática concluída até o fim."
+                            : tocando
+                              ? `Reproduzindo, ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`
+                              : `Pausado em ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`}
             </p>
           )}
 
+          {/* Aviso prévio: dá tempo de renovar antes de a mídia ser interrompida */}
+          {ehMidia && prestesAExpirar && !bloqueio && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-ocre/30 bg-ocre/10 p-4"
+            >
+              <p className="text-sm text-floresta">
+                O link seguro desta prática está prestes a expirar. Renove agora para continuar sem
+                interrupção.
+              </p>
+              <Button
+                onClick={renovarMidia}
+                disabled={renovando || emEspera}
+                className="rounded-full bg-floresta px-5 text-floresta-foreground hover:bg-floresta/90"
+              >
+                {renovando ? "Renovando..." : "Renovar acesso"}
+              </Button>
+            </div>
+          )}
+
           {ehMidia && data?.url && !bloqueio && (
+
 
             <div className="mt-6 overflow-hidden rounded-3xl bg-floresta p-4">
               {conteudo.tipo === "video" ? (
