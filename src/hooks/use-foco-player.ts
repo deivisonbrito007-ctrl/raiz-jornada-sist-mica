@@ -34,6 +34,11 @@ function gravar(conteudoId: string, controle: ControlePlayer | null) {
   }
 }
 
+/** Descarta o ponto de foco guardado de uma prática (ex.: troca de conteúdo). */
+export function limparFocoPlayer(conteudoId: string) {
+  gravar(conteudoId, null);
+}
+
 /** Nome do controle do player em foco agora, se houver. */
 export function controleEmFoco(): ControlePlayer | null {
   const ativo = document.activeElement as HTMLElement | null;
