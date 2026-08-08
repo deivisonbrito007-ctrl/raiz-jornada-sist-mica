@@ -154,35 +154,3 @@ export const Route = createFileRoute("/api/public/hooks/lembretes")({
   },
 });
 
-/**
- * Envia o lembrete por e-mail quando os templates do projeto já existem.
- * Enquanto o domínio de envio não estiver configurado, apenas ignora.
- */
-async function enviarEmailLembrete(
-  email: string,
-  lembrete: { titulo: string; mensagem: string; destino: string; tipo: string; chaveDedupe: string },
-): Promise<boolean> {
-  try {
-    const mod = (await import(
-      /* @vite-ignore */ "@/lib/email-templates/send-email"
-    )) as unknown as {
-      sendTemplateEmail: (
-        nome: string,
-        para: string,
-        opts: { templateData: Record<string, unknown>; idempotencyKey: string },
-      ) => Promise<{ sent: boolean }>;
-    };
-    const r = await mod.sendTemplateEmail("lembrete-pratica", email, {
-      templateData: {
-        titulo: lembrete.titulo,
-        mensagem: lembrete.mensagem,
-        destino: lembrete.destino,
-      },
-      idempotencyKey: lembrete.chaveDedupe,
-    });
-    return r.sent;
-  } catch {
-    // Templates/domínio de e-mail ainda não configurados: push e app já cobrem o lembrete.
-    return false;
-  }
-}
