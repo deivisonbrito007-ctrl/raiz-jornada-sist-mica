@@ -176,7 +176,8 @@ async function prontoParaEventos() {
 }
 
 function evento() {
-  handlers.forEach((h) => h());
+  // apenas o canal de liberações (o primeiro assinado)
+  handlers[0]!();
 }
 
 beforeEach(() => {
