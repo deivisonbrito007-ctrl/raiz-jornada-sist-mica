@@ -189,7 +189,13 @@ describe("foco ao abrir o aviso do player", () => {
     await waitFor(() => expect(document.activeElement).toBe(botao));
 
     await userEvent.tab();
-    console.log("APOS TAB:", (document.activeElement as HTMLElement)?.outerHTML?.slice(0, 80));
+    console.log(
+      "FOCAVEIS:",
+      Array.from(
+        screen.getByRole("alertdialog").querySelectorAll("a[href], button:not([disabled])"),
+      ).map((el) => el.textContent),
+      "ATIVO:", document.activeElement?.textContent,
+    );
     expect(caixaContem()).toBe(true);
     voltar.focus();
     // no último controle, o Tab volta ao primeiro: o foco não escapa do aviso
