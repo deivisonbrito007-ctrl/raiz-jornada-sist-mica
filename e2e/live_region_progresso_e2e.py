@@ -20,6 +20,8 @@ import os
 import re
 from pathlib import Path
 
+import requests
+
 from playwright.async_api import async_playwright
 
 BASE_URL = os.environ.get("E2E_BASE_URL", "http://localhost:8080")
@@ -27,6 +29,51 @@ SCREENSHOTS = Path(__file__).parent / "screenshots"
 SCREENSHOTS.mkdir(parents=True, exist_ok=True)
 
 LIVE = "[data-testid='anuncio-live']"
+
+
+def env_from_dotenv(name: str) -> str:
+    if os.environ.get(name):
+        return os.environ[name]
+    env_path = Path(__file__).resolve().parent.parent / ".env"
+    for line in env_path.read_text().splitlines():
+        if line.startswith(f"{name}="):
+            return line.split("=", 1)[1].strip().strip('"')
+    raise RuntimeError(f"{name} não encontrado")
+
+
+def liberar_uma_pratica_para_concluir(session: dict) -> str | None:
+    """Reabre uma prática já concluída para o fluxo poder concluí-la de novo.
+
+    A alteração é feita como o próprio cliente (RLS aplicada) e o próprio teste
+    recoloca a prática em "concluído" ao clicar em Marcar como concluída.
+    """
+    url = env_from_dotenv("VITE_SUPABASE_URL")
+    key = env_from_dotenv("VITE_SUPABASE_PUBLISHABLE_KEY")
+    cabecalhos = {
+        "apikey": key,
+        "Authorization": f"Bearer {session['access_token']}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
+    }
+    resp = requests.get(
+        f"{url}/rest/v1/progresso",
+        params={"select": "id,conteudo_id,status", "status": "eq.concluido", "limit": "1"},
+        headers=cabecalhos,
+        timeout=30,
+    )
+    resp.raise_for_status()
+    linhas = resp.json()
+    if not linhas:
+        return None
+    patch = requests.patch(
+        f"{url}/rest/v1/progresso",
+        params={"id": f"eq.{linhas[0]['id']}"},
+        headers=cabecalhos,
+        json={"status": "em_andamento", "concluido_em": None},
+        timeout=30,
+    )
+    patch.raise_for_status()
+    return linhas[0]["conteudo_id"]
 
 
 async def texto_live(page) -> str:
@@ -50,6 +97,9 @@ async def main() -> None:
     session = json.loads(os.environ["LOVABLE_BROWSER_SUPABASE_SESSION_JSON"])
     storage_key = os.environ["LOVABLE_BROWSER_SUPABASE_STORAGE_KEY"]
     cookies_json = os.environ.get("LOVABLE_BROWSER_SUPABASE_COOKIES_JSON")
+
+    conteudo_reaberto = liberar_uma_pratica_para_concluir(session)
+    print("prática reaberta para concluir no fluxo:", conteudo_reaberto)
 
     falhas: list[str] = []
 
@@ -116,9 +166,12 @@ async def main() -> None:
         await page.screenshot(path=str(SCREENSHOTS / "live_2_meta.png"))
 
         # ---------- 3. navegar e voltar não repete o mesmo anúncio ----------
-        await page.get_by_role("link", name=re.compile("Biblioteca|Início", re.I)).first.click()
+        # navegação client-side (sem recarregar), como a pessoa faz pelas abas
+        await page.get_by_role("link", name="Início").first.click()
+        await page.wait_for_url(re.compile(r"/app$"), timeout=20000)
         await page.wait_for_timeout(800)
-        await page.goto(f"{BASE_URL}/app/progresso", wait_until="domcontentloaded")
+        await page.get_by_role("link", name="Progresso").first.click()
+        await page.wait_for_url(re.compile(r"/app/progresso"), timeout=20000)
         await page.get_by_role("heading", name="Seu caminho").wait_for(timeout=30000)
         await page.wait_for_timeout(2500)
         revisita = await texto_live(page)
@@ -127,13 +180,15 @@ async def main() -> None:
             falhas.append(f"anúncio repetido ao voltar para progresso: {revisita!r}")
 
         # ---------- 4. concluir uma prática anuncia a conclusão ----------
-        await page.goto(f"{BASE_URL}/app", wait_until="domcontentloaded")
+        await page.get_by_role("link", name="Início").first.click()
+        await page.wait_for_url(re.compile(r"/app$"), timeout=20000)
         await page.wait_for_timeout(1500)
-        pendentes = page.get_by_role("link", name=re.compile("Continuar|Começar|Abrir", re.I))
         alvo = None
-        if await pendentes.count() > 0:
-            alvo = pendentes.first
-        else:
+        if conteudo_reaberto:
+            especifico = page.locator(f"a[href*='/app/conteudo/{conteudo_reaberto}']")
+            if await especifico.count() > 0:
+                alvo = especifico.first
+        if alvo is None:
             praticas = page.locator("a[href*='/app/conteudo/']")
             if await praticas.count() > 0:
                 alvo = praticas.first
@@ -162,9 +217,11 @@ async def main() -> None:
                 await page.screenshot(path=str(SCREENSHOTS / "live_4_concluida.png"))
 
                 # ---------- 5. voltar ao player não repete a conclusão ----------
-                await page.goto(f"{BASE_URL}/app", wait_until="domcontentloaded")
+                await page.get_by_role("link", name="Início").first.click()
+                await page.wait_for_url(re.compile(r"/app$"), timeout=20000)
                 await page.wait_for_timeout(800)
-                await page.goto(url_player, wait_until="domcontentloaded")
+                await page.locator(f"a[href*='{url_player.split('/app')[-1].split('?')[0]}']").first.click()
+                await page.wait_for_url(re.compile(r"/app/conteudo/"), timeout=20000)
                 await page.wait_for_timeout(2500)
                 repetido = await texto_live(page)
                 print("5) live region ao reabrir o player (esperado vazio):", repr(repetido))
@@ -172,7 +229,8 @@ async def main() -> None:
                     falhas.append(f"anúncio de conclusão repetido ao reabrir o player: {repetido!r}")
 
                 # ---------- 6. progresso anuncia os números atualizados ----------
-                await page.goto(f"{BASE_URL}/app/progresso", wait_until="domcontentloaded")
+                await page.get_by_role("link", name="Progresso").first.click()
+                await page.wait_for_url(re.compile(r"/app/progresso"), timeout=20000)
                 await page.get_by_role("heading", name="Seu caminho").wait_for(timeout=30000)
                 atualizado = await esperar_live(page, padrao_meta)
                 print("6) live region no progresso após concluir:", repr(atualizado))
