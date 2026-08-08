@@ -84,9 +84,9 @@ function Progresso() {
   useEffect(() => {
     if (isLoading) return;
     anunciar(
-      `Progresso atualizado: ${meta.concluidas} de ${meta.meta} práticas nesta semana. Sequência atual de ${streak} ${streak === 1 ? "dia" : "dias"}.`,
+      `Progresso atualizado: ${meta.concluidasSemana} de ${meta.meta} práticas nesta semana. Sequência atual de ${streak} ${streak === 1 ? "dia" : "dias"}.`,
     );
-  }, [meta.concluidas, meta.meta, streak, isLoading, anunciar]);
+  }, [meta.concluidasSemana, meta.meta, streak, isLoading, anunciar]);
 
   const baixarRelatorio = async () => {
     setGerando(true);
