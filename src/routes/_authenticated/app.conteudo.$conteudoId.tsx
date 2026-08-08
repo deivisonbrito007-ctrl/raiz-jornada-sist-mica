@@ -196,17 +196,23 @@ function Player() {
   const conteudo = data?.conteudo;
   const ehMidia = conteudo?.tipo === "video" || conteudo?.tipo === "audio";
 
-  function expirarMidia() {
+  /** Para a mídia guardando onde a pessoa estava — usado quando o acesso cai. */
+  function pararMidia() {
     const el = mediaRef.current;
     if (el) {
-      // guarda onde a pessoa parou e se estava tocando, para retomar igual depois
       posicaoRef.current = el.currentTime || posicaoRef.current;
       tocandoAntesRef.current = !el.paused;
       el.pause();
     }
     setTocando(false);
-    setBloqueio("validade");
   }
+
+  function expirarMidia() {
+    pararMidia();
+    setBloqueio("validade");
+    toast.error("O link seguro desta prática expirou. Renove o acesso para continuar.");
+  }
+
 
 
   /** Ao carregar a nova mídia, volta ao ponto salvo e retoma se estava tocando. */
