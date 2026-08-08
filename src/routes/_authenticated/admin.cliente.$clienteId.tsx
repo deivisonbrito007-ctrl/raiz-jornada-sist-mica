@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/select";
 import { formatarData, PAGAMENTO_LABEL, TIPO_LABEL } from "@/lib/raiz-format";
 import { useState } from "react";
+import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
+import { ControlePermitido, SecaoSemPermissao, SePode } from "@/components/permissao-ui";
 
 export const Route = createFileRoute("/_authenticated/admin/cliente/$clienteId")({
   component: AdminCliente,
@@ -36,9 +38,16 @@ function AdminCliente() {
   const atualizarPagamento = useServerFn(adminAtualizarPagamento);
   const [pacoteSelecionado, setPacoteSelecionado] = useState("");
 
+  const { pode, carregando } = useMinhasPermissoes();
+  const podeVer = pode("ver_clientes");
+  const podeLiberar = pode("gerenciar_liberacoes");
+  const podePacotes = pode("gerenciar_pacotes");
+  const podeDiario = pode("ver_diario");
+
   const { data, isLoading } = useQuery({
     queryKey: ["admin-cliente", clienteId],
     queryFn: () => fetchCliente({ data: { clienteId } }),
+    enabled: podeVer,
   });
 
   function recarregar() {
@@ -103,6 +112,20 @@ function AdminCliente() {
 
   const vinculo = (data?.vinculos ?? [])[0];
 
+  if (!carregando && !podeVer) {
+    return (
+      <div>
+        <Link
+          to="/admin"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-floresta"
+        >
+          <ArrowLeft className="h-4 w-4" /> Clientes
+        </Link>
+        <SecaoSemPermissao permissao="ver_clientes" className="mt-6" titulo="Cliente restrito" />
+      </div>
+    );
+  }
+
   return (
     <div>
       <Link
@@ -129,6 +152,7 @@ function AdminCliente() {
                   {(data.pacotes ?? []).find((p) => p.id === vinculo.pacote_id)?.nome ?? "Pacote"}
                 </p>
                 <Select
+                  disabled={!podePacotes}
                   value={vinculo.status_pagamento}
                   onValueChange={async (valor) => {
                     await atualizarPagamento({
@@ -154,7 +178,11 @@ function AdminCliente() {
               </div>
             ) : (
               <div className="mt-4 flex flex-wrap items-center gap-3">
-                <Select value={pacoteSelecionado} onValueChange={setPacoteSelecionado}>
+                <Select
+                  disabled={!podePacotes}
+                  value={pacoteSelecionado}
+                  onValueChange={setPacoteSelecionado}
+                >
                   <SelectTrigger className="w-64 rounded-full">
                     <SelectValue placeholder="Escolher pacote" />
                   </SelectTrigger>
@@ -167,7 +195,8 @@ function AdminCliente() {
                   </SelectContent>
                 </Select>
                 <Button
-                  disabled={!pacoteSelecionado}
+                  disabled={!pacoteSelecionado || !podePacotes}
+                  title={podePacotes ? undefined : "Você não tem permissão para gerenciar pacotes."}
                   onClick={async () => {
                     await vincularPacote({ data: { clienteId, pacoteId: pacoteSelecionado } });
                     setPacoteSelecionado("");
@@ -212,19 +241,24 @@ function AdminCliente() {
                       <div className="flex flex-col items-end gap-2">
                         <label className="flex items-center gap-2 text-xs text-salvia">
                           Eixo completo
-                          <Switch
-                            checked={marcado(eixo.id, null)}
-                            onCheckedChange={(v) =>
-                              alternar({ eixoId: eixo.id, titulo: eixo.nome }, v)
+                          <ControlePermitido permissao="gerenciar_liberacoes">
+                            <Switch
+                              checked={marcado(eixo.id, null)}
+                              aria-label={`Liberar eixo ${eixo.nome}`}
+                              onCheckedChange={(v) =>
+                                alternar({ eixoId: eixo.id, titulo: eixo.nome }, v)
+                              }
+                            />
+                          </ControlePermitido>
+                        </label>
+                        {podeLiberar && (
+                          <Agendador
+                            agendadoPara={agendamento(eixo.id, null)}
+                            onAgendar={(quando) =>
+                              alternar({ eixoId: eixo.id, titulo: eixo.nome }, true, quando)
                             }
                           />
-                        </label>
-                        <Agendador
-                          agendadoPara={agendamento(eixo.id, null)}
-                          onAgendar={(quando) =>
-                            alternar({ eixoId: eixo.id, titulo: eixo.nome }, true, quando)
-                          }
-                        />
+                        )}
                       </div>
                     </div>
 
@@ -248,14 +282,17 @@ function AdminCliente() {
                             </p>
                           </div>
                           <div className="flex flex-col items-end gap-2">
-                            <Switch
-                              checked={marcado(null, conteudo.id) || marcado(eixo.id, null)}
-                              disabled={marcado(eixo.id, null)}
-                              onCheckedChange={(v) =>
-                                alternar({ conteudoId: conteudo.id, titulo: conteudo.titulo }, v)
-                              }
-                            />
-                            {!marcado(eixo.id, null) && (
+                            <ControlePermitido permissao="gerenciar_liberacoes">
+                              <Switch
+                                checked={marcado(null, conteudo.id) || marcado(eixo.id, null)}
+                                disabled={marcado(eixo.id, null)}
+                                aria-label={`Liberar ${conteudo.titulo}`}
+                                onCheckedChange={(v) =>
+                                  alternar({ conteudoId: conteudo.id, titulo: conteudo.titulo }, v)
+                                }
+                              />
+                            </ControlePermitido>
+                            {podeLiberar && !marcado(eixo.id, null) && (
                               <Agendador
                                 agendadoPara={agendamento(null, conteudo.id)}
                                 onAgendar={(quando) =>
@@ -284,7 +321,8 @@ function AdminCliente() {
 
           <section className="mt-8">
             <h2 className="text-xl text-floresta">Diário da cliente</h2>
-            <div className="mt-4 space-y-3">
+            {!podeDiario && <SecaoSemPermissao permissao="ver_diario" className="mt-4" titulo="Diário restrito" />}
+            <div className={`mt-4 space-y-3 ${podeDiario ? "" : "hidden"}`}>
               {data.diario.length === 0 && (
                 <p className="rounded-3xl border border-dashed border-border p-6 text-sm text-muted-foreground">
                   Nenhuma reflexão registrada ainda.
