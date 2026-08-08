@@ -682,35 +682,30 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
       if (error) throw erroSeguro(error);
     }
 
-    const agendadoParaFuturo = Boolean(data.liberarEm && new Date(data.liberarEm) > new Date());
+    const plano = planejarLiberacao({
+      statusAtual: (existente.data?.status as "liberado" | "bloqueado" | undefined) ?? null,
+      liberarEm: data.liberarEm ?? null,
+      titulo: data.titulo ?? null,
+    });
+
     await registrarAuditoria(supabase, atorAuditoria(context), {
-      acao: agendadoParaFuturo
-        ? "liberacao_agendada"
-        : ehRenovacao
-          ? "liberacao_renovada"
-          : "conteudo_liberado",
+      acao: plano.acao,
       ...alvoAuditoria,
       detalhes: {
         ...alvoAuditoria.detalhes,
         agendadoPara: data.liberarEm ?? "",
-        renovacao: ehRenovacao,
+        renovacao: plano.renovacao,
       },
     });
-    if (agendadoParaFuturo) return { ok: true, agendado: true };
+    if (!plano.notificacao) return { ok: true, agendado: true, renovada: plano.renovacao };
 
     await supabase.from("notificacoes").insert({
       cliente_id: data.clienteId,
-      titulo: ehRenovacao ? "Acesso renovado" : "Novo conteúdo liberado",
-      mensagem: ehRenovacao
-        ? data.titulo
-          ? `"${data.titulo}" está liberada novamente: você pode retomar de onde parou.`
-          : "Seu acesso foi renovado: você pode retomar de onde parou."
-        : data.titulo
-          ? `"${data.titulo}" já está disponível na sua biblioteca.`
-          : "Há algo novo esperando por você na sua biblioteca.",
+      titulo: plano.notificacao.titulo,
+      mensagem: plano.notificacao.mensagem,
     });
 
-    return { ok: true, renovada: ehRenovacao };
+    return { ok: true, renovada: plano.renovacao };
   });
 
 export const adminSalvarConteudo = createServerFn({ method: "POST" })
