@@ -599,29 +599,36 @@ function Player() {
                 aria-label="Controles de reprodução"
               >
                 <button
+                  type="button"
                   onClick={() => pular(-15)}
-                  className="rounded-full text-palco-foreground/80 hover:text-palco-realce focus-visible:ring-2 focus-visible:ring-palco-realce focus-visible:ring-offset-2"
+                  className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-palco-foreground/80 hover:text-palco-realce focus-visible:ring-2 focus-visible:ring-palco-realce focus-visible:ring-offset-2"
                   aria-label="Voltar 15 segundos"
                   data-foco-player="voltar15"
                 >
-                  <RotateCcw className="h-6 w-6" />
+                  <RotateCcw className="h-6 w-6" aria-hidden="true" />
                 </button>
                 <button
+                  type="button"
                   onClick={alternar}
-                  className="rounded-full bg-terracota p-4 text-terracota-foreground focus-visible:ring-2 focus-visible:ring-palco-realce focus-visible:ring-offset-2"
+                  className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-terracota p-4 text-terracota-foreground focus-visible:ring-2 focus-visible:ring-palco-realce focus-visible:ring-offset-2"
                   aria-label={tocando ? "Pausar" : "Reproduzir"}
                   data-foco-player="play"
                   aria-pressed={tocando}
                 >
-                  {tocando ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7" />}
+                  {tocando ? (
+                    <Pause className="h-7 w-7" aria-hidden="true" />
+                  ) : (
+                    <Play className="h-7 w-7" aria-hidden="true" />
+                  )}
                 </button>
                 <button
+                  type="button"
                   onClick={() => pular(15)}
-                  className="rounded-full text-palco-foreground/80 hover:text-palco-realce focus-visible:ring-2 focus-visible:ring-palco-realce focus-visible:ring-offset-2"
+                  className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-palco-foreground/80 hover:text-palco-realce focus-visible:ring-2 focus-visible:ring-palco-realce focus-visible:ring-offset-2"
                   aria-label="Avançar 15 segundos"
                   data-foco-player="avancar15"
                 >
-                  <RotateCw className="h-6 w-6" />
+                  <RotateCw className="h-6 w-6" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -641,10 +648,13 @@ function Player() {
           )}
 
           {ehMidia && !data?.url && !bloqueio && (
-            <p className="mt-6 rounded-3xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-              A mídia desta prática ainda não foi enviada.
-            </p>
+            <AvisoSemMidia
+              eixoId={conteudo.eixo_id}
+              carregando={isFetching}
+              onVerificar={() => void refetch()}
+            />
           )}
+
 
 
           {!ehMidia && bloqueio !== "revogado" && (
