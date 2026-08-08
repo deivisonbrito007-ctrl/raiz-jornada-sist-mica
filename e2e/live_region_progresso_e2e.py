@@ -204,6 +204,10 @@ async def main() -> None:
                 url_player = page.url
                 await botao.first.click()
                 anuncio = await esperar_live(page, re.compile("Prática concluída:", re.I))
+                print("   avisos na tela:", " | ".join(
+                    " ".join(t.split()) for t in await page.locator("[data-sonner-toast]").all_inner_texts()
+                ))
+                print("   live regions:", await page.locator(LIVE).all_inner_texts())
                 print("4) live region após concluir:", repr(anuncio))
                 if "Prática concluída:" not in anuncio:
                     falhas.append(f"conclusão não anunciada na live region: {anuncio!r}")
