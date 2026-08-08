@@ -6,7 +6,6 @@
 
 Prompt para o Lovable — App "Raiz" (acompanhamento terapêutico sistêmico)
 
-Prompt para o Lovable — App "Raiz" (acompanhamento terapêutico sistêmico)
 
 Cole este texto direto no chat do Lovable para iniciar o projeto. Ele já descreve propósito, telas, modelo de dados, regras de acesso e direção visual. Depois da primeira geração, você pode ir refinando tela por tela com novos prompts.
 
