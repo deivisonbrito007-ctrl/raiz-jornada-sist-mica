@@ -68,6 +68,15 @@ export function AvisoMidiaBloqueada({
       estado: "Acesso revogado",
       tom: "terracota",
     },
+    removido: {
+      icone: <Lock className="mt-0.5 h-5 w-5 shrink-0 text-terracota" aria-hidden="true" />,
+      titulo: "Esta prática foi removida",
+      texto:
+        "O terapeuta retirou esta prática do acervo, então ela não pode mais ser reproduzida. Suas anotações no diário e o histórico do que você já praticou continuam salvos.",
+      botao: "Tentar novamente",
+      estado: "Prática removida",
+      tom: "terracota",
+    },
     falha: {
       icone: <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />,
       titulo: "Não conseguimos renovar agora",
