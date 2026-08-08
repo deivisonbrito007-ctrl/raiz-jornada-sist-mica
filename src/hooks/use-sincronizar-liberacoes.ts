@@ -64,9 +64,16 @@ const TETO_TIMEOUT = 2_147_483_647;
  *   - `eixos`: uma sequência inteira é removida ou renomeada.
  *
  * O `onMudanca` permite que o player reaja no mesmo instante (parar a mídia,
- * mostrar o aviso de bloqueio etc.).
+ * mostrar o aviso de bloqueio etc.). Quando a mudança é a remoção de uma
+ * prática, o aviso chega com `{ tipo: "removido", conteudoId }`, para a tela
+ * anunciar o motivo exato a quem usa leitor de tela.
  */
-export function useSincronizarLiberacoes(onMudanca?: () => void) {
+export type MudancaSincronia =
+  | { tipo: "removido"; conteudoId: string }
+  | { tipo: "sequencia-removida"; eixoId: string }
+  | { tipo: "liberacao" };
+
+export function useSincronizarLiberacoes(onMudanca?: (mudanca?: MudancaSincronia) => void) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
