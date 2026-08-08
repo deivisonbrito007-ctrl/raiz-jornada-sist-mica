@@ -446,14 +446,25 @@ function Player() {
         </Link>
       ) : (
         <Link
+          ref={voltarRef}
           to="/app"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-floresta"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full text-sm text-muted-foreground hover:text-floresta focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2"
         >
-          <ArrowLeft className="h-4 w-4" /> Voltar à trilha
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Voltar à trilha
         </Link>
       )}
 
-      {isLoading && <Skeleton className="mt-6 h-64 rounded-3xl" />}
+      {/* Carregando: o leitor de tela recebe o estado; o esqueleto é decorativo */}
+      {isLoading && (
+        <div role="status" aria-live="polite" aria-busy="true" className="mt-6">
+          <span className="sr-only">Carregando a prática. Os controles do player ficam indisponíveis até terminar.</span>
+          <Skeleton aria-hidden="true" className="h-64 rounded-3xl" />
+        </div>
+      )}
+
+      {/* Erro de carregamento: caminho de teclado próprio, com foco no botão */}
+      {isError && !isLoading && <AvisoFalhaCarregamento carregando={isFetching} onTentar={() => void refetch()} />}
+
 
       {conteudo && (
         <>
