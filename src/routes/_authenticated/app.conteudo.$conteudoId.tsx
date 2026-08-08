@@ -95,6 +95,26 @@ function Player() {
   const [emEspera, setEmEspera] = useState(false);
   /** quando a nova tentativa volta a ser permitida (usado na contagem do aviso) */
   const [esperaAte, setEsperaAte] = useState<number | null>(null);
+  /** anúncio assertivo de liberação: fala uma única vez quando o bloqueio sai */
+  const [anuncioLiberacao, setAnuncioLiberacao] = useState<{ id: number; texto: string } | null>(
+    null,
+  );
+  const contadorLiberacaoRef = useRef(0);
+  const bloqueioAnteriorRef = useRef<MotivoBloqueio | null>(null);
+  useEffect(() => {
+    const antes = bloqueioAnteriorRef.current;
+    bloqueioAnteriorRef.current = bloqueio;
+    if (!antes || bloqueio) return;
+    contadorLiberacaoRef.current += 1;
+    setAnuncioLiberacao({
+      id: contadorLiberacaoRef.current,
+      texto:
+        antes === "validade" || antes === "limite" || antes === "falha"
+          ? "Acesso renovado. A mídia está liberada e você pode continuar de onde parou."
+          : "Prática liberada novamente pelo terapeuta. A mídia voltou a ficar disponível.",
+    });
+  }, [bloqueio]);
+
 
 
 
@@ -428,6 +448,13 @@ function Player() {
 
   return (
     <div>
+      {/* Liberação do acesso: anúncio assertivo único para leitores de tela */}
+      <div role="alert" aria-live="assertive" aria-atomic="true" className="sr-only">
+        {anuncioLiberacao ? (
+          <span key={anuncioLiberacao.id}>{anuncioLiberacao.texto}</span>
+        ) : null}
+      </div>
+
       {conteudo ? (
         <Link
           ref={voltarRef}
