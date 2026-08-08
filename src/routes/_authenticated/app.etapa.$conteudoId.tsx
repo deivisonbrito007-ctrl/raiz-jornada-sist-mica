@@ -102,8 +102,9 @@ function EtapaTrilha() {
   }
 
   const atribuicaoId = data?.atribuicao?.id ?? null;
-  const materiais = (etapa.materiais ?? []) as string[];
-  const sensibilidades = (etapa.sensibilidades ?? []) as string[];
+  const materiais = paraLista(etapa.materiais);
+  const sensibilidades = paraLista(etapa.sensibilidades);
+
   const somenteEmSessao = Boolean(data?.atribuicao?.somente_em_sessao);
 
   async function finalizar() {
