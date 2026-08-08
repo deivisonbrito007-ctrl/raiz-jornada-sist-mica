@@ -684,21 +684,33 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
 
     const agendadoParaFuturo = Boolean(data.liberarEm && new Date(data.liberarEm) > new Date());
     await registrarAuditoria(supabase, atorAuditoria(context), {
-      acao: agendadoParaFuturo ? "liberacao_agendada" : "conteudo_liberado",
+      acao: agendadoParaFuturo
+        ? "liberacao_agendada"
+        : ehRenovacao
+          ? "liberacao_renovada"
+          : "conteudo_liberado",
       ...alvoAuditoria,
-      detalhes: { ...alvoAuditoria.detalhes, agendadoPara: data.liberarEm ?? "" },
+      detalhes: {
+        ...alvoAuditoria.detalhes,
+        agendadoPara: data.liberarEm ?? "",
+        renovacao: ehRenovacao,
+      },
     });
     if (agendadoParaFuturo) return { ok: true, agendado: true };
 
     await supabase.from("notificacoes").insert({
       cliente_id: data.clienteId,
-      titulo: "Novo conteúdo liberado",
-      mensagem: data.titulo
-        ? `"${data.titulo}" já está disponível na sua biblioteca.`
-        : "Há algo novo esperando por você na sua biblioteca.",
+      titulo: ehRenovacao ? "Acesso renovado" : "Novo conteúdo liberado",
+      mensagem: ehRenovacao
+        ? data.titulo
+          ? `"${data.titulo}" está liberada novamente: você pode retomar de onde parou.`
+          : "Seu acesso foi renovado: você pode retomar de onde parou."
+        : data.titulo
+          ? `"${data.titulo}" já está disponível na sua biblioteca.`
+          : "Há algo novo esperando por você na sua biblioteca.",
     });
 
-    return { ok: true };
+    return { ok: true, renovada: ehRenovacao };
   });
 
 export const adminSalvarConteudo = createServerFn({ method: "POST" })
