@@ -38,7 +38,7 @@ vi.mock("@/lib/raiz.functions", () => ({
   marcarProgresso: Symbol("marcarProgresso"),
 }));
 
-vi.mock("sonner", () => ({ toast: { error: toastError, success: toastSuccess, info: toastInfo } }));
+vi.mock("sonner", () => ({ toast: { warning: vi.fn(), error: toastError, success: toastSuccess, info: toastInfo } }));
 
 const { Route } = await import("./app.conteudo.$conteudoId");
 const PlayerPage = (Route as unknown as { component: () => React.ReactElement }).component;
@@ -157,8 +157,7 @@ describe("player — expiração da URL assinada", () => {
     expect(screen.getByText(/O link de reprodução desta mídia tem tempo de validade/)).toBeInTheDocument();
   });
 
-  it("bloqueia novas tentativas de progresso enquanto o acesso está expirado", async () => {
-    const user = userEvent.setup();
+  it("esconde os CTAs de progresso enquanto o acesso está expirado", async () => {
     fetchConteudo.mockResolvedValue(resposta("https://midia/uma.mp3", 60_000));
     renderPlayer();
     await esperarPlayer();
@@ -166,11 +165,10 @@ describe("player — expiração da URL assinada", () => {
     fireEvent.error(audio());
     await esperarBloqueio("O link seguro expirou");
 
-    await user.click(screen.getByRole("button", { name: "Marcar como concluída" }));
-
+    // sem acesso não há como concluir: os CTAs saem da tela
+    expect(screen.queryByRole("button", { name: "Marcar como concluída" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Ir ao diário/i })).toBeNull();
     expect(salvarProgresso).not.toHaveBeenCalled();
-    expect(toastError).toHaveBeenCalledWith("Acesso à mídia expirado. Renove antes de concluir a prática.");
-    expect(screen.getByRole("button", { name: "Marcar como concluída" })).toBeInTheDocument();
     expect(play).not.toHaveBeenCalled();
   });
 
@@ -226,11 +224,10 @@ describe("player — expiração da URL assinada", () => {
     expect(toastError).toHaveBeenCalledWith("Esta prática não está mais liberada para você.");
     expect(document.querySelector("audio")).toBeNull();
 
-    await user.click(screen.getByRole("button", { name: "Marcar como concluída" }));
+    // com o acesso bloqueado, o CTA de concluir sai da tela em vez de falhar no clique
+    expect(screen.queryByRole("button", { name: "Marcar como concluída" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Ir ao diário/i })).toBeNull();
     expect(salvarProgresso).not.toHaveBeenCalled();
-    expect(toastError).toHaveBeenCalledWith(
-      "Esta prática não está mais liberada. Fale com seu terapeuta se quiser continuar.",
-    );
   });
 
   it("falha de rede na renovação: mensagem separada de erro de conexão e botão de tentar", async () => {

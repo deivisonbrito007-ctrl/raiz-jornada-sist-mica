@@ -43,7 +43,7 @@ vi.mock("@/lib/raiz.functions", () => ({
   marcarProgresso: Symbol("marcarProgresso"),
 }));
 
-vi.mock("sonner", () => ({ toast: { error: toastError, success: toastSuccess, info: toastInfo } }));
+vi.mock("sonner", () => ({ toast: { warning: vi.fn(), error: toastError, success: toastSuccess, info: toastInfo } }));
 
 let handlers: Array<() => void> = [];
 vi.mock("@/integrations/supabase/client", () => ({

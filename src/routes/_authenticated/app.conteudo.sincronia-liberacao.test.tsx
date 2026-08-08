@@ -37,7 +37,7 @@ vi.mock("@/lib/raiz.functions", () => ({
   marcarProgresso: Symbol("marcarProgresso"),
 }));
 
-vi.mock("sonner", () => ({ toast: { error: toastError, success: toastSuccess, info: toastInfo } }));
+vi.mock("sonner", () => ({ toast: { warning: vi.fn(), error: toastError, success: toastSuccess, info: toastInfo } }));
 
 /** Captura o handler de tempo real para simular o terapeuta liberando/revogando. */
 let handlers: Array<() => void> = [];

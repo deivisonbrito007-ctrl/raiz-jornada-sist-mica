@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { TimerOff, Lock, AlertCircle, Hourglass } from "lucide-react";
+import { TimerOff, Lock, AlertCircle, Hourglass, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export type MotivoBloqueio = "validade" | "revogado" | "removido" | "falha" | "limite";
+
 
 
 interface Props {
@@ -69,14 +70,15 @@ export function AvisoMidiaBloqueada({
       tom: "terracota",
     },
     removido: {
-      icone: <Lock className="mt-0.5 h-5 w-5 shrink-0 text-terracota" aria-hidden="true" />,
+      icone: <Trash2 className="mt-0.5 h-5 w-5 shrink-0 text-terracota" aria-hidden="true" />,
       titulo: "Esta prática foi removida",
       texto:
-        "O terapeuta retirou esta prática do acervo, então ela não pode mais ser reproduzida. Suas anotações no diário e o histórico do que você já praticou continuam salvos.",
+        "O terapeuta removeu esta prática da sua trilha, então ela não pode mais ser reproduzida. Seu histórico e o que você escreveu no diário continuam guardados.",
       botao: "Tentar novamente",
       estado: "Prática removida",
       tom: "terracota",
     },
+
     falha: {
       icone: <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />,
       titulo: "Não conseguimos renovar agora",
@@ -116,30 +118,10 @@ export function AvisoMidiaBloqueada({
   // O aviso é o único caminho possível daqui: o foco vai para o botão de nova
   // tentativa assim que aparece — inclusive durante a espera, porque ele
   // continua focável (aria-disabled) para quem usa teclado ou leitor de tela
-  // acompanhar a contagem e saber quando pode acionar. Também rolamos o aviso
-  // até a vista, para quem enxerga acompanhar a mesma mudança.
+  // acompanhar a contagem e saber quando pode acionar.
   useEffect(() => {
     (botaoRef.current ?? caixaRef.current)?.focus();
-    caixaRef.current?.scrollIntoView?.({ block: "center" });
   }, [motivo]);
-
-  // Anúncio imediato (assertivo) do que acabou de acontecer com a prática: só
-  // dispara na virada de estado, para o leitor de tela interromper a leitura
-  // atual e contar que a mídia expirou, foi revogada ou foi removida.
-  const [mudanca, setMudanca] = useState<{ id: number; texto: string } | null>(null);
-  const contadorRef = useRef(0);
-  useEffect(() => {
-    const anuncios: Record<MotivoBloqueio, string> = {
-      validade: "O link seguro desta prática expirou. A reprodução foi interrompida.",
-      revogado: "O terapeuta recolheu o acesso agora. A reprodução foi interrompida.",
-      removido: "Esta prática foi removida pelo terapeuta. A reprodução foi interrompida.",
-      falha: "Não conseguimos verificar o acesso a esta prática agora.",
-      limite: "Muitos pedidos de acesso em pouco tempo. Aguarde para tentar de novo.",
-    };
-    contadorRef.current += 1;
-    setMudanca({ id: contadorRef.current, texto: anuncios[motivo] });
-  }, [motivo]);
-
 
   /** Tab circula entre os controles do aviso; Esc devolve o foco para fora. */
   const aoTeclar = useCallback(
@@ -217,16 +199,10 @@ export function AvisoMidiaBloqueada({
       onKeyDown={aoTeclar}
       className={`mt-6 rounded-3xl border p-6 outline-none focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2 ${borda}`}
     >
-      {/* Mudança que acabou de acontecer: anúncio assertivo, uma única vez */}
-      <div role="alert" aria-live="assertive" aria-atomic="true" className="sr-only">
-        {mudanca ? <span key={mudanca.id}>{mudanca.texto}</span> : null}
-      </div>
-
       {/* Estado do player e da contagem, para leitores de tela */}
       <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {anuncio}
       </p>
-
 
       <div className="flex items-start gap-3">
         {cfg.icone}
@@ -252,7 +228,7 @@ export function AvisoMidiaBloqueada({
               {renovando ? "Renovando..." : cfg.botao}
             </Button>
 
-            {motivo === "revogado" && eixoId && (
+            {(motivo === "revogado" || motivo === "removido") && eixoId && (
               <Link
                 to="/app/eixo/$eixoId"
                 params={{ eixoId }}

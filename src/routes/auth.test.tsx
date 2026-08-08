@@ -29,7 +29,7 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth, rpc } }));
-vi.mock("sonner", () => ({ toast: { error: toastError, success: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { warning: vi.fn(), error: toastError, success: vi.fn() } }));
 
 const { Route } = await import("./auth");
 const AuthPage = (Route as unknown as { component: () => React.ReactElement }).component;

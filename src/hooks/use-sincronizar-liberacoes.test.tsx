@@ -75,8 +75,8 @@ beforeEach(() => {
 describe("sincronização de liberações na interface do cliente", () => {
   it("assina apenas as liberações do próprio cliente", async () => {
     montar();
-    await waitFor(() => expect(handlers.length).toBe(3));
-    expect(filtros).toEqual(["cliente_id=eq.cliente-1", undefined, undefined]);
+    await waitFor(() => expect(handlers.length).toBe(2));
+    expect(filtros).toEqual(["cliente_id=eq.cliente-1", undefined]);
   });
 
   it("atualiza a biblioteca ao receber uma liberação nova, sem recarregar", async () => {
@@ -84,7 +84,7 @@ describe("sincronização de liberações na interface do cliente", () => {
     expect(await screen.findByText("Respiração da raiz")).toBeInTheDocument();
     expect(screen.queryByText("Carta ao clã")).not.toBeInTheDocument();
 
-    await waitFor(() => expect(handlers.length).toBe(3));
+    await waitFor(() => expect(handlers.length).toBe(2));
     handlers[0]!();
 
     expect(await screen.findByText("Carta ao clã")).toBeInTheDocument();
@@ -94,7 +94,7 @@ describe("sincronização de liberações na interface do cliente", () => {
   it("avisa o player (onMudanca) a cada liberação ou revogação recebida", async () => {
     const onMudanca = vi.fn();
     montar(onMudanca);
-    await waitFor(() => expect(handlers.length).toBe(3));
+    await waitFor(() => expect(handlers.length).toBe(2));
 
     handlers[0]!();
     handlers[0]!();
@@ -104,14 +104,10 @@ describe("sincronização de liberações na interface do cliente", () => {
 
   it("encerra a assinatura ao sair da tela", async () => {
     const { unmount } = montar();
-    await waitFor(() => expect(handlers.length).toBe(3));
+    await waitFor(() => expect(handlers.length).toBe(2));
     unmount();
     await waitFor(() =>
-      expect(canaisRemovidos).toEqual([
-        "raiz-liberacoes-cliente-1",
-        "raiz-conteudos-cliente-1",
-        "raiz-eixos-cliente-1",
-      ]),
+      expect(canaisRemovidos).toEqual(["raiz-liberacoes-cliente-1", "raiz-conteudos-cliente-1"]),
     );
   });
 });

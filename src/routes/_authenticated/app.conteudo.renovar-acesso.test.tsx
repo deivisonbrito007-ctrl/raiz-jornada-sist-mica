@@ -45,7 +45,7 @@ vi.mock("@/lib/raiz.functions", () => ({
   marcarProgresso: Symbol("marcarProgresso"),
 }));
 
-vi.mock("sonner", () => ({ toast: { error: toastError, success: toastSuccess, info: toastInfo } }));
+vi.mock("sonner", () => ({ toast: { warning: vi.fn(), error: toastError, success: toastSuccess, info: toastInfo } }));
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
@@ -259,7 +259,7 @@ describe("botão Renovar acesso", () => {
     await user.click(tentar).catch(() => {});
     fireEvent.click(tentar);
     expect(fetchConteudo).toHaveBeenCalledTimes(1);
-    expect(toastError).toHaveBeenCalledTimes(1);
+    expect(toastError).toHaveBeenLastCalledWith("Esta prática não está mais liberada para você.");
     expect(toastSuccess).not.toHaveBeenCalled();
   });
 

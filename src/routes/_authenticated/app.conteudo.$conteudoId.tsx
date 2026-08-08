@@ -31,9 +31,13 @@ export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")
   component: Player,
 });
 
+/** Antecedência do aviso "prestes a expirar" antes do fim do link seguro. */
+export const AVISO_ANTECEDENCIA_MS = 60_000;
+
 function ehMidiaTipo(tipo?: string) {
   return tipo === "video" || tipo === "audio";
 }
+
 
 function Player() {
   const { conteudoId } = Route.useParams();
@@ -50,10 +54,10 @@ function Player() {
     queryFn: () => fetchConteudo({ data: { conteudoId } }),
   });
 
-  // Remoção da prática tem aviso próprio (e anúncio próprio no leitor de tela);
-  // as outras mudanças passam pela revalidação da liberação.
+  // A remoção da prática tem aviso próprio; as outras mudanças passam pela
+  // revalidação da liberação (que decide entre liberar e bloquear).
   useSincronizarLiberacoes((mudanca) => {
-    if (mudanca?.tipo === "removido" && mudanca.conteudoId === conteudoId) {
+    if (mudanca.tipo === "removido" && mudanca.conteudoId === conteudoId) {
       pararMidia();
       if (bloqueioRef.current !== "removido") {
         bloqueioRef.current = "removido";
@@ -83,6 +87,8 @@ function Player() {
   const [terminou, setTerminou] = useState(false);
   const [concluido, setConcluido] = useState(false);
   const [bloqueio, setBloqueio] = useState<MotivoBloqueio | null>(null);
+  /** o link seguro está perto de vencer: mostramos o aviso antes de interromper */
+  const [prestesAExpirar, setPrestesAExpirar] = useState(false);
   /** espelho do bloqueio para leitura dentro de callbacks de tempo real */
   const bloqueioRef = useRef<MotivoBloqueio | null>(null);
   /** ordem das revalidações concorrentes — só a última pode aplicar estado */
@@ -196,17 +202,23 @@ function Player() {
   const conteudo = data?.conteudo;
   const ehMidia = conteudo?.tipo === "video" || conteudo?.tipo === "audio";
 
-  function expirarMidia() {
+  /** Para a mídia guardando onde a pessoa estava — usado quando o acesso cai. */
+  function pararMidia() {
     const el = mediaRef.current;
     if (el) {
-      // guarda onde a pessoa parou e se estava tocando, para retomar igual depois
       posicaoRef.current = el.currentTime || posicaoRef.current;
       tocandoAntesRef.current = !el.paused;
       el.pause();
     }
     setTocando(false);
-    setBloqueio("validade");
   }
+
+  function expirarMidia() {
+    pararMidia();
+    setBloqueio("validade");
+    toast.error("O link seguro desta prática expirou. Renove o acesso para continuar.");
+  }
+
 
 
   /** Ao carregar a nova mídia, volta ao ponto salvo e retoma se estava tocando. */
@@ -243,16 +255,30 @@ function Player() {
 
   // O link seguro da mídia tem validade limitada: ao chegar ao fim, o player para
   // sozinho e passa a exigir uma nova liberação em vez de tentar tocar um link morto.
+  // Antes disso, avisamos que está prestes a expirar, para dar tempo de renovar.
   useEffect(() => {
     if (!data?.url || !data?.urlExpiraEm) return;
     setBloqueio(null);
+    setPrestesAExpirar(false);
     const restante = new Date(data.urlExpiraEm).getTime() - Date.now();
     if (restante <= 0) {
       expirarMidia();
       return;
     }
+    // aviso prévio: 60s antes, ou na metade do tempo quando a validade é curta
+    const antecedencia = Math.min(AVISO_ANTECEDENCIA_MS, Math.floor(restante / 2));
+    const avisar = setTimeout(() => {
+      setPrestesAExpirar(true);
+      const segundos = Math.max(1, Math.round(antecedencia / 1000));
+      toast.warning(
+        `Esta prática expira em cerca de ${segundos} ${segundos === 1 ? "segundo" : "segundos"}. Renove o acesso para não interromper.`,
+      );
+    }, restante - antecedencia);
     const timer = setTimeout(expirarMidia, restante);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(avisar);
+      clearTimeout(timer);
+    };
   }, [data?.url, data?.urlExpiraEm]);
 
 
@@ -321,7 +347,12 @@ function Player() {
       // a liberação é o que define o acesso; mídia ainda não enviada tem aviso próprio
       const liberado = Boolean(novo?.conteudo);
       if (!liberado) {
-        pararMidia();
+        const el = mediaRef.current;
+        if (el) {
+          posicaoRef.current = el.currentTime || posicaoRef.current;
+          el.pause();
+        }
+        setTocando(false);
         if (bloqueioRef.current !== "revogado" && bloqueioRef.current !== "removido") {
           bloqueioRef.current = "revogado";
           setBloqueio("revogado");
@@ -337,16 +368,6 @@ function Player() {
     } catch {
       /* falha de rede: o estado atual é mantido e o botão de renovar segue disponível */
     }
-  }
-
-  /** Para a mídia guardando o ponto atual — usado quando o acesso cai. */
-  function pararMidia() {
-    const el = mediaRef.current;
-    if (el) {
-      posicaoRef.current = el.currentTime || posicaoRef.current;
-      el.pause();
-    }
-    setTocando(false);
   }
 
   /** Pequena espera entre tentativas — o botão nunca fica travado para sempre. */
@@ -466,16 +487,39 @@ function Player() {
                       ? `Player pausado: o link seguro expirou em ${formatarDuracao(Math.floor(tempo))}. Renove o acesso para continuar.`
                       : renovando
                         ? "Renovando o acesso à mídia."
-                        : terminou
-                          ? "Prática concluída até o fim."
-                          : tocando
-                            ? `Reproduzindo, ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`
-                            : `Pausado em ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`}
+                        : prestesAExpirar
+                          ? "Atenção: o link seguro desta prática está prestes a expirar. Renove o acesso para não interromper."
+                          : terminou
+                            ? "Prática concluída até o fim."
+                            : tocando
+                              ? `Reproduzindo, ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`
+                              : `Pausado em ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`}
             </p>
           )}
 
+          {/* Aviso prévio: dá tempo de renovar antes de a mídia ser interrompida */}
+          {ehMidia && prestesAExpirar && !bloqueio && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-ocre/30 bg-ocre/10 p-4"
+            >
+              <p className="text-sm text-floresta">
+                O link seguro desta prática está prestes a expirar. Renove agora para continuar sem
+                interrupção.
+              </p>
+              <Button
+                onClick={renovarMidia}
+                disabled={renovando || emEspera}
+                className="rounded-full bg-floresta px-5 text-floresta-foreground hover:bg-floresta/90"
+              >
+                {renovando ? "Renovando..." : "Renovar acesso"}
+              </Button>
+            </div>
+          )}
 
           {ehMidia && data?.url && !bloqueio && (
+
 
             <div className="mt-6 overflow-hidden rounded-3xl bg-floresta p-4">
               {conteudo.tipo === "video" ? (
@@ -601,37 +645,41 @@ function Player() {
           )}
 
 
-          {!ehMidia && bloqueio !== "revogado" && (
+          {!ehMidia && bloqueio !== "revogado" && bloqueio !== "removido" && (
             <div className="mt-6 whitespace-pre-line rounded-3xl bg-card p-6 text-[15px] leading-relaxed text-foreground shadow-[var(--shadow-organico)]">
               {conteudo.corpo_texto || "Conteúdo em preparação."}
             </div>
           )}
 
-          <div className="mt-8 rounded-3xl bg-secondary p-6">
-            <h2 className="text-xl text-floresta">
-              {concluido ? "Prática concluída" : terminou ? "Como foi para você?" : "Ao terminar"}
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Marque como concluída e registre no diário o que se moveu.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Button
-                onClick={concluir}
-                disabled={concluido}
-                className="rounded-full bg-salvia px-6 text-salvia-foreground hover:bg-salvia/90"
-              >
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                {concluido ? "Concluída" : "Marcar como concluída"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate({ to: "/app/diario", search: { conteudoId } })}
-                className="rounded-full border-floresta/20 px-6 text-floresta"
-              >
-                <NotebookPen className="mr-2 h-4 w-4" /> Ir ao diário
-              </Button>
+          {/* Nada de concluir nem diário enquanto o acesso está bloqueado: os CTAs
+              saem da tela no mesmo instante em que a prática expira ou é removida. */}
+          {!bloqueio && (
+            <div className="mt-8 rounded-3xl bg-secondary p-6">
+              <h2 className="text-xl text-floresta">
+                {concluido ? "Prática concluída" : terminou ? "Como foi para você?" : "Ao terminar"}
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Marque como concluída e registre no diário o que se moveu.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Button
+                  onClick={concluir}
+                  disabled={concluido}
+                  className="rounded-full bg-salvia px-6 text-salvia-foreground hover:bg-salvia/90"
+                >
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  {concluido ? "Concluída" : "Marcar como concluída"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate({ to: "/app/diario", search: { conteudoId } })}
+                  className="rounded-full border-floresta/20 px-6 text-floresta"
+                >
+                  <NotebookPen className="mr-2 h-4 w-4" /> Ir ao diário
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
 
