@@ -23,7 +23,7 @@ import {
 import { formatarData, PAGAMENTO_LABEL, TIPO_LABEL } from "@/lib/raiz-format";
 import { useState } from "react";
 import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
-import { ControlePermitido, SecaoSemPermissao, SePode } from "@/components/permissao-ui";
+import { ControlePermitido, SecaoSemPermissao } from "@/components/permissao-ui";
 
 export const Route = createFileRoute("/_authenticated/admin/cliente/$clienteId")({
   component: AdminCliente,
