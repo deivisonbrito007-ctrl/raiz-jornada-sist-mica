@@ -59,11 +59,17 @@ function AppLayout() {
                 }
               }}
             >
-              <PopoverTrigger className="relative rounded-full p-2 text-floresta transition-colors hover:bg-secondary">
-                <Bell className="h-5 w-5" />
+              <PopoverTrigger
+                aria-label={
+                  naoLidas > 0 ? `Avisos (${naoLidas} não lidos)` : "Avisos"
+                }
+                className="relative rounded-full p-2 text-floresta transition-colors hover:bg-secondary"
+              >
+                <Bell className="h-5 w-5" aria-hidden="true" />
                 {naoLidas > 0 && (
                   <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-terracota" />
                 )}
+
               </PopoverTrigger>
               <PopoverContent align="end" className="w-80 rounded-2xl">
                 <p className="mb-3 font-display text-base text-floresta">Avisos</p>

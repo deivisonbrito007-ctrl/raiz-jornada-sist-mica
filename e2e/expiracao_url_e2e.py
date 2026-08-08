@@ -351,4 +351,5 @@ async def main() -> None:
     print("\nE2E OK: expiração da URL assinada pausa a mídia, avisa na tela e bloqueia progresso.")
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
