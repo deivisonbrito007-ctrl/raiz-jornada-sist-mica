@@ -26,7 +26,7 @@ const PARES: Par[] = [
     frente: "salvia",
     frenteOpacidade: 0.4,
     fundo: [{ nome: "salvia", opacidade: 0.15 }, ...CARTAO],
-    tipo: "grafico",
+    tipo: "decorativo",
   },
   // Selo "Acesso expirado"
   {
@@ -76,7 +76,7 @@ const PARES: Par[] = [
   },
   {
     onde: "aviso de expiração — ícone",
-    frente: "ocre",
+    frente: "ocre-forte",
     fundo: [{ nome: "ocre", opacidade: 0.1 }, ...CARTAO],
     tipo: "grafico",
   },
@@ -85,7 +85,7 @@ const PARES: Par[] = [
     frente: "ocre",
     frenteOpacidade: 0.3,
     fundo: [{ nome: "ocre", opacidade: 0.1 }, ...CARTAO],
-    tipo: "grafico",
+    tipo: "decorativo",
   },
   {
     onde: "aviso de remoção — ícone",
@@ -127,8 +127,21 @@ const PARES: Par[] = [
   // Barra de progresso e tempos
   {
     onde: "barra de progresso — trilho preenchido",
-    frente: "salvia",
+    frente: "ocre",
     fundo: [{ nome: "floresta-foreground", opacidade: 0.2 }, { nome: "floresta" }],
+    tipo: "grafico",
+  },
+  {
+    onde: "ícones de avançar/voltar 15s sobre a faixa do player",
+    frente: "floresta-foreground",
+    frenteOpacidade: 0.8,
+    fundo: [{ nome: "floresta" }, ...CARTAO],
+    tipo: "grafico",
+  },
+  {
+    onde: "hover/foco dos controles (ocre sobre floresta)",
+    frente: "ocre",
+    fundo: [{ nome: "floresta" }, ...CARTAO],
     tipo: "grafico",
   },
   {

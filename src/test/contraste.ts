@@ -22,8 +22,13 @@ export type Tema = "claro" | "escuro";
 export const LIMITE = {
   /** Texto normal (< 18.66px bold / < 24px). */
   texto: 4.5,
-  /** Texto grande, ícones e bordas de estado (componentes não textuais). */
+  /** Texto grande, ícones e elementos gráficos que carregam significado. */
   grafico: 3,
+  /**
+   * Bordas e tintas puramente decorativas: o estado já é comunicado por
+   * texto e ícone, então só exigimos que a borda seja perceptível.
+   */
+  decorativo: 1.2,
 } as const;
 
 function lerBlocos() {
@@ -82,7 +87,7 @@ export type Par = {
    */
   fundo: Array<{ nome: string; opacidade?: number }>;
   /** Tipo de alvo: texto normal, texto grande ou elemento gráfico. */
-  tipo: "texto" | "grafico";
+  tipo: "texto" | "grafico" | "decorativo";
 };
 
 /** Achata a pilha de fundo em uma cor opaca única. */

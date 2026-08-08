@@ -51,7 +51,7 @@ export function AvisoMidiaBloqueada({
     tom: "ocre" | "terracota" | "muted";
   }> = {
     validade: {
-      icone: <TimerOff className="mt-0.5 h-5 w-5 shrink-0 text-ocre" aria-hidden="true" />,
+      icone: <TimerOff className="mt-0.5 h-5 w-5 shrink-0 text-ocre-forte" aria-hidden="true" />,
       titulo: "O link seguro expirou",
       texto:
         "O link de reprodução desta mídia tem tempo de validade por segurança e acabou de encerrar. Não se preocupe: o ponto onde você parou está guardado e nenhum progresso foi perdido.",
@@ -87,7 +87,7 @@ export function AvisoMidiaBloqueada({
       tom: "muted",
     },
     limite: {
-      icone: <Hourglass className="mt-0.5 h-5 w-5 shrink-0 text-ocre" aria-hidden="true" />,
+      icone: <Hourglass className="mt-0.5 h-5 w-5 shrink-0 text-ocre-forte" aria-hidden="true" />,
       titulo: "Muitos pedidos em pouco tempo",
       texto:
         "Para proteger sua conta, limitamos quantos links seguros podem ser gerados por minuto. Você chegou nesse limite: aguarde alguns segundos e tente de novo. Nada foi perdido — seu progresso e o ponto onde você parou seguem salvos.",
