@@ -89,9 +89,9 @@ export function useSincronizarLiberacoes(onMudanca?: () => void) {
           .on(
             "postgres_changes",
             { event: "*", schema: "public", table: "conteudos" },
-            (evento) => {
-              const antigo = evento.old as { id?: string } | null;
-              if (evento.eventType === "DELETE" && antigo?.id) {
+            (evento?: { eventType?: string; old?: { id?: string } | null }) => {
+              const antigo = evento?.old ?? null;
+              if (evento?.eventType === "DELETE" && antigo?.id) {
                 removerPraticaDoCache(queryClient, antigo.id);
               } else {
                 invalidarTudo(queryClient);
