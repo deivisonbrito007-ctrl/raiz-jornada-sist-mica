@@ -7,6 +7,8 @@ import { ShieldAlert } from "lucide-react";
 import { equipeAcessosNegados } from "@/lib/equipe.functions";
 import { PERMISSAO_LABEL, type Permissao } from "@/lib/permissoes";
 import { AvisoPermissao } from "@/components/aviso-permissao";
+import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
+import { SecaoSemPermissao } from "@/components/permissao-ui";
 import { ehErroPermissao } from "@/lib/erro-permissao";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -55,11 +57,23 @@ function dataHora(iso: string) {
 function AuditoriaAcessos() {
   const listar = useServerFn(equipeAcessosNegados);
   const [busca, setBusca] = useState("");
+  const { pode, carregando } = useMinhasPermissoes();
+  const podeVer = pode("gerenciar_equipe");
   const { data, isLoading, error } = useQuery({
     queryKey: ["auditoria-acessos-negados"],
     queryFn: () => listar(),
     refetchInterval: 30000,
+    enabled: podeVer,
   });
+
+  if (!carregando && !podeVer) {
+    return (
+      <section className="space-y-4">
+        <h1 className="font-serif text-2xl text-foreground">Acessos negados</h1>
+        <SecaoSemPermissao permissao="gerenciar_equipe" titulo="Auditoria restrita" />
+      </section>
+    );
+  }
 
   if (error) {
     return (

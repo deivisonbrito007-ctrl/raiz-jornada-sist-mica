@@ -12,16 +12,22 @@ import {
   linhaDoTempoSemanal,
 } from "@/lib/raiz-format";
 import { Flame } from "lucide-react";
+import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
+import { SecaoSemPermissao } from "@/components/permissao-ui";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminClientes,
 });
 
 function AdminClientes() {
+  const { pode, carregando } = useMinhasPermissoes();
+  const podeVer = pode("ver_clientes");
   const fetchResumo = useServerFn(adminResumo);
   const { data, isLoading } = useQuery({
     queryKey: ["admin-resumo"],
     queryFn: () => fetchResumo(),
+    // sem permissão a chamada só voltaria erro — não vale disparar
+    enabled: podeVer,
   });
   const [busca, setBusca] = useState("");
 
@@ -34,6 +40,15 @@ function AdminClientes() {
     { label: "Trilhas em andamento", valor: data?.metricas.trilhasEmAndamento ?? 0 },
     { label: "Conclusão média", valor: `${data?.metricas.conclusaoMedia ?? 0}%` },
   ];
+
+  if (!carregando && !podeVer) {
+    return (
+      <div>
+        <h1 className="text-3xl text-floresta">Clientes</h1>
+        <SecaoSemPermissao permissao="ver_clientes" className="mt-6" titulo="Lista de clientes restrita" />
+      </div>
+    );
+  }
 
   return (
     <div>
