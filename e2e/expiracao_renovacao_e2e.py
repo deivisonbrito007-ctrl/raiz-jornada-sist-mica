@@ -412,7 +412,15 @@ async def main() -> None:
 
         # ============ Fase 4: terapeuta recolhe e renova a liberação ============
         revogar()
-        await page.get_by_text("não está mais liberada", exact=False).first.wait_for(timeout=30000)
+        try:
+            await page.get_by_text("não está mais liberada", exact=False).first.wait_for(
+                timeout=30000
+            )
+        except Exception:
+            corpo = " ".join((await page.locator("body").inner_text()).split())
+            print("DEBUG tela após revogar:", corpo[:600])
+            raise
+
         selo = await selo_texto(page)
         if "Acesso revogado" not in selo:
             falhas.append(f"selo não virou 'Acesso revogado' (veio: {selo!r})")
