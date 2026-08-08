@@ -202,14 +202,14 @@ export function AvisoMidiaBloqueada({
 
   // Anúncio curto e sem repetição: o leitor de tela recebe o estado da mídia e
   // marcos da contagem (10, 5, 3, 2, 1), em vez de uma fala a cada segundo.
-  const marco = emEspera && segundos > 0 && (segundos <= 3 || segundos % 5 === 0);
+  const marco = emEspera && segundos > 0 && (segundos <= 5 || segundos % 5 === 0);
   const anuncio = renovando
     ? `${cfg.estado}. Renovando o acesso.`
     : emEspera
       ? marco
         ? `${cfg.estado}. Botão “${cfg.botao}” em espera: ${segundos} ${segundos === 1 ? "segundo" : "segundos"}.`
         : `${cfg.estado}. Botão “${cfg.botao}” em espera.`
-      : `${cfg.estado}. Botão “${cfg.botao}” disponível.`;
+      : `${cfg.estado}. Botão “${cfg.botao}” disponível agora.`;
 
   return (
     <div
