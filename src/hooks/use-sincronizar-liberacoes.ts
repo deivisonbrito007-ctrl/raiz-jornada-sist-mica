@@ -70,6 +70,7 @@ const TETO_TIMEOUT = 2_147_483_647;
  */
 export type MudancaSincronia =
   | { tipo: "removido"; conteudoId: string }
+  | { tipo: "liberacao-removida"; liberacaoId?: string | undefined }
   | { tipo: "sequencia-removida"; eixoId: string }
   | { tipo: "liberacao" };
 
@@ -113,10 +114,18 @@ export function useSincronizarLiberacoes(onMudanca?: (mudanca?: MudancaSincronia
               table: "liberacoes",
               filter: `cliente_id=eq.${uid}`,
             },
-            (evento?: { new?: { liberar_em?: string | null } | null }) => {
+            (evento?: {
+              eventType?: string;
+              new?: { liberar_em?: string | null } | null;
+              old?: { id?: string } | null;
+            }) => {
               // sequências, metas e heatmap também dependem das liberações
               invalidarTudo(queryClient);
               agendarVirada(evento?.new?.liberar_em ?? null);
+              if (evento?.eventType === "DELETE") {
+                onMudanca?.({ tipo: "liberacao-removida", liberacaoId: evento?.old?.id });
+                return;
+              }
               onMudanca?.({ tipo: "liberacao" });
             },
           )
