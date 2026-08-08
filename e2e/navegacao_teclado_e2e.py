@@ -257,7 +257,12 @@ async def main() -> None:
         context = await browser.new_context(viewport={"width": 1280, "height": 1800})
         page = await context.new_page()
         erros: list[str] = []
-        page.on("console", lambda m: erros.append(m.text) if m.type == "error" else None)
+        page.on(
+            "console",
+            lambda m: erros.append(f"{m.text} | em {m.location} | url {page.url}")
+            if m.type == "error"
+            else None,
+        )
 
         await restaurar_sessao(context, page, session, storage_key, cookies_json)
 
