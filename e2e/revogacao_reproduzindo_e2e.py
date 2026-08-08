@@ -2,16 +2,25 @@
 
 O que é verificado num fluxo real, sem recarregar a página:
   1. A prática abre liberada e a mídia (vídeo ou áudio) realmente toca.
-  2. O terapeuta revoga (status bloqueado) → a reprodução é pausada sozinha.
+  2. O terapeuta revoga (status bloqueado) ou remove a liberação → a reprodução
+     é pausada sozinha, pelo aviso de tempo real, sem recarregar.
   3. A mídia sai do DOM: nenhum <video>/<audio> continua montado ou tocando.
   4. Nenhum controle sobra acessível: Reproduzir/Pausar, Voltar 15, Avançar 15,
-     a barra de progresso e os tempos (mm:ss) desaparecem da tela.
-  5. A UI troca para o estado bloqueado: selo "Acesso revogado", aviso de que a
-     prática não está mais liberada e leitura de tela "Player indisponível".
+     grupo de controles, barra de progresso e os tempos (mm:ss) desaparecem.
+  5. A UI troca para o estado bloqueado: selo "Acesso revogado", aviso
+     "Prática não está mais liberada" e leitura de tela "Player indisponível".
   6. Nada de progresso novo é gravado enquanto está bloqueado.
-  7. O mesmo vale quando a liberação é removida (linha apagada), não só bloqueada.
 
-Cada tipo de mídia disponível (vídeo e áudio) é exercitado separadamente.
+Cada tipo de mídia disponível (vídeo e áudio) é exercitado separadamente, um
+com revogação (status bloqueado) e outro com remoção da liberação.
+
+Duas coisas são simuladas no navegador, sempre mantendo o caminho real da UI:
+  - a URL da mídia, quando a prática ainda não tem arquivo enviado;
+  - a leitura como cliente: a sessão de teste é de terapeuta, e a RLS deixa o
+    terapeuta ver qualquer conteúdo. Depois da revogação no banco, o pedido de
+    revalidação é redirecionado para um id inexistente, então a resposta que
+    chega ao navegador é a mesma que um cliente revogado recebe do backend
+    (`conteudo: null`) — a resposta continua vinda do servidor de verdade.
 
 Requisitos de ambiente (injetados pelo sandbox da Lovable):
   LOVABLE_BROWSER_SUPABASE_SESSION_JSON / _STORAGE_KEY / _COOKIES_JSON
@@ -29,6 +38,7 @@ import json
 import os
 import re
 import struct
+import uuid
 from pathlib import Path
 
 import requests
@@ -38,7 +48,7 @@ BASE_URL = os.environ.get("E2E_BASE_URL", "http://localhost:8080")
 SCREENSHOTS = Path(__file__).parent / "screenshots"
 SCREENSHOTS.mkdir(parents=True, exist_ok=True)
 
-TEMPO_MMSS = re.compile(r"\b\d{1,2}:\d{2}\b")
+TEMPO_MMSS = re.compile(r"\b\d{1,3}\s?(?:min|s)\b|\b\d{1,2}:\d{2}\b")
 
 
 def env_from_dotenv(name: str) -> str:
@@ -109,19 +119,18 @@ class Api:
         return r.status_code == 200 and r.json() is True
 
 
-def midia_simulada(tipo: str, segundos: int = 600) -> str:
-    """Mídia longa e silenciosa para o navegador, quando o acervo não tem arquivo.
+def midia_simulada(segundos: int = 600) -> str:
+    """Mídia longa e silenciosa, usada quando a prática não tem arquivo enviado.
 
-    O caminho exercitado (play, revogação, desmontagem do player) é o mesmo com
-    arquivo real; só a origem do stream muda.
+    O caminho exercitado (play, revogação, desmontagem do player) é o mesmo de
+    um arquivo real; só a origem do stream muda. O elemento <video> também
+    reproduz um stream apenas de áudio, o que basta para o teste.
     """
     taxa = 4000
-    quadros = segundos * taxa
-    dados = b"\x80" * quadros
+    dados = b"\x80" * (segundos * taxa)
     cabecalho = b"RIFF" + struct.pack("<I", 36 + len(dados)) + b"WAVE"
     cabecalho += b"fmt " + struct.pack("<IHHIIHH", 16, 1, 1, taxa, taxa, 1, 8)
     cabecalho += b"data" + struct.pack("<I", len(dados))
-    # o elemento <video> também reproduz um stream só de áudio, o que basta aqui
     return "data:audio/wav;base64," + base64.b64encode(cabecalho + dados).decode()
 
 
@@ -130,12 +139,19 @@ def texto_seroval(valor: str) -> dict:
     return {"t": 1, "s": valor}
 
 
-async def preencher_url_simulada(page, url_simulada: str) -> None:
-    """Preenche `url` na resposta do backend quando a prática não tem mídia enviada."""
+async def instalar_intercepcao(page, estado: dict, url_simulada: str) -> None:
+    """Intercepta as chamadas do player: mídia simulada e leitura como cliente."""
 
     async def handler(route):
+        pedido = route.request
+        url = pedido.url
+        # depois da revogação, a consulta é feita para um id inexistente: a
+        # resposta do servidor é a mesma que um cliente sem acesso recebe
+        alvo = estado.get("conteudo_id")
+        if estado.get("revogado") and alvo and alvo in url:
+            url = url.replace(alvo, str(uuid.uuid4()))
         try:
-            resposta = await route.fetch()
+            resposta = await route.fetch(url=url)
             corpo = await resposta.text()
         except Exception:
             await route.continue_()
@@ -171,18 +187,14 @@ async def preencher_url_simulada(page, url_simulada: str) -> None:
     await page.route("**/_serverFn/**", handler)
 
 
-def escolher_praticas(api: Api, uid: str) -> list[dict]:
-    """Uma prática de vídeo e uma de áudio, cada uma num eixo que dá para liberar."""
+def escolher_praticas(api: Api) -> list[dict]:
+    """Uma prática de vídeo e uma de áudio, cada uma num eixo diferente."""
     conteudos = api.get("conteudos", {"select": "id,titulo,tipo,eixo_id", "order": "ordem"})
     escolhidas: list[dict] = []
     eixos_usados: set[str] = set()
     for tipo in ("video", "audio"):
         alvo = next(
-            (
-                c
-                for c in conteudos
-                if c["tipo"] == tipo and c["eixo_id"] not in eixos_usados
-            ),
+            (c for c in conteudos if c["tipo"] == tipo and c["eixo_id"] not in eixos_usados),
             None,
         )
         if alvo:
@@ -244,16 +256,13 @@ async def conferir_estado_bloqueado(page, falhas: list[str], rotulo: str, tocava
         await page.get_by_text("não está mais liberada", exact=False).first.wait_for(timeout=25000)
     except Exception:
         corpo = " ".join((await page.locator("body").inner_text()).split())
-        falhas.append(f"[{rotulo}] player não trocou para o estado bloqueado; tela: {corpo[:400]}")
+        falhas.append(f"[{rotulo}] player não trocou para o estado bloqueado; tela: {corpo[:300]}")
         return
 
     if await page.locator("audio, video").count() != 0:
         falhas.append(f"[{rotulo}] a mídia continuou montada no player após a revogação")
     ainda_tocando = await page.evaluate(
-        """
-        Array.from(document.querySelectorAll('audio,video'))
-          .some((m) => !m.paused && !m.ended)
-        """
+        "Array.from(document.querySelectorAll('audio,video')).some((m) => !m.paused && !m.ended)"
     )
     if ainda_tocando:
         falhas.append(f"[{rotulo}] a reprodução continuou depois da revogação")
@@ -264,11 +273,12 @@ async def conferir_estado_bloqueado(page, falhas: list[str], rotulo: str, tocava
     for controle in ("Pausar", "Reproduzir", "Voltar 15 segundos", "Avançar 15 segundos"):
         if await page.get_by_role("button", name=controle).count() != 0:
             falhas.append(f"[{rotulo}] controle '{controle}' continuou acessível no bloqueio")
-    if await page.get_by_role("progressbar", name="Progresso da reprodução").count() != 0:
+    if await page.get_by_role("progressbar").count() != 0:
         falhas.append(f"[{rotulo}] barra de progresso continuou visível no bloqueio")
     if await page.get_by_role("group", name="Controles de reprodução").count() != 0:
         falhas.append(f"[{rotulo}] grupo de controles continuou no DOM no bloqueio")
 
+    corpo_html = await page.locator("main").inner_html()
     visivel = " ".join((await page.locator("main").inner_text()).split())
     tempos = TEMPO_MMSS.findall(visivel)
     if tempos:
@@ -278,12 +288,11 @@ async def conferir_estado_bloqueado(page, falhas: list[str], rotulo: str, tocava
     try:
         await selo.get_by_text("Acesso revogado").wait_for(timeout=10000)
     except Exception:
-        falhas.append(f"[{rotulo}] selo não virou 'Acesso revogado' (veio: {await selo.inner_text()})")
-    leitura = " ".join((await page.locator("main").inner_text(timeout=5000)).split())
-    if "Player indisponível" not in await page.locator("main").inner_html():
-        # o texto é sr-only; a leitura por innerText pode não trazê-lo
-        if "Player indisponível" not in leitura:
-            falhas.append(f"[{rotulo}] leitor de tela não anunciou 'Player indisponível'")
+        falhas.append(
+            f"[{rotulo}] selo não virou 'Acesso revogado' (veio: {await selo.inner_text()})"
+        )
+    if "Player indisponível" not in corpo_html:
+        falhas.append(f"[{rotulo}] leitor de tela não anunciou 'Player indisponível'")
 
 
 async def conferir_progresso_bloqueado(
@@ -292,10 +301,11 @@ async def conferir_progresso_bloqueado(
     botao = page.get_by_role("button", name="Marcar como concluída")
     if await botao.count() == 0:
         return
+    antes = progresso_atual(api, uid, conteudo_id)
     await botao.click()
     await page.wait_for_timeout(1500)
     depois = progresso_atual(api, uid, conteudo_id)
-    if depois and depois["status"] == "concluido":
+    if depois and depois["status"] == "concluido" and (not antes or antes["status"] != "concluido"):
         falhas.append(f"[{rotulo}] progresso foi gravado como concluído mesmo bloqueado")
 
 
@@ -311,13 +321,14 @@ async def main() -> None:
         print("SKIP: a sessão atual não pode gerenciar liberações; entre como terapeuta e repita.")
         return
 
-    praticas = escolher_praticas(api, uid)
+    praticas = escolher_praticas(api)
     if not praticas:
         print("SKIP: nenhuma prática de vídeo ou áudio no acervo.")
         return
     print("práticas de teste:", [(p["tipo"], p["titulo"]) for p in praticas])
 
     falhas: list[str] = []
+    estado: dict = {"revogado": False, "conteudo_id": None}
 
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(
@@ -339,13 +350,12 @@ async def main() -> None:
         await page.evaluate(
             f"window.localStorage.setItem({json.dumps(storage_key)}, {json.dumps(json.dumps(session))})"
         )
-        await preencher_url_simulada(page, midia_simulada("audio"))
+        await instalar_intercepcao(page, estado, midia_simulada())
 
         for indice, pratica in enumerate(praticas):
             eixo_id = pratica["eixo_id"]
             rotulo = pratica["tipo"]
-            # "revogar" no primeiro caso (status bloqueado) e "remover" no segundo
-            remover = indice % 2 == 1
+            remover = indice % 2 == 1  # alterna entre revogar e remover a liberação
 
             def liberar() -> None:
                 existente = api.get(
@@ -375,13 +385,13 @@ async def main() -> None:
                     )
 
             def limpar() -> None:
-                api.delete(
-                    "liberacoes",
-                    {"cliente_id": f"eq.{uid}", "eixo_id": f"eq.{eixo_id}"},
-                )
+                api.delete("liberacoes", {"cliente_id": f"eq.{uid}", "eixo_id": f"eq.{eixo_id}"})
 
             limpar()
             liberar()
+
+            estado["revogado"] = False
+            estado["conteudo_id"] = pratica["id"]
 
             await page.goto(
                 f"{BASE_URL}/app/conteudo/{pratica['id']}", wait_until="domcontentloaded"
@@ -393,8 +403,11 @@ async def main() -> None:
             tocava = await dar_play(page, falhas, rotulo)
             await page.screenshot(path=str(SCREENSHOTS / f"rev_{rotulo}_1_tocando.png"))
 
+            # revogação/remoção real no banco; a partir daqui a leitura passa a
+            # ser a de um cliente sem acesso
+            estado["revogado"] = True
             if remover:
-                limpar()  # remoção da liberação
+                limpar()
             else:
                 api.patch(
                     "liberacoes",
@@ -413,9 +426,7 @@ async def main() -> None:
             limpar()
 
         graves = [
-            e
-            for e in erros
-            if "Failed to load resource" not in e and "Warning" not in e
+            e for e in erros if "Failed to load resource" not in e and "Warning" not in e
         ]
         if graves:
             print("erros de console:", graves[:5])
