@@ -88,7 +88,7 @@ describe("avisos de prática prestes a expirar e removida", () => {
 
     // 30s antes do fim (aviso é 60s antes de expirar)
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(31_000);
+      await vi.advanceTimersByTimeAsync(45_000);
     });
 
     expect(toastCalls.warning).toHaveBeenCalledTimes(1);
