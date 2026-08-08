@@ -17,6 +17,7 @@ import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bloqueada";
+import { useFocoRetorno } from "@/hooks/use-foco-retorno";
 import { StatusMidiaBadge } from "@/components/status-midia";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 
@@ -72,6 +73,8 @@ function Player() {
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   /** link de saída: recebe o foco quando a pessoa pressiona Esc no aviso */
   const voltarRef = useRef<HTMLAnchorElement | null>(null);
+  /** botão principal do player: destino do foco quando o acesso é liberado */
+  const playRef = useRef<HTMLButtonElement | null>(null);
   const posicaoRef = useRef(0);
   /** estava tocando no instante em que o link venceu? */
   const tocandoAntesRef = useRef(false);
@@ -97,6 +100,14 @@ function Player() {
   const [emEspera, setEmEspera] = useState(false);
   /** quando a nova tentativa volta a ser permitida (usado na contagem do aviso) */
   const [esperaAte, setEsperaAte] = useState<number | null>(null);
+
+  // Foco: guarda quem estava focado quando o aviso apareceu e devolve o foco
+  // depois que o acesso é liberado — de volta ao controle original ou, se ele
+  // foi desmontado durante o bloqueio, ao botão de reprodução recriado.
+  const { registrarOrigem } = useFocoRetorno(bloqueio !== null, {
+    alternativo: () => playRef.current,
+    fallback: () => voltarRef.current,
+  });
 
 
 
@@ -509,7 +520,10 @@ function Player() {
                 interrupção.
               </p>
               <Button
-                onClick={renovarMidia}
+                onClick={(e) => {
+                  registrarOrigem(e.currentTarget);
+                  renovarMidia();
+                }}
                 disabled={renovando || emEspera}
                 className="rounded-full bg-floresta px-5 text-floresta-foreground hover:bg-floresta/90"
               >
@@ -608,6 +622,7 @@ function Player() {
                   <RotateCcw className="h-6 w-6" />
                 </button>
                 <button
+                  ref={playRef}
                   onClick={alternar}
                   className="rounded-full bg-terracota p-4 text-terracota-foreground focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label={tocando ? "Pausar" : "Reproduzir"}
