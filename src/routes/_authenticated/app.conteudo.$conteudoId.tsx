@@ -50,7 +50,20 @@ function Player() {
     queryFn: () => fetchConteudo({ data: { conteudoId } }),
   });
 
-  useSincronizarLiberacoes(() => void revalidarLiberacao());
+  // Remoção da prática tem aviso próprio (e anúncio próprio no leitor de tela);
+  // as outras mudanças passam pela revalidação da liberação.
+  useSincronizarLiberacoes((mudanca) => {
+    if (mudanca?.tipo === "removido" && mudanca.conteudoId === conteudoId) {
+      pararMidia();
+      if (bloqueioRef.current !== "removido") {
+        bloqueioRef.current = "removido";
+        setBloqueio("removido");
+        toast.error("Esta prática foi removida pelo seu terapeuta.");
+      }
+      return;
+    }
+    void revalidarLiberacao();
+  });
 
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   /** link de saída: recebe o foco quando a pessoa pressiona Esc no aviso */
@@ -100,7 +113,7 @@ function Player() {
   useEffect(() => {
     if (isLoading || !data) return;
     const semAcesso = !data.conteudo && !(data as { limitado?: boolean }).limitado;
-    if (semAcesso && bloqueioRef.current !== "revogado") {
+    if (semAcesso && bloqueioRef.current !== "revogado" && bloqueioRef.current !== "removido") {
       bloqueioRef.current = "revogado";
       setBloqueio("revogado");
     }
@@ -308,13 +321,8 @@ function Player() {
       // a liberação é o que define o acesso; mídia ainda não enviada tem aviso próprio
       const liberado = Boolean(novo?.conteudo);
       if (!liberado) {
-        const el = mediaRef.current;
-        if (el) {
-          posicaoRef.current = el.currentTime || posicaoRef.current;
-          el.pause();
-        }
-        setTocando(false);
-        if (bloqueioRef.current !== "revogado") {
+        pararMidia();
+        if (bloqueioRef.current !== "revogado" && bloqueioRef.current !== "removido") {
           bloqueioRef.current = "revogado";
           setBloqueio("revogado");
           toast.error("Esta prática não está mais liberada para você.");
@@ -329,6 +337,16 @@ function Player() {
     } catch {
       /* falha de rede: o estado atual é mantido e o botão de renovar segue disponível */
     }
+  }
+
+  /** Para a mídia guardando o ponto atual — usado quando o acesso cai. */
+  function pararMidia() {
+    const el = mediaRef.current;
+    if (el) {
+      posicaoRef.current = el.currentTime || posicaoRef.current;
+      el.pause();
+    }
+    setTocando(false);
   }
 
   /** Pequena espera entre tentativas — o botão nunca fica travado para sempre. */
@@ -419,11 +437,11 @@ function Player() {
           <h1 className="mt-1 text-3xl text-floresta">{conteudo.titulo}</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{conteudo.descricao}</p>
 
-          {(ehMidia || bloqueio === "revogado") && (
+          {(ehMidia || bloqueio === "revogado" || bloqueio === "removido") && (
             <div>
               <StatusMidiaBadge
                 status={
-                  bloqueio === "revogado"
+                  bloqueio === "revogado" || bloqueio === "removido"
                     ? "revogada"
                     : bloqueio === "limite"
                       ? "limitada"
@@ -436,23 +454,26 @@ function Player() {
             </div>
           )}
 
-          {(ehMidia || bloqueio === "revogado") && (
+          {(ehMidia || bloqueio === "revogado" || bloqueio === "removido") && (
             <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-              {bloqueio === "revogado"
-                ? "Player indisponível: esta prática não está mais liberada."
-                : bloqueio === "limite"
-                  ? "Player pausado: muitos pedidos de link em pouco tempo. Aguarde para renovar o acesso."
-                  : bloqueio
-                    ? `Player pausado: o link seguro expirou em ${formatarDuracao(Math.floor(tempo))}. Renove o acesso para continuar.`
-                    : renovando
-                      ? "Renovando o acesso à mídia."
-                      : terminou
-                        ? "Prática concluída até o fim."
-                        : tocando
-                          ? `Reproduzindo, ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`
-                          : `Pausado em ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`}
+              {bloqueio === "removido"
+                ? "Player indisponível: esta prática foi removida pelo terapeuta."
+                : bloqueio === "revogado"
+                  ? "Player indisponível: esta prática não está mais liberada."
+                  : bloqueio === "limite"
+                    ? "Player pausado: muitos pedidos de link em pouco tempo. Aguarde para renovar o acesso."
+                    : bloqueio
+                      ? `Player pausado: o link seguro expirou em ${formatarDuracao(Math.floor(tempo))}. Renove o acesso para continuar.`
+                      : renovando
+                        ? "Renovando o acesso à mídia."
+                        : terminou
+                          ? "Prática concluída até o fim."
+                          : tocando
+                            ? `Reproduzindo, ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`
+                            : `Pausado em ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`}
             </p>
           )}
+
 
           {ehMidia && data?.url && !bloqueio && (
 
@@ -561,7 +582,7 @@ function Player() {
             </div>
           )}
 
-          {(ehMidia || bloqueio === "revogado") && bloqueio && (
+          {(ehMidia || bloqueio === "revogado" || bloqueio === "removido") && bloqueio && (
             <AvisoMidiaBloqueada
               motivo={bloqueio}
               renovando={renovando}
@@ -614,16 +635,18 @@ function Player() {
         </>
       )}
 
-      {!conteudo && !isLoading && bloqueio === "revogado" && (
+      {!conteudo && !isLoading && (bloqueio === "revogado" || bloqueio === "removido") && (
         <>
           <div>
             <StatusMidiaBadge status="revogada" />
           </div>
           <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-            Player indisponível: o terapeuta recolheu o acesso a esta prática.
+            {bloqueio === "removido"
+              ? "Player indisponível: esta prática foi removida pelo terapeuta."
+              : "Player indisponível: o terapeuta recolheu o acesso a esta prática."}
           </p>
           <AvisoMidiaBloqueada
-            motivo="revogado"
+            motivo={bloqueio}
             renovando={renovando}
             emEspera={emEspera}
             esperaAte={esperaAte}
