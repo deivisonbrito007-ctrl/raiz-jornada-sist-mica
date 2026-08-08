@@ -40,6 +40,12 @@ export function removerPraticaDoCache(queryClient: QueryClient, conteudoId: stri
   }
 }
 
+/** O que acabou de mudar no servidor, para a tela reagir com o aviso certo. */
+export type MudancaSincronia =
+  | { tipo: "liberacao" }
+  | { tipo: "removido"; conteudoId: string }
+  | { tipo: "editado" };
+
 /**
  * Mantém a biblioteca e o player em sincronia com o terapeuta, em tempo real.
  *
@@ -49,9 +55,9 @@ export function removerPraticaDoCache(queryClient: QueryClient, conteudoId: stri
  *     cache dela é descartado na hora, junto de resquícios locais.
  *
  * O `onMudanca` permite que o player reaja no mesmo instante (parar a mídia,
- * mostrar o aviso de bloqueio etc.).
+ * mostrar o aviso de bloqueio etc.), sabendo qual foi a mudança.
  */
-export function useSincronizarLiberacoes(onMudanca?: () => void) {
+export function useSincronizarLiberacoes(onMudanca?: (mudanca: MudancaSincronia) => void) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -77,7 +83,7 @@ export function useSincronizarLiberacoes(onMudanca?: () => void) {
             () => {
               // sequências, metas e heatmap também dependem das liberações
               invalidarTudo(queryClient);
-              onMudanca?.();
+              onMudanca?.({ tipo: "liberacao" });
             },
           )
           .subscribe(),
@@ -93,10 +99,11 @@ export function useSincronizarLiberacoes(onMudanca?: () => void) {
               const antigo = evento?.old ?? null;
               if (evento?.eventType === "DELETE" && antigo?.id) {
                 removerPraticaDoCache(queryClient, antigo.id);
+                onMudanca?.({ tipo: "removido", conteudoId: antigo.id });
               } else {
                 invalidarTudo(queryClient);
+                onMudanca?.({ tipo: "editado" });
               }
-              onMudanca?.();
             },
           )
           .subscribe(),
@@ -112,3 +119,4 @@ export function useSincronizarLiberacoes(onMudanca?: () => void) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryClient]);
 }
+
