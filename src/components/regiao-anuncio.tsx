@@ -3,20 +3,20 @@ import { deveAnunciar, usePreferenciaAnuncios } from "@/lib/preferencia-anuncios
 
 type Props = {
   /** Texto a anunciar. Vazio/nulo não gera fala nem fallback. */
-  texto?: string | null;
+  texto?: string | null | undefined;
   /**
    * `importante` = bloqueio, erro, remoção, expiração (sobrevive ao modo
    * reduzido e ganha fallback visível quando os anúncios estão desativados).
    * `rotina` = contagem, progresso, confirmações.
    */
-  nivel?: "rotina" | "importante";
+  nivel?: "rotina" | "importante" | undefined;
   /** Usa `assertive` em vez de `polite` (só para mudanças que interrompem). */
-  assertivo?: boolean;
+  assertivo?: boolean | undefined;
   /** Muda a chave do texto para forçar uma nova fala do mesmo conteúdo. */
-  chaveAnuncio?: string | number;
+  chaveAnuncio?: string | number | undefined;
   /** Desliga o fallback visível (quando a tela já mostra a mesma mensagem). */
-  semFallbackVisivel?: boolean;
-  className?: string;
+  semFallbackVisivel?: boolean | undefined;
+  className?: string | undefined;
 };
 
 /**

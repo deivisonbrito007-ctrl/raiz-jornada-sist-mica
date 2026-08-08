@@ -670,11 +670,15 @@ function Player() {
           <div>
             <StatusMidiaBadge status="revogada" />
           </div>
-          <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-            {bloqueio === "removido"
-              ? "Player indisponível: esta prática foi removida pelo terapeuta."
-              : "Player indisponível: o terapeuta recolheu o acesso a esta prática."}
-          </p>
+          <RegiaoAnuncio
+            nivel="importante"
+            semFallbackVisivel
+            texto={
+              bloqueio === "removido"
+                ? "Player indisponível: esta prática foi removida pelo terapeuta."
+                : "Player indisponível: o terapeuta recolheu o acesso a esta prática."
+            }
+          />
           <AvisoMidiaBloqueada
             motivo={bloqueio}
             renovando={renovando}
