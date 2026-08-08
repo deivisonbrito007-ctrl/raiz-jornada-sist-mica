@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeAll, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -183,21 +183,15 @@ describe("foco ao abrir o aviso do player", () => {
     });
     await screen.findByRole("heading", { name: "Prática não está mais liberada" });
 
-    const caixaContem = () => screen.getByRole("alertdialog").contains(document.activeElement);
-    const botao = screen.getByRole("button", { name: "Tentar novamente" });
-    const voltar = screen.getByRole("link", { name: "Voltar à trilha" });
+    const caixa = screen.getByRole("alertdialog");
+    const caixaContem = () => caixa.contains(document.activeElement);
+    const botao = within(caixa).getByRole("button", { name: "Tentar novamente" });
+    const voltar = within(caixa).getByRole("link", { name: "Voltar à trilha" });
     await waitFor(() => expect(document.activeElement).toBe(botao));
 
     await userEvent.tab();
-    console.log(
-      "FOCAVEIS:",
-      Array.from(
-        screen.getByRole("alertdialog").querySelectorAll("a[href], button:not([disabled])"),
-      ).map((el) => el.textContent),
-      "ATIVO:", document.activeElement?.textContent,
-    );
+    expect(document.activeElement).toBe(voltar);
     expect(caixaContem()).toBe(true);
-    voltar.focus();
     // no último controle, o Tab volta ao primeiro: o foco não escapa do aviso
     await userEvent.tab();
     expect(document.activeElement).toBe(botao);
