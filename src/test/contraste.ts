@@ -8,7 +8,6 @@
  */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-// @ts-expect-error axe-core não tipa axe.commons
 import axe from "axe-core";
 
 const { Color, getContrast, flattenColors } = (axe as any).commons.color as {
@@ -38,7 +37,7 @@ function lerBlocos() {
     const mapa: Record<string, string> = {};
     for (const linha of corpo.split(";")) {
       const m = linha.match(/--([\w-]+)\s*:\s*(.+)/);
-      if (m) mapa[m[1].trim()] = m[2].trim();
+      if (m && m[1] && m[2]) mapa[m[1].trim()] = m[2].trim();
     }
     return mapa;
   };
@@ -89,7 +88,9 @@ export type Par = {
 /** Achata a pilha de fundo em uma cor opaca única. */
 function fundoFinal(par: Par, tema: Tema) {
   const camadas = [...par.fundo].reverse();
-  let base = cor(camadas[0].nome, tema, camadas[0].opacidade ?? 1);
+  const primeira = camadas[0];
+  if (!primeira) throw new Error(`Par ${par.onde} sem camada de fundo`);
+  let base = cor(primeira.nome, tema, primeira.opacidade ?? 1);
   base.alpha = 1;
   for (const camada of camadas.slice(1)) {
     base = flattenColors(cor(camada.nome, tema, camada.opacidade ?? 1), base);
