@@ -288,7 +288,12 @@ async def main() -> None:
         await page.wait_for_timeout(1500)
         revogar()
         aviso = page.get_by_role("alertdialog")
-        await aviso.wait_for(timeout=20000)
+        try:
+            await aviso.wait_for(timeout=20000)
+        except Exception:
+            print("DEBUG url:", page.url)
+            print("DEBUG texto:", (await page.locator("body").inner_text())[:1200])
+            raise
         await page.wait_for_timeout(400)
         atual = await foco(page)
         assert atual["dentroDoAviso"], f"o foco deveria estar no aviso de bloqueio: {atual}"
