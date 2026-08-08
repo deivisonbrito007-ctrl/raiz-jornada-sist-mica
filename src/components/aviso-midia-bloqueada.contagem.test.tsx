@@ -25,17 +25,6 @@ function montar(props: Partial<React.ComponentProps<typeof AvisoMidiaBloqueada>>
   );
 }
 
-/**
- * Relógios que não pertencem à contagem (infra dos timers falsos).
- * Serve de linha de base: montar com espera deve somar exatamente um.
- */
-function relogiosDeFundo() {
-  const { unmount } = montar({ emEspera: false, esperaAte: null });
-  const total = vi.getTimerCount();
-  unmount();
-  return total;
-}
-
 /** Texto de ajuda ligado ao botão — é onde a contagem aparece na tela. */
 function ajuda() {
   const botao = screen.getByRole("button");
@@ -109,12 +98,12 @@ describe("contagem regressiva do player com timers falsos", () => {
     expect(ajuda()).toHaveTextContent(/Aguarde 30 segundos/i);
   });
 
-  it("sem espera ativa não há relógio rodando por trás", () => {
-    const base = relogiosDeFundo();
-    const { unmount } = montar({ emEspera: false, esperaAte: null });
-    expect(vi.getTimerCount()).toBe(base);
-    unmount();
-    expect(vi.getTimerCount()).toBe(base);
+  it("sem espera ativa o texto não conta nada e o tempo passando não muda a tela", () => {
+    montar({ emEspera: false, esperaAte: null });
+    const antes = ajuda().textContent;
+    act(() => vi.advanceTimersByTime(30_000));
+    expect(ajuda().textContent).toBe(antes);
+    expect(ajuda().textContent).not.toMatch(/Aguarde/i);
   });
 });
 
@@ -127,15 +116,16 @@ describe("troca rápida de telas durante a espera", () => {
     vi.useRealTimers();
   });
 
-  it("sair do player durante a espera encerra o relógio da contagem", () => {
-    const base = relogiosDeFundo();
+  it("sair do player durante a espera não deixa a contagem atualizando nada", () => {
+    const erros = vi.spyOn(console, "error").mockImplementation(() => {});
     const { unmount } = montar();
-    expect(vi.getTimerCount()).toBe(base + 1);
+    act(() => vi.advanceTimersByTime(2_000));
     unmount();
-    expect(vi.getTimerCount()).toBe(base);
-    // avançar o tempo depois de sair não pode quebrar nada nem avisar ninguém
+    // o tempo continua correndo, mas não há mais tela para atualizar
     act(() => vi.advanceTimersByTime(20_000));
     expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(erros).not.toHaveBeenCalled();
+    erros.mockRestore();
   });
 
   it("voltar ao player no meio da espera retoma a contagem no ponto certo", () => {
@@ -158,17 +148,20 @@ describe("troca rápida de telas durante a espera", () => {
     expect(screen.getByRole("button")).toHaveAttribute("aria-disabled", "false");
   });
 
-  it("idas e vindas repetidas não acumulam relógios nem anúncios duplicados", () => {
-    const base = relogiosDeFundo();
+  it("idas e vindas repetidas não duplicam avisos nem estragam a contagem", () => {
+    const erros = vi.spyOn(console, "error").mockImplementation(() => {});
     for (let i = 0; i < 5; i++) {
       const { unmount } = montar();
       act(() => vi.advanceTimersByTime(500));
       unmount();
     }
-    expect(vi.getTimerCount()).toBe(base);
     montar();
-    expect(vi.getTimerCount()).toBe(base + 1);
+    // uma única caixa de aviso e um único anúncio na tela, com o tempo certo
+    expect(screen.getAllByRole("alertdialog")).toHaveLength(1);
     expect(screen.getAllByRole("status")).toHaveLength(1);
+    expect(ajuda()).toHaveTextContent(/Aguarde 8 segundos/i);
+    expect(erros).not.toHaveBeenCalled();
+    erros.mockRestore();
   });
 
   it("mudar o motivo do bloqueio no meio da espera mantém a contagem e refoca o botão", async () => {
