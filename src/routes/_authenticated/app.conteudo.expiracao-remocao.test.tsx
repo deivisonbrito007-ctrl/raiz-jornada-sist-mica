@@ -1,3 +1,4 @@
+import type React from "react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -36,7 +37,7 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 const { Route } = await import("./app.conteudo.$conteudoId");
-const Player = (Route as unknown as { component: () => JSX.Element }).component;
+const Player = (Route as unknown as { component: () => React.ReactElement }).component;
 
 function pratica(urlExpiraEm: string) {
   return {
