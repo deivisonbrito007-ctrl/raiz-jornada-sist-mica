@@ -75,6 +75,8 @@ function Player() {
   const voltarRef = useRef<HTMLAnchorElement | null>(null);
   /** botão principal do player: destino do foco quando o acesso é liberado */
   const playRef = useRef<HTMLButtonElement | null>(null);
+  /** último eixo conhecido: mantém o caminho de volta mesmo após a revogação */
+  const eixoConhecidoRef = useRef<string | null>(null);
   const posicaoRef = useRef(0);
   /** estava tocando no instante em que o link venceu? */
   const tocandoAntesRef = useRef(false);
@@ -713,7 +715,9 @@ function Player() {
             renovando={renovando}
             emEspera={emEspera}
             esperaAte={esperaAte}
+            eixoId={eixoConhecidoRef.current ?? undefined}
             onRenovar={renovarMidia}
+            onSair={() => voltarRef.current?.focus()}
           />
         </>
       )}
