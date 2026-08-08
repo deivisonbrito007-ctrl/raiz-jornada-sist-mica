@@ -17,6 +17,9 @@ import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bloqueada";
+import { AvisoFalhaCarregamento } from "@/components/aviso-falha-carregamento";
+import { AvisoSemMidia } from "@/components/aviso-sem-midia";
+
 import { StatusMidiaBadge } from "@/components/status-midia";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 import { useFocoPlayer } from "@/hooks/use-foco-player";
