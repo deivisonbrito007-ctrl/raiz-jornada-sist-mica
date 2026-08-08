@@ -21,7 +21,8 @@
     "test:e2e:expiracao": "python3 e2e/expiracao_url_e2e.py",
     "test:e2e:isolamento": "python3 e2e/isolamento_dados_e2e.py",
     "test:e2e:revogacao": "python3 e2e/revogacao_reproduzindo_e2e.py",
-    "test:rls": "vitest run --config vitest.rls.config.ts"
+    "test:rls": "vitest run --config vitest.rls.config.ts",
+    "test:a11y": "vitest run --config vitest.a11y.config.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
