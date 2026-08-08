@@ -19,7 +19,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bloqueada";
 import { StatusMidiaBadge } from "@/components/status-midia";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
-import { useFocoPlayer } from "@/hooks/use-foco-player";
+import { useAnuncio } from "@/hooks/use-anuncio";
+import { RegiaoAnuncio } from "@/components/regiao-anuncio";
 
 
 export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")({
@@ -45,6 +46,8 @@ function Player() {
   const fetchConteudo = useServerFn(getConteudo);
   const salvarProgresso = useServerFn(marcarProgresso);
   const persistirPosicao = useServerFn(salvarPosicao);
+
+  const { anuncio, anunciar } = useAnuncio();
 
   const { data, isLoading } = useQuery({
     queryKey: ["conteudo", conteudoId],
@@ -98,13 +101,6 @@ function Player() {
   useEffect(() => {
     bloqueioRef.current = bloqueio;
   }, [bloqueio]);
-
-  // Devolve o foco ao mesmo controle do player depois que o acesso volta —
-  // inclusive quando a pessoa precisa reautenticar e a página monta de novo.
-  useFocoPlayer(conteudoId, {
-    bloqueado: Boolean(bloqueio),
-    liberado: Boolean(data?.url) && !bloqueio,
-  });
 
   // A prática voltou a aparecer na consulta: o acesso foi liberado de novo e o
   // aviso de revogação sai sozinho, sem precisar recarregar a página.
@@ -386,6 +382,7 @@ function Player() {
       // um único registro de "em andamento" por sessão, mesmo após renovar
       if (!progressoIniciadoRef.current) {
         progressoIniciadoRef.current = true;
+        anunciar("Prática marcada como em andamento no seu progresso.");
         void registrar("em_andamento");
       }
     } else {
@@ -406,17 +403,29 @@ function Player() {
           ? "Esta prática não está mais liberada. Fale com seu terapeuta se quiser continuar."
           : "Acesso à mídia expirado. Renove antes de concluir a prática.";
       toast.error(texto);
+      anunciar(texto, "assertive");
       return;
     }
-    await registrar("concluido");
+    anunciar("Salvando a conclusão da prática.");
+    try {
+      await registrar("concluido");
+    } catch {
+      toast.error("Não foi possível salvar a conclusão agora.");
+      anunciar("Não foi possível salvar a conclusão. Tente de novo.", "assertive");
+      return;
+    }
     setConcluido(true);
     toast.success("Prática concluída. Que tal registrar no diário?");
+    anunciar(
+      `Progresso atualizado: ${conteudo?.titulo ?? "a prática"} está concluída. Que tal registrar no diário?`,
+    );
   }
 
 
 
   return (
     <div>
+      <RegiaoAnuncio anuncio={anuncio} />
       {conteudo ? (
         <Link
           ref={voltarRef}
@@ -568,7 +577,6 @@ function Player() {
                   onClick={() => pular(-15)}
                   className="rounded-full text-floresta-foreground/80 hover:text-ocre focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label="Voltar 15 segundos"
-                  data-foco-player="voltar15"
                 >
                   <RotateCcw className="h-6 w-6" />
                 </button>
@@ -576,7 +584,6 @@ function Player() {
                   onClick={alternar}
                   className="rounded-full bg-terracota p-4 text-terracota-foreground focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label={tocando ? "Pausar" : "Reproduzir"}
-                  data-foco-player="play"
                   aria-pressed={tocando}
                 >
                   {tocando ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7" />}
@@ -585,7 +592,6 @@ function Player() {
                   onClick={() => pular(15)}
                   className="rounded-full text-floresta-foreground/80 hover:text-ocre focus-visible:ring-2 focus-visible:ring-ocre focus-visible:ring-offset-2"
                   aria-label="Avançar 15 segundos"
-                  data-foco-player="avancar15"
                 >
                   <RotateCw className="h-6 w-6" />
                 </button>
