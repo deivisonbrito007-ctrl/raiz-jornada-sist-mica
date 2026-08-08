@@ -1,5 +1,6 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { limparFocoPlayer } from "@/hooks/use-foco-player";
+import { rolarParaVista } from "@/lib/rolar-para-vista";
 
 /**
  * Troca de conteúdo com o aviso do player aberto.
@@ -78,6 +79,6 @@ export function useFocoTrocaConteudo(
     }
     devolverRef.current = false;
     alvo.focus();
-    alvo.scrollIntoView?.({ block: "start" });
+    rolarParaVista(alvo, "start");
   }, [pronto, conteudoId, tituloRef]);
 }
