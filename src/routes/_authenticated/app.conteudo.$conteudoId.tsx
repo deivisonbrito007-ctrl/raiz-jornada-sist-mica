@@ -249,16 +249,30 @@ function Player() {
 
   // O link seguro da mídia tem validade limitada: ao chegar ao fim, o player para
   // sozinho e passa a exigir uma nova liberação em vez de tentar tocar um link morto.
+  // Antes disso, avisamos que está prestes a expirar, para dar tempo de renovar.
   useEffect(() => {
     if (!data?.url || !data?.urlExpiraEm) return;
     setBloqueio(null);
+    setPrestesAExpirar(false);
     const restante = new Date(data.urlExpiraEm).getTime() - Date.now();
     if (restante <= 0) {
       expirarMidia();
       return;
     }
+    // aviso prévio: 60s antes, ou na metade do tempo quando a validade é curta
+    const antecedencia = Math.min(AVISO_ANTECEDENCIA_MS, Math.floor(restante / 2));
+    const avisar = setTimeout(() => {
+      setPrestesAExpirar(true);
+      const segundos = Math.max(1, Math.round(antecedencia / 1000));
+      toast.warning(
+        `Esta prática expira em cerca de ${segundos} ${segundos === 1 ? "segundo" : "segundos"}. Renove o acesso para não interromper.`,
+      );
+    }, restante - antecedencia);
     const timer = setTimeout(expirarMidia, restante);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(avisar);
+      clearTimeout(timer);
+    };
   }, [data?.url, data?.urlExpiraEm]);
 
 
