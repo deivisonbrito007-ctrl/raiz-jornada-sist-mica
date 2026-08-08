@@ -215,8 +215,8 @@ async def main() -> None:
                 await page.screenshot(path=str(SCREENSHOTS / "live_4_concluida.png"))
 
                 # ---------- 5. voltar ao player não repete a conclusão ----------
-                await page.get_by_role("link", name="Progresso").first.click()
-                await page.wait_for_url(re.compile(r"/app/progresso"), timeout=20000)
+                await page.get_by_role("link", name="Início").first.click()
+                await page.wait_for_url(re.compile(r"/app$"), timeout=20000)
                 await page.wait_for_timeout(800)
                 # volta pelo histórico do router (client-side, sem recarregar)
                 await page.go_back()
