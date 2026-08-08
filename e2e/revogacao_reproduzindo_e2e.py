@@ -292,7 +292,9 @@ async def conferir_estado_bloqueado(page, falhas: list[str], rotulo: str, tocava
             f"[{rotulo}] selo não virou 'Acesso revogado' (veio: {await selo.inner_text()})"
         )
     if "Player indisponível" not in corpo_html:
-        falhas.append(f"[{rotulo}] leitor de tela não anunciou 'Player indisponível'")
+        falhas.append(
+            f"[{rotulo}] leitor de tela não anunciou 'Player indisponível'; html: {corpo_html[:600]}"
+        )
 
 
 async def conferir_progresso_bloqueado(
