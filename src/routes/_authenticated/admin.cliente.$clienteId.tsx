@@ -24,6 +24,7 @@ import { formatarData, PAGAMENTO_LABEL, TIPO_LABEL } from "@/lib/raiz-format";
 import { useState } from "react";
 import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
 import { ControlePermitido, SecaoSemPermissao } from "@/components/permissao-ui";
+import { LembretesClienteAdmin } from "@/components/lembretes-cliente-admin";
 
 export const Route = createFileRoute("/_authenticated/admin/cliente/$clienteId")({
   component: AdminCliente,
@@ -344,7 +345,10 @@ function AdminCliente() {
               ))}
             </div>
           </section>
+
+          <LembretesClienteAdmin clienteId={clienteId} />
         </>
+
       )}
     </div>
   );

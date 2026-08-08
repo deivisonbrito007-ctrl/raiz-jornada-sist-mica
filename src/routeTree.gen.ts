@@ -33,6 +33,7 @@ import { Route as AuthenticatedAppProgressoRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminClienteClienteIdRouteImport } from './routes/_authenticated/admin.cliente.$clienteId'
 import { Route as AuthenticatedAppConteudoConteudoIdRouteImport } from './routes/_authenticated/app.conteudo.$conteudoId'
 import { Route as AuthenticatedAppEixoEixoIdRouteImport } from './routes/_authenticated/app.eixo.$eixoId'
+import { Route as ApiPublicHooksLembretesRouteImport } from './routes/api/public/hooks/lembretes'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -165,6 +166,11 @@ const AuthenticatedAppEixoEixoIdRoute =
     path: '/eixo/$eixoId',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const ApiPublicHooksLembretesRoute = ApiPublicHooksLembretesRouteImport.update({
+  id: '/api/public/hooks/lembretes',
+  path: '/api/public/hooks/lembretes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
   '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
+  '/api/public/hooks/lembretes': typeof ApiPublicHooksLembretesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
   '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
+  '/api/public/hooks/lembretes': typeof ApiPublicHooksLembretesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
   '/_authenticated/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/_authenticated/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
+  '/api/public/hooks/lembretes': typeof ApiPublicHooksLembretesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/admin/cliente/$clienteId'
     | '/app/conteudo/$conteudoId'
     | '/app/eixo/$eixoId'
+    | '/api/public/hooks/lembretes'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/admin/cliente/$clienteId'
     | '/app/conteudo/$conteudoId'
     | '/app/eixo/$eixoId'
+    | '/api/public/hooks/lembretes'
   id:
     | '__root__'
     | '/'
@@ -316,6 +327,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/cliente/$clienteId'
     | '/_authenticated/app/conteudo/$conteudoId'
     | '/_authenticated/app/eixo/$eixoId'
+    | '/api/public/hooks/lembretes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -327,6 +339,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicHooksLembretesRoute: typeof ApiPublicHooksLembretesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -499,6 +512,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppEixoEixoIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/api/public/hooks/lembretes': {
+      id: '/api/public/hooks/lembretes'
+      path: '/api/public/hooks/lembretes'
+      fullPath: '/api/public/hooks/lembretes'
+      preLoaderRoute: typeof ApiPublicHooksLembretesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -573,6 +593,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicHooksLembretesRoute: ApiPublicHooksLembretesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

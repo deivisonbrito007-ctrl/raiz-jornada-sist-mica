@@ -7,6 +7,7 @@ import { getMeuContexto } from "@/lib/raiz.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { formatarData } from "@/lib/raiz-format";
+import { PreferenciasLembretes } from "@/components/preferencias-lembretes";
 
 export const Route = createFileRoute("/_authenticated/app/perfil")({
   component: Perfil,
@@ -67,6 +68,7 @@ function Perfil() {
         <History className="h-5 w-5 shrink-0 text-salvia" aria-hidden="true" />
       </Link>
 
+      <PreferenciasLembretes />
 
 
       <div className="mt-6 rounded-3xl bg-secondary p-6">
