@@ -425,7 +425,12 @@ async def main() -> None:
         print(f"OK: acesso renovado e prática retomada (t={pos_depois:.1f}s)")
 
         # ============ Fase 4: terapeuta recolhe e renova a liberação ============
+        # A revogação é feita de verdade no banco; como a conta da sessão é de
+        # terapeuta (e o RLS dela alcança o acervo inteiro), a resposta que chega
+        # ao navegador é reescrita na forma que o backend devolve a um cliente sem
+        # acesso — assim a tela do cliente é exercitada de ponta a ponta.
         revogar()
+        estado["revogado"] = True
         try:
             await page.get_by_text("não está mais liberada", exact=False).first.wait_for(
                 timeout=30000
@@ -446,7 +451,9 @@ async def main() -> None:
         await page.screenshot(path=str(SCREENSHOTS / "renov_5_revogado.png"))
         print("OK: revogação bloqueou o player e recolheu o CTA de conclusão")
 
+        # renovação aplicada pelo terapeuta: a liberação volta e o cliente retoma
         liberar()
+        estado["revogado"] = False
         tentar = page.get_by_role("button", name="Tentar novamente")
         if await tentar.count():
             await tentar.first.click()
@@ -454,6 +461,7 @@ async def main() -> None:
         selo = await selo_texto(page)
         if "Mídia liberada" not in selo:
             falhas.append(f"selo não voltou após a renovação do terapeuta (veio: {selo!r})")
+
         await page.wait_for_timeout(1500)
         pos_final = await tempo_atual(page)
         if pos_final + 5 < pos_antes:
