@@ -94,9 +94,9 @@ function Player() {
     }
   }, [data?.conteudo]);
 
-  // Carga nova da página (F5 ou novo acesso) com a liberação já revogada: o
-  // servidor não devolve a prática, então a tela mostra o mesmo aviso de sempre
-  // em vez de ficar vazia — nenhum trecho já visto volta a ficar acessível.
+  // Carga nova da página ou deep link com a liberação já revogada: o servidor
+  // não devolve a prática, então a tela mostra o mesmo aviso de sempre em vez de
+  // ficar vazia — nenhum trecho já visto volta a ficar acessível.
   useEffect(() => {
     if (isLoading || !data) return;
     const semAcesso = !data.conteudo && !(data as { limitado?: boolean }).limitado;
