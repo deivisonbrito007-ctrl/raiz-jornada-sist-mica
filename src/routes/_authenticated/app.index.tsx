@@ -117,13 +117,14 @@ function Biblioteca() {
           <Input
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
+            aria-label="Buscar eixo ou prática"
             placeholder="Buscar eixo ou prática"
             className="rounded-full pl-11"
           />
         </div>
         <div className="grid gap-2 sm:grid-cols-3">
           <Select value={eixoFiltro} onValueChange={setEixoFiltro}>
-            <SelectTrigger className="rounded-full">
+            <SelectTrigger className="rounded-full" aria-label="Filtrar por eixo">
               <SelectValue placeholder="Eixo" />
             </SelectTrigger>
             <SelectContent>
@@ -136,7 +137,7 @@ function Biblioteca() {
             </SelectContent>
           </Select>
           <Select value={tipoFiltro} onValueChange={setTipoFiltro}>
-            <SelectTrigger className="rounded-full">
+            <SelectTrigger className="rounded-full" aria-label="Filtrar por tipo">
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
             <SelectContent>
@@ -149,7 +150,7 @@ function Biblioteca() {
             </SelectContent>
           </Select>
           <Select value={statusFiltro} onValueChange={setStatusFiltro}>
-            <SelectTrigger className="rounded-full">
+            <SelectTrigger className="rounded-full" aria-label="Filtrar por status">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
