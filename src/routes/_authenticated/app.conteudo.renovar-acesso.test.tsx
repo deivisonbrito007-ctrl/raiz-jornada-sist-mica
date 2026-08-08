@@ -196,7 +196,7 @@ describe("botão Renovar acesso", () => {
     await user.click(screen.getByRole("button", { name: "Renovar acesso" }));
 
     const botao = await screen.findByRole("button", { name: "Renovando..." });
-    expect(botao).toBeDisabled();
+    expect(botao).toHaveAttribute("aria-disabled", "true");
 
     liberar(resposta("https://midia/nova.mp3"));
     await waitFor(() => expect(audio()?.src).toBe("https://midia/nova.mp3"));
@@ -255,7 +255,7 @@ describe("botão Renovar acesso", () => {
 
     // retentativa fica em espera: cliques repetidos não disparam novas chamadas
     const tentar = screen.getByRole("button", { name: "Tentar novamente" });
-    expect(tentar).toBeDisabled();
+    expect(tentar).toHaveAttribute("aria-disabled", "true");
     await user.click(tentar).catch(() => {});
     fireEvent.click(tentar);
     expect(fetchConteudo).toHaveBeenCalledTimes(1);
@@ -276,7 +276,7 @@ describe("botão Renovar acesso", () => {
     expect(toastError).toHaveBeenCalledWith("Não foi possível renovar o acesso à mídia.");
     expect(screen.queryByRole("heading", { name: /Prática não está mais liberada/ })).toBeNull();
     expect(audio()).toBeNull();
-    expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Tentar novamente" })).toHaveAttribute("aria-disabled", "true");
     expect(salvarProgresso).not.toHaveBeenCalled();
   });
 });

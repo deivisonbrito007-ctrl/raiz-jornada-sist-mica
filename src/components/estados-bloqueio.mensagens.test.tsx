@@ -74,14 +74,14 @@ describe("mensagens do aviso de mídia bloqueada", () => {
     expect(
       screen.getByRole("heading", { name: "Muitos pedidos em pouco tempo" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Tentar novamente" })).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText(/Aguarde \d+ segundos|Aguarde um instante/i)).toBeInTheDocument();
   });
 
   it("enquanto renova, o CTA sai do ar e vira estado de carregamento", () => {
     montarAviso({ motivo: "validade", renovando: true });
     expect(screen.queryByRole("button", { name: "Renovar acesso" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Renovando..." })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Renovando..." })).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByRole("alertdialog")).toHaveAttribute("aria-busy", "true");
   });
 });
