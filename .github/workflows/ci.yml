@@ -110,8 +110,11 @@ jobs:
             bun-${{ runner.os }}-
       - name: Install dependencies (fallback)
         run: bun install --frozen-lockfile
+      - name: Acessibilidade (axe) nas telas principais
+        run: bun run test:a11y
       - name: Run tests with coverage
         run: bun run test:coverage
+
       - name: Generate coverage badge
         run: bun run coverage:badge
       - name: Upload coverage to Codecov
