@@ -149,12 +149,15 @@ describe("acessibilidade do botão de nova tentativa em cada estado", () => {
     expect(screen.getByRole("button", { name: "Renovando..." })).toBeInTheDocument();
   });
 
-  it("a contagem é anunciada em marcos e vira disponibilidade ao terminar", () => {
-    montarAviso({ emEspera: true, esperaAte: Date.now() + 5500 });
+  it("a contagem é anunciada em marcos, sem falar a cada segundo", () => {
+    montarAviso({ emEspera: true, esperaAte: Date.now() + 10000 });
     const vivo = screen.getByRole("status");
-    expect(vivo).toHaveTextContent(/em espera: 5 segundos/i);
-    act(() => vi.advanceTimersByTime(3000));
-    expect(vivo).toHaveTextContent(/em espera: [123] segundos?/i);
+    expect(vivo).toHaveTextContent(/em espera: 10 segundos/i);
+    // 9, 8, 7 e 6 segundos não são marcos: o anúncio fica curto
+    act(() => vi.advanceTimersByTime(2000));
+    expect(vivo).toHaveTextContent(/em espera\.$/i);
+    act(() => vi.advanceTimersByTime(6000));
+    expect(vivo).toHaveTextContent(/em espera: 2 segundos/i);
   });
 
   it("liberado: o anúncio confirma que o botão pode ser acionado", () => {
