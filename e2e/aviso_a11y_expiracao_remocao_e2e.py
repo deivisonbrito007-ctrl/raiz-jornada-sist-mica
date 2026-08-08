@@ -102,6 +102,10 @@ def achar_midia_liberada(api: Api, uid: str) -> tuple[dict, bool] | None:
     return (midias[0], False) if midias else None
 
 
+# null no formato serializado do TanStack Start
+NULO = {"t": 2, "s": 0}
+
+
 def texto_seroval(valor: str) -> dict:
     """Nó de string no formato que o TanStack Start usa para serializar respostas."""
     return {"t": 1, "s": valor}
@@ -146,9 +150,9 @@ async def interceptar(page, segundos: int, url_simulada: str | None, remover: bo
                     i_prazo = chaves.index("urlExpiraEm")
                     if remover:
                         if "conteudo" in chaves:
-                            valores[chaves.index("conteudo")] = {"t": 2}  # null
-                        valores[i_url] = {"t": 2}
-                        valores[i_prazo] = {"t": 2}
+                            valores[chaves.index("conteudo")] = NULO
+                        valores[i_url] = NULO
+                        valores[i_prazo] = NULO
                     else:
                         atual = valores[i_url]
                         tem_url = isinstance(atual, dict) and atual.get("t") == 1
