@@ -127,21 +127,41 @@ const PARES: Par[] = [
   // Barra de progresso e tempos
   {
     onde: "barra de progresso — trilho preenchido",
-    frente: "ocre",
-    fundo: [{ nome: "floresta-foreground", opacidade: 0.2 }, { nome: "floresta" }],
+    frente: "palco-realce",
+    fundo: [{ nome: "palco-foreground", opacidade: 0.2 }, { nome: "palco" }],
     tipo: "grafico",
+  },
+  {
+    onde: "tempos decorrido/total sobre o palco do player",
+    frente: "palco-foreground",
+    frenteOpacidade: 0.6,
+    fundo: [{ nome: "palco" }],
+    tipo: "texto",
+  },
+  {
+    onde: "legenda de áudio sobre o palco do player",
+    frente: "palco-foreground",
+    frenteOpacidade: 0.7,
+    fundo: [{ nome: "palco-foreground", opacidade: 0.05 }, { nome: "palco" }],
+    tipo: "texto",
+  },
+  {
+    onde: "botão play/pausa sobre o palco",
+    frente: "terracota-foreground",
+    fundo: [{ nome: "terracota" }, { nome: "palco" }],
+    tipo: "texto",
   },
   {
     onde: "ícones de avançar/voltar 15s sobre a faixa do player",
-    frente: "floresta-foreground",
+    frente: "palco-foreground",
     frenteOpacidade: 0.8,
-    fundo: [{ nome: "floresta" }, ...CARTAO],
+    fundo: [{ nome: "palco" }],
     tipo: "grafico",
   },
   {
-    onde: "hover/foco dos controles (ocre sobre floresta)",
-    frente: "ocre",
-    fundo: [{ nome: "floresta" }, ...CARTAO],
+    onde: "hover e anel de foco dos controles sobre o palco",
+    frente: "palco-realce",
+    fundo: [{ nome: "palco" }],
     tipo: "grafico",
   },
   {
