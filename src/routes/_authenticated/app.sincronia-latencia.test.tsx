@@ -282,14 +282,14 @@ describe("sincronização de liberações sob latência e eventos fora de ordem"
 
     // a última resposta responde primeiro; as anteriores chegam embaralhadas
     fila[3]!.resolver(bibliotecaComEixoLiberado(true, ["Nova prática liberada"]));
-    await waitFor(() => expect(screen.getByText("1/0 concluídos")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("0/1 concluídos")).toBeInTheDocument());
 
     fila[1]!.resolver(bibliotecaComEixoLiberado(false));
     fila[2]!.resolver(bibliotecaComEixoLiberado(true, ["Antiga", "Outra"]));
     await tick();
     await tick();
 
-    expect(screen.getByText("1/0 concluídos")).toBeInTheDocument();
+    expect(screen.getByText("0/1 concluídos")).toBeInTheDocument();
     expect(
       screen.queryByText("Este eixo será liberado quando for o momento do seu processo."),
     ).not.toBeInTheDocument();
