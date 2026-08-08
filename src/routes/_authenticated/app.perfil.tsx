@@ -1,15 +1,12 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { History } from "lucide-react";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMeuContexto } from "@/lib/raiz.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { formatarData } from "@/lib/raiz-format";
-import {
-  salvarPreferenciaAnuncios,
-  usePreferenciaAnuncios,
-  type PreferenciaAnuncios,
-} from "@/lib/preferencia-anuncios";
 
 export const Route = createFileRoute("/_authenticated/app/perfil")({
   component: Perfil,
@@ -57,7 +54,20 @@ function Perfil() {
         </dl>
       </div>
 
-      <PreferenciaAnunciosCartao />
+      <Link
+        to="/app/historico"
+        className="mt-6 flex min-h-11 items-center justify-between rounded-3xl bg-card px-6 py-4 text-sm text-floresta shadow-[var(--shadow-organico)]"
+      >
+        <span>
+          Meu histórico
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            Práticas liberadas, concluídas e suas reflexões por trilha
+          </span>
+        </span>
+        <History className="h-5 w-5 shrink-0 text-salvia" aria-hidden="true" />
+      </Link>
+
+
 
       <div className="mt-6 rounded-3xl bg-secondary p-6">
         <h2 className="text-lg text-floresta">Privacidade</h2>
@@ -76,76 +86,5 @@ function Perfil() {
         Sair da conta
       </Button>
     </div>
-  );
-}
-
-const OPCOES: { valor: PreferenciaAnuncios; titulo: string; descricao: string }[] = [
-  {
-    valor: "completo",
-    titulo: "Anúncios completos",
-    descricao:
-      "O leitor de tela fala todas as mudanças: estado do player, contagem para renovar, progresso e confirmações.",
-  },
-  {
-    valor: "reduzido",
-    titulo: "Somente o essencial",
-    descricao:
-      "Fala apenas o que é importante: bloqueio de acesso, expiração, remoção de prática e erros.",
-  },
-  {
-    valor: "desativado",
-    titulo: "Sem anúncios",
-    descricao:
-      "Nada é falado automaticamente. Mensagens importantes continuam aparecendo na tela, em destaque.",
-  },
-];
-
-/**
- * Preferência de anúncios em live region. Fica no dispositivo e vale
- * imediatamente para o player, o diário e os avisos em tempo real.
- */
-function PreferenciaAnunciosCartao() {
-  const atual = usePreferenciaAnuncios();
-
-  return (
-    <section
-      aria-labelledby="titulo-preferencia-anuncios"
-      className="mt-6 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]"
-    >
-      <h2 id="titulo-preferencia-anuncios" className="text-lg text-floresta">
-        Acessibilidade: avisos falados
-      </h2>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        Escolha quanto o leitor de tela deve falar sozinho. Mesmo com os anúncios desativados, os
-        avisos importantes seguem visíveis na tela.
-      </p>
-
-      <fieldset className="mt-4 space-y-3">
-        <legend className="sr-only">Nível dos anúncios para leitor de tela</legend>
-        {OPCOES.map((opcao) => (
-          <label
-            key={opcao.valor}
-            className="flex cursor-pointer items-start gap-3 rounded-2xl border border-floresta/15 p-4 focus-within:ring-2 focus-within:ring-floresta has-[:checked]:border-floresta/50 has-[:checked]:bg-secondary"
-          >
-            <input
-              type="radio"
-              name="preferencia-anuncios"
-              value={opcao.valor}
-              checked={atual === opcao.valor}
-              onChange={() => salvarPreferenciaAnuncios(opcao.valor)}
-              className="mt-1 h-4 w-4 accent-[hsl(var(--floresta))]"
-            />
-            <span>
-              <span className="block text-sm font-medium text-floresta">{opcao.titulo}</span>
-              <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
-                {opcao.descricao}
-              </span>
-            </span>
-          </label>
-        ))}
-      </fieldset>
-
-      <p className="mt-3 text-xs text-salvia">Preferência salva neste dispositivo.</p>
-    </section>
   );
 }

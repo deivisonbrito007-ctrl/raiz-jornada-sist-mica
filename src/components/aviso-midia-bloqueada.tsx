@@ -3,7 +3,6 @@ import { TimerOff, Lock, AlertCircle, Hourglass } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { rolarParaVista } from "@/lib/rolar-para-vista";
-import { RegiaoAnuncio } from "@/components/regiao-anuncio";
 
 export type MotivoBloqueio = "validade" | "revogado" | "removido" | "falha" | "limite";
 
@@ -226,17 +225,14 @@ export function AvisoMidiaBloqueada({
       className={`mt-6 rounded-3xl border p-6 outline-none focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2 ${borda}`}
     >
       {/* Mudança que acabou de acontecer: anúncio assertivo, uma única vez */}
-      <RegiaoAnuncio
-        texto={mudanca?.texto}
-        chaveAnuncio={mudanca?.id}
-        nivel="importante"
-        assertivo
-        semFallbackVisivel
-      />
+      <div role="alert" aria-live="assertive" aria-atomic="true" className="sr-only">
+        {mudanca ? <span key={mudanca.id}>{mudanca.texto}</span> : null}
+      </div>
 
       {/* Estado do player e da contagem, para leitores de tela */}
-      <RegiaoAnuncio texto={anuncio} nivel="rotina" />
-
+      <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {anuncio}
+      </p>
 
       <div className="flex items-start gap-3">
         {cfg.icone}

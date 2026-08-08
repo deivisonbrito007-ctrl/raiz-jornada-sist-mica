@@ -180,6 +180,101 @@ export const getMinhaBiblioteca = createServerFn({ method: "GET" })
     };
   });
 
+/**
+ * Histórico da pessoa, trilha por trilha: o que está liberado, o que ela
+ * concluiu (com data) e as reflexões do diário ligadas a cada prática.
+ *
+ * A RLS já limita `conteudos` ao que está liberado para quem pede (função
+ * `conteudo_liberado`, que também respeita liberações agendadas), então aqui
+ * basta agrupar e cruzar com progresso e diário do próprio usuário.
+ */
+export const getMeuHistorico = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const [eixos, conteudos, progresso, diario] = await Promise.all([
+      supabase.from("eixos").select("id, nome, descricao, icone, ordem").order("ordem"),
+      supabase
+        .from("conteudos")
+        .select("id, eixo_id, tipo, titulo, duracao_segundos, ordem")
+        .order("ordem"),
+      supabase
+        .from("progresso")
+        .select("conteudo_id, status, concluido_em, updated_at")
+        .eq("cliente_id", userId),
+      supabase
+        .from("diario")
+        .select("id, texto, created_at, conteudo_id")
+        .eq("cliente_id", userId)
+        .order("created_at", { ascending: false }),
+    ]);
+
+    const progressoPorConteudo = new Map(
+      (progresso.data ?? []).map((p) => [p.conteudo_id, p]),
+    );
+    const reflexoesPorConteudo = new Map<string, { id: string; texto: string; criadoEm: string }[]>();
+    const reflexoesGerais: { id: string; texto: string; criadoEm: string }[] = [];
+    for (const entrada of diario.data ?? []) {
+      const item = { id: entrada.id, texto: entrada.texto, criadoEm: entrada.created_at };
+      if (!entrada.conteudo_id) {
+        reflexoesGerais.push(item);
+        continue;
+      }
+      const lista = reflexoesPorConteudo.get(entrada.conteudo_id) ?? [];
+      lista.push(item);
+      reflexoesPorConteudo.set(entrada.conteudo_id, lista);
+    }
+
+    const trilhas = (eixos.data ?? [])
+      .map((eixo) => {
+        const praticas = (conteudos.data ?? [])
+          .filter((c) => c.eixo_id === eixo.id)
+          .map((c) => {
+            const p = progressoPorConteudo.get(c.id);
+            return {
+              id: c.id,
+              tipo: c.tipo,
+              titulo: c.titulo,
+              duracaoSegundos: c.duracao_segundos,
+              status: p?.status ?? ("nao_iniciado" as const),
+              concluidoEm: p?.status === "concluido" ? (p.concluido_em ?? null) : null,
+              atualizadoEm: p?.updated_at ?? null,
+              reflexoes: reflexoesPorConteudo.get(c.id) ?? [],
+            };
+          });
+        return {
+          id: eixo.id,
+          nome: eixo.nome,
+          descricao: eixo.descricao,
+          icone: eixo.icone,
+          total: praticas.length,
+          concluidos: praticas.filter((p) => p.status === "concluido").length,
+          praticas,
+        };
+      })
+      .filter((t) => t.total > 0);
+
+    const totalItens = trilhas.reduce((soma, t) => soma + t.total, 0);
+    const totalConcluidos = trilhas.reduce((soma, t) => soma + t.concluidos, 0);
+    const datasConclusao = trilhas
+      .flatMap((t) => t.praticas.map((p) => p.concluidoEm))
+      .filter((d): d is string => Boolean(d))
+      .sort();
+
+    return {
+      trilhas,
+      reflexoesGerais,
+      resumo: {
+        totalItens,
+        totalConcluidos,
+        percentual: totalItens === 0 ? 0 : Math.round((totalConcluidos / totalItens) * 100),
+        totalReflexoes: (diario.data ?? []).length,
+        ultimaConclusao: datasConclusao.at(-1) ?? null,
+      },
+    };
+  });
+
+
 export const getEixoTrilha = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ eixoId: z.string().uuid() }).parse(input))

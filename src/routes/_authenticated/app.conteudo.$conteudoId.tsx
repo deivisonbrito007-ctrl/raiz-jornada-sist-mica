@@ -18,8 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bloqueada";
 import { StatusMidiaBadge } from "@/components/status-midia";
-import { RegiaoAnuncio } from "@/components/regiao-anuncio";
-import { useAnuncio } from "@/hooks/use-anuncio";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 import { useFocoPlayer } from "@/hooks/use-foco-player";
 import { useFocoTrocaConteudo } from "@/hooks/use-foco-troca-conteudo";
@@ -47,9 +45,6 @@ function Player() {
   const queryClient = useQueryClient();
   const fetchConteudo = useServerFn(getConteudo);
   const salvarProgresso = useServerFn(marcarProgresso);
-  // Escopo "progresso": compartilhado com a tela Seu caminho, para que a mesma
-  // conclusão não seja falada de novo ao navegar entre as telas.
-  const { texto: anuncioProgresso, anunciar: anunciarProgresso } = useAnuncio("progresso");
   const persistirPosicao = useServerFn(salvarPosicao);
 
   const { data, isLoading } = useQuery({
@@ -426,9 +421,6 @@ function Player() {
     }
     await registrar("concluido");
     setConcluido(true);
-    anunciarProgresso(
-      `Prática concluída: ${conteudo?.titulo ?? "prática"}. Registre no diário se quiser.`,
-    );
     toast.success("Prática concluída. Que tal registrar no diário?");
   }
 
@@ -436,8 +428,6 @@ function Player() {
 
   return (
     <div>
-      <RegiaoAnuncio texto={anuncioProgresso} nivel="rotina" />
-
       {conteudo ? (
         <Link
           ref={voltarRef}
@@ -486,11 +476,8 @@ function Player() {
           )}
 
           {(ehMidia || bloqueio === "revogado" || bloqueio === "removido") && (
-            <RegiaoAnuncio
-              nivel={bloqueio ? "importante" : "rotina"}
-              semFallbackVisivel
-              texto={
-              bloqueio === "removido"
+            <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+              {bloqueio === "removido"
                 ? "Player indisponível: esta prática foi removida pelo terapeuta."
                 : bloqueio === "revogado"
                   ? "Player indisponível: esta prática não está mais liberada."
@@ -505,8 +492,7 @@ function Player() {
                           : tocando
                             ? `Reproduzindo, ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`
                             : `Pausado em ${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}.`}
-            />
-
+            </p>
           )}
 
 
@@ -679,15 +665,11 @@ function Player() {
           <div>
             <StatusMidiaBadge status="revogada" />
           </div>
-          <RegiaoAnuncio
-            nivel="importante"
-            semFallbackVisivel
-            texto={
-              bloqueio === "removido"
-                ? "Player indisponível: esta prática foi removida pelo terapeuta."
-                : "Player indisponível: o terapeuta recolheu o acesso a esta prática."
-            }
-          />
+          <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+            {bloqueio === "removido"
+              ? "Player indisponível: esta prática foi removida pelo terapeuta."
+              : "Player indisponível: o terapeuta recolheu o acesso a esta prática."}
+          </p>
           <AvisoMidiaBloqueada
             motivo={bloqueio}
             renovando={renovando}

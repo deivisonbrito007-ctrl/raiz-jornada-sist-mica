@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Flame, Sprout, Target, Check, Minus, Plus, FileDown, Loader2 } from "lucide-react";
+import { Flame, Sprout, Target, Check, Minus, Plus, FileDown, Loader2, History } from "lucide-react";
 import { toast } from "sonner";
 import {
   getMinhaBiblioteca,
@@ -13,8 +13,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { gerarRelatorioPdf } from "@/lib/raiz-relatorio";
 import { LembreteRetorno } from "@/components/lembrete-retorno";
-import { RegiaoAnuncio } from "@/components/regiao-anuncio";
-import { useAnuncio } from "@/hooks/use-anuncio";
 import { MapaCalor, NIVEIS_MAPA_CALOR } from "@/components/mapa-calor";
 import {
   calcularStreak,
@@ -76,22 +74,6 @@ function Progresso() {
   const proximaPratica = (data?.praticas ?? []).find((p) => p.status !== "concluido") ?? null;
   const lembrete = avaliarLembrete(datasConclusao, streak);
 
-  // Mesmo escopo do player: uma conclusão já falada lá não é repetida aqui.
-  const { texto: anuncioProgresso, anunciar: anunciarProgresso } = useAnuncio("progresso");
-
-  // Meta e sequência da semana: só fala quando os números mudam de verdade.
-  useEffect(() => {
-    // Só anuncia com os dois carregamentos prontos: anunciar um número
-    // provisório criaria uma fala a mais e furaria a deduplicação ao voltar
-    // para a tela.
-    if (isLoading || !data || !contexto) return;
-    anunciarProgresso(
-      `Meta semanal de ${meta.meta} ${meta.meta === 1 ? "prática" : "práticas"}. ` +
-        `${meta.concluidasSemana} ${meta.concluidasSemana === 1 ? "concluída" : "concluídas"} esta semana. ` +
-        `Sequência atual de ${streak} ${streak === 1 ? "dia" : "dias"}.`,
-    );
-  }, [isLoading, data, contexto, meta.meta, meta.concluidasSemana, streak, anunciarProgresso]);
-
   const fetchDiario = useServerFn(listarDiario);
   const [gerando, setGerando] = useState(false);
 
@@ -117,8 +99,6 @@ function Progresso() {
 
   return (
     <div>
-      <RegiaoAnuncio texto={anuncioProgresso} nivel="rotina" />
-
       <h1 className="text-3xl text-floresta">Seu caminho</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         Progresso não é pressa. É o que você já foi capaz de olhar.
@@ -137,6 +117,13 @@ function Progresso() {
         Inclui seu progresso por eixo e suas entradas do diário, para compartilhar com quem
         acompanha você.
       </p>
+
+      <Link
+        to="/app/historico"
+        className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card px-5 text-sm text-floresta"
+      >
+        <History className="h-4 w-4" aria-hidden="true" /> Ver histórico completo
+      </Link>
 
       {isLoading && <Skeleton className="mt-7 h-40 rounded-3xl" />}
 
