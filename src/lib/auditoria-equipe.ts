@@ -10,6 +10,7 @@ export const ACOES_AUDITORIA = [
   "conteudo_liberado",
   "liberacao_agendada",
   "liberacao_revogada",
+  "lembretes_configurados",
 ] as const;
 
 export type AcaoAuditoria = (typeof ACOES_AUDITORIA)[number];
@@ -24,6 +25,7 @@ export const ACAO_LABEL: Record<AcaoAuditoria, string> = {
   conteudo_liberado: "Conteúdo liberado",
   liberacao_agendada: "Liberação agendada",
   liberacao_revogada: "Liberação revogada",
+  lembretes_configurados: "Lembretes configurados",
 };
 
 /** Ações que representam perda de acesso — destacadas em cor de alerta na tela. */
@@ -36,7 +38,7 @@ export const ACOES_SENSIVEIS: AcaoAuditoria[] = [
 
 export type RegistroAuditoria = {
   acao: AcaoAuditoria;
-  alvoTipo: "equipe" | "convite" | "liberacao";
+  alvoTipo: "equipe" | "convite" | "liberacao" | "lembretes";
   alvoId?: string | null;
   alvoEmail?: string | null;
   detalhes?: Record<string, unknown>;
