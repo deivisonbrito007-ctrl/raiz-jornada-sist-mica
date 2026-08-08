@@ -587,7 +587,7 @@ function Player() {
             </div>
           )}
 
-          {(ehMidia || bloqueio === "revogado") && bloqueio && (
+          {(ehMidia || bloqueio === "revogado" || bloqueio === "removido") && bloqueio && (
             <AvisoMidiaBloqueada
               motivo={bloqueio}
               renovando={renovando}
