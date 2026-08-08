@@ -645,37 +645,41 @@ function Player() {
           )}
 
 
-          {!ehMidia && bloqueio !== "revogado" && (
+          {!ehMidia && bloqueio !== "revogado" && bloqueio !== "removido" && (
             <div className="mt-6 whitespace-pre-line rounded-3xl bg-card p-6 text-[15px] leading-relaxed text-foreground shadow-[var(--shadow-organico)]">
               {conteudo.corpo_texto || "Conteúdo em preparação."}
             </div>
           )}
 
-          <div className="mt-8 rounded-3xl bg-secondary p-6">
-            <h2 className="text-xl text-floresta">
-              {concluido ? "Prática concluída" : terminou ? "Como foi para você?" : "Ao terminar"}
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Marque como concluída e registre no diário o que se moveu.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Button
-                onClick={concluir}
-                disabled={concluido}
-                className="rounded-full bg-salvia px-6 text-salvia-foreground hover:bg-salvia/90"
-              >
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                {concluido ? "Concluída" : "Marcar como concluída"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate({ to: "/app/diario", search: { conteudoId } })}
-                className="rounded-full border-floresta/20 px-6 text-floresta"
-              >
-                <NotebookPen className="mr-2 h-4 w-4" /> Ir ao diário
-              </Button>
+          {/* Nada de concluir nem diário enquanto o acesso está bloqueado: os CTAs
+              saem da tela no mesmo instante em que a prática expira ou é removida. */}
+          {!bloqueio && (
+            <div className="mt-8 rounded-3xl bg-secondary p-6">
+              <h2 className="text-xl text-floresta">
+                {concluido ? "Prática concluída" : terminou ? "Como foi para você?" : "Ao terminar"}
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Marque como concluída e registre no diário o que se moveu.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Button
+                  onClick={concluir}
+                  disabled={concluido}
+                  className="rounded-full bg-salvia px-6 text-salvia-foreground hover:bg-salvia/90"
+                >
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  {concluido ? "Concluída" : "Marcar como concluída"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate({ to: "/app/diario", search: { conteudoId } })}
+                  className="rounded-full border-floresta/20 px-6 text-floresta"
+                >
+                  <NotebookPen className="mr-2 h-4 w-4" /> Ir ao diário
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
 
