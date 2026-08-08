@@ -52,6 +52,21 @@ function Perfil() {
         </dl>
       </div>
 
+      <Link
+        to="/app/historico"
+        className="mt-6 flex min-h-11 items-center justify-between rounded-3xl bg-card px-6 py-4 text-sm text-floresta shadow-[var(--shadow-organico)]"
+      >
+        <span>
+          Meu histórico
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            Práticas liberadas, concluídas e suas reflexões por trilha
+          </span>
+        </span>
+        <History className="h-5 w-5 shrink-0 text-salvia" aria-hidden="true" />
+      </Link>
+
+
+
       <div className="mt-6 rounded-3xl bg-secondary p-6">
         <h2 className="text-lg text-floresta">Privacidade</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
