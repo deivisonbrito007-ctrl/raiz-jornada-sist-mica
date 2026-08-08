@@ -118,9 +118,6 @@ describe("deep link para conteúdo revogado", () => {
   it("mostra o aviso de bloqueio imediatamente ao abrir a URL direta", async () => {
     abrirDeepLink();
 
-    await new Promise((r) => setTimeout(r, 200));
-    console.log("CALLS", fetchConteudo.mock.calls.length, JSON.stringify(await fetchConteudo.mock.results[0]?.value));
-    console.log("BODY", document.body.innerHTML.slice(0, 600));
     expect(await screen.findByText(/Prática não está mais liberada/i)).toBeInTheDocument();
     expect(screen.getByText(/Acesso revogado/i)).toBeInTheDocument();
     // o aviso é um diálogo de alerta, então leitores de tela recebem o estado
