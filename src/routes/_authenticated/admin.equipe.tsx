@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { mensagemPainel } from "@/lib/erro-permissao";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
+import { SecaoSemPermissao } from "@/components/permissao-ui";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -137,6 +139,7 @@ function AdminEquipe() {
   const auditoriaQuery = useQuery({
     queryKey: ["equipe-auditoria"],
     queryFn: () => auditoria(),
+    enabled: podeGerenciar,
   });
 
   const [emailConvite, setEmailConvite] = useState("");
@@ -263,6 +266,15 @@ function AdminEquipe() {
   const candidato = (data?.candidatos ?? []).find(
     (c) => c.email.toLowerCase() === emailPromover.trim().toLowerCase(),
   );
+
+  if (!carregandoPermissoes && !podeGerenciar) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl text-floresta">Equipe</h1>
+        <SecaoSemPermissao permissao="gerenciar_equipe" titulo="Gestão de equipe restrita" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
