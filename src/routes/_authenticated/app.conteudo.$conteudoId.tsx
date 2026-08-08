@@ -50,7 +50,20 @@ function Player() {
     queryFn: () => fetchConteudo({ data: { conteudoId } }),
   });
 
-  useSincronizarLiberacoes(() => void revalidarLiberacao());
+  // Remoção da prática tem aviso próprio (e anúncio próprio no leitor de tela);
+  // as outras mudanças passam pela revalidação da liberação.
+  useSincronizarLiberacoes((mudanca) => {
+    if (mudanca?.tipo === "removido" && mudanca.conteudoId === conteudoId) {
+      pararMidia();
+      if (bloqueioRef.current !== "removido") {
+        bloqueioRef.current = "removido";
+        setBloqueio("removido");
+        toast.error("Esta prática foi removida pelo seu terapeuta.");
+      }
+      return;
+    }
+    void revalidarLiberacao();
+  });
 
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   /** link de saída: recebe o foco quando a pessoa pressiona Esc no aviso */
