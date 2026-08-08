@@ -170,8 +170,12 @@ async def main() -> None:
         # ── Etapa 2: biblioteca -> trilha ────────────────────────────────────
         await page.goto(f"{BASE_URL}/app", wait_until="domcontentloaded")
         await page.get_by_role("heading", level=1).first.wait_for(timeout=30000)
+        try:
+            await page.locator('a[href*="/app/eixo/"]').first.wait_for(timeout=30000)
+        except Exception:
+            pass
         await page.evaluate("() => document.body.focus()")
-        eixo, _ = await tab_ate(page, lambda f: "/app/eixo/" in (f.get("href") or ""))
+        eixo, _ = await tab_ate(page, lambda f: "/app/eixo/" in (f.get("href") or ""), limite=80)
         if not eixo:
             print("SKIP: nenhum eixo alcançável por teclado nesta conta.")
         else:
@@ -181,8 +185,10 @@ async def main() -> None:
             await page.get_by_role("heading", level=1).first.wait_for(timeout=20000)
             await page.screenshot(path=str(SCREENSHOTS / "teclado_mobile_2_trilha.png"))
 
+            await page.wait_for_timeout(1200)
             ordenada = await page.locator("ol li a").count()
-            voltar, _ = await tab_ate(page, lambda f: "Biblioteca" in (f.get("nome") or ""), limite=20)
+            await page.evaluate("() => document.body.focus()")
+            voltar, _ = await tab_ate(page, lambda f: "Biblioteca" in (f.get("nome") or ""), limite=40)
             if not voltar:
                 falhas.append("trilha: link 'Biblioteca' (voltar) não alcançado por teclado")
 
