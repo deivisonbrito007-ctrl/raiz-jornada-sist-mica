@@ -8,6 +8,8 @@ import { getConteudo, listarDiario, salvarDiario } from "@/lib/raiz.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatarData } from "@/lib/raiz-format";
+import { useAnuncio } from "@/hooks/use-anuncio";
+import { RegiaoAnuncio } from "@/components/regiao-anuncio";
 
 export const Route = createFileRoute("/_authenticated/app/diario")({
   validateSearch: z.object({ conteudoId: z.string().uuid().optional() }),
@@ -30,6 +32,7 @@ function Diario() {
 
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const { anuncio, anunciar } = useAnuncio();
 
   const { data: entradas } = useQuery({ queryKey: ["diario"], queryFn: () => fetchDiario() });
   const { data: conteudo } = useQuery({
@@ -45,13 +48,17 @@ function Diario() {
   async function enviar() {
     if (!texto.trim()) return;
     setEnviando(true);
+    anunciar("Guardando sua reflexão.");
     try {
       await salvar({ data: { texto, conteudoId: conteudoId ?? null } });
       setTexto("");
       queryClient.invalidateQueries({ queryKey: ["diario"] });
       toast.success("Reflexão guardada.");
+      anunciar("Reflexão guardada no seu diário.");
     } catch (erro) {
-      toast.error(erro instanceof Error ? erro.message : "Não foi possível salvar");
+      const mensagem = erro instanceof Error ? erro.message : "Não foi possível salvar";
+      toast.error(mensagem);
+      anunciar(`Erro ao salvar a reflexão: ${mensagem}`, "assertive");
     } finally {
       setEnviando(false);
     }
@@ -59,6 +66,7 @@ function Diario() {
 
   return (
     <div>
+      <RegiaoAnuncio anuncio={anuncio} rotulo="Avisos do diário" />
       <h1 className="text-3xl text-floresta">Diário de reflexão</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         Um espaço privado entre você e quem acompanha o seu processo.
