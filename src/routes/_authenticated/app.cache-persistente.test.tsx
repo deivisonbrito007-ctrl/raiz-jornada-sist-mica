@@ -217,23 +217,24 @@ describe("remoção de conteúdo da sequência invalida cache persistente", () =
     const queryClient = criarCachePersistente();
     fetchBiblioteca.mockResolvedValue(bibliotecaCom([MANTIDA, REMOVIDA]));
     const tela = montar(Biblioteca, queryClient);
-    expect(await screen.findByText(REMOVIDA)).toBeInTheDocument();
+    expect(await screen.findByText("0/2 concluídos")).toBeInTheDocument();
     await prontoParaEventos();
 
     fetchBiblioteca.mockResolvedValue(bibliotecaCom([MANTIDA]));
     eventoDeRemocao();
-    await waitFor(() => expect(screen.queryByText(REMOVIDA)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("0/1 concluídos")).toBeInTheDocument());
 
     tela.unmount();
     handlers = [];
     montar(Biblioteca, queryClient);
 
-    expect(await screen.findByText(MANTIDA)).toBeInTheDocument();
+    expect(await screen.findByText("0/1 concluídos")).toBeInTheDocument();
     await tick();
     await tick();
-    expect(screen.queryByText(REMOVIDA)).not.toBeInTheDocument();
+    expect(screen.queryByText("0/2 concluídos")).not.toBeInTheDocument();
     expect(textoDoCache(queryClient)).not.toContain(REMOVIDA);
   });
+
 
   it("marca o cache do player da prática removida como inválido, forçando nova checagem", async () => {
     const queryClient = criarCachePersistente();
