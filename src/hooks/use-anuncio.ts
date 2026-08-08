@@ -17,11 +17,10 @@ export function useAnuncio(escopo: string) {
   const anunciar = useCallback(
     (novo: string) => {
       if (!novo) return;
-      // Mesma mensagem do último anúncio deste escopo: não repete.
-      if (ultimoPorEscopo.get(escopo) === novo) {
-        setTexto(novo);
-        return;
-      }
+      // Mesma mensagem do último anúncio deste escopo: não repete. Isso vale
+      // inclusive depois de remontar a tela — a live region fica vazia e o
+      // leitor de tela não ouve o mesmo aviso duas vezes.
+      if (ultimoPorEscopo.get(escopo) === novo) return;
       ultimoPorEscopo.set(escopo, novo);
       setTexto(novo);
     },
