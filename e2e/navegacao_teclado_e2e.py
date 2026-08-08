@@ -245,7 +245,6 @@ async def main() -> None:
 
     # Zera liberações do eixo para que a revogação do teste seja a única fonte de verdade.
     api.delete("liberacoes", {"cliente_id": f"eq.{uid}", "eixo_id": f"eq.{eixo['id']}"})
-    liberar()
 
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=True)
@@ -256,9 +255,11 @@ async def main() -> None:
 
         await restaurar_sessao(context, page, session, storage_key, cookies_json)
 
-        # 1) Biblioteca: alcança o eixo liberado só com Tab
+        # 1) Biblioteca: o eixo começa bloqueado e a liberação chega em tempo real
         await page.goto(f"{BASE_URL}/app", wait_until="domcontentloaded")
-        await page.get_by_role("link").filter(has_text=eixo["nome"]).first.wait_for(timeout=20000)
+        await page.wait_for_timeout(2500)
+        liberar()
+        await page.locator(f'a[href$="/app/eixo/{eixo["id"]}"]').first.wait_for(timeout=20000)
         await page.evaluate("() => document.body.focus()")
         no_eixo = lambda f: (f["href"] or "").endswith(f"/app/eixo/{eixo['id']}")
         link_eixo = await tab_ate(page, no_eixo)
