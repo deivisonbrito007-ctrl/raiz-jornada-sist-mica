@@ -99,6 +99,7 @@ describe("contagem regressiva do player com timers falsos", () => {
   });
 
   it("sem espera ativa não há relógio rodando por trás", () => {
+    const base = vi.getTimerCount();
     const { unmount } = render(
       <AvisoMidiaBloqueada
         motivo="validade"
@@ -107,7 +108,7 @@ describe("contagem regressiva do player com timers falsos", () => {
         onRenovar={() => {}}
       />,
     );
-    expect(vi.getTimerCount()).toBe(0);
+    expect(vi.getTimerCount()).toBe(base);
     unmount();
   });
 });
@@ -122,10 +123,11 @@ describe("troca rápida de telas durante a espera", () => {
   });
 
   it("sair do player durante a espera encerra o relógio da contagem", () => {
+    const base = vi.getTimerCount();
     const { unmount } = montar();
-    expect(vi.getTimerCount()).toBeGreaterThan(0);
+    expect(vi.getTimerCount()).toBe(base + 1);
     unmount();
-    expect(vi.getTimerCount()).toBe(0);
+    expect(vi.getTimerCount()).toBe(base);
     // avançar o tempo depois de sair não pode quebrar nada nem avisar ninguém
     act(() => vi.advanceTimersByTime(20_000));
     expect(screen.queryByRole("alertdialog")).toBeNull();
@@ -152,14 +154,15 @@ describe("troca rápida de telas durante a espera", () => {
   });
 
   it("idas e vindas repetidas não acumulam relógios nem anúncios duplicados", () => {
+    const base = vi.getTimerCount();
     for (let i = 0; i < 5; i++) {
       const { unmount } = montar();
       act(() => vi.advanceTimersByTime(500));
       unmount();
     }
-    expect(vi.getTimerCount()).toBe(0);
+    expect(vi.getTimerCount()).toBe(base);
     montar();
-    expect(vi.getTimerCount()).toBe(1);
+    expect(vi.getTimerCount()).toBe(base + 1);
     expect(screen.getAllByRole("status")).toHaveLength(1);
   });
 
