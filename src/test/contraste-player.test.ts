@@ -184,10 +184,9 @@ describe("contraste WCAG dos estados do player (axe-core)", () => {
       for (const par of PARES) {
         it(`${par.onde} atende ao mínimo WCAG AA`, () => {
           const r = verificarContraste(par, tema as Tema);
-          expect(
-            r.ok,
-            `${par.onde} no tema ${tema}: ${r.razao}:1 (mínimo ${r.minimo}:1)`,
-          ).toBe(true);
+          expect(r.ok, `${par.onde} no tema ${tema}: ${r.razao}:1 (mínimo ${r.minimo}:1)`).toBe(
+            true,
+          );
         });
       }
     });

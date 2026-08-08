@@ -10,11 +10,19 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import axe from "axe-core";
 
-const { Color, getContrast, flattenColors } = (axe as any).commons.color as {
-  Color: new (r?: number, g?: number, b?: number, a?: number) => any;
-  getContrast: (a: unknown, b: unknown) => number;
-  flattenColors: (fg: unknown, bg: unknown) => any;
+type CorAxe = {
+  alpha?: number;
+  parseString: (valor: string) => void;
 };
+
+type ColorApi = {
+  Color: new (r?: number, g?: number, b?: number, a?: number) => CorAxe;
+  getContrast: (a: CorAxe, b: CorAxe) => number;
+  flattenColors: (frente: CorAxe, fundo: CorAxe) => CorAxe;
+};
+
+const { Color, getContrast, flattenColors } = (axe as unknown as { commons: { color: ColorApi } })
+  .commons.color;
 
 export type Tema = "claro" | "escuro";
 
