@@ -45,6 +45,8 @@ function Player() {
   const salvarProgresso = useServerFn(marcarProgresso);
   const persistirPosicao = useServerFn(salvarPosicao);
 
+  const { anuncio, anunciar } = useAnuncio();
+
   const { data, isLoading } = useQuery({
     queryKey: ["conteudo", conteudoId],
     queryFn: () => fetchConteudo({ data: { conteudoId } }),
@@ -378,6 +380,7 @@ function Player() {
       // um único registro de "em andamento" por sessão, mesmo após renovar
       if (!progressoIniciadoRef.current) {
         progressoIniciadoRef.current = true;
+        anunciar("Prática marcada como em andamento no seu progresso.");
         void registrar("em_andamento");
       }
     } else {
@@ -398,17 +401,29 @@ function Player() {
           ? "Esta prática não está mais liberada. Fale com seu terapeuta se quiser continuar."
           : "Acesso à mídia expirado. Renove antes de concluir a prática.";
       toast.error(texto);
+      anunciar(texto, "assertive");
       return;
     }
-    await registrar("concluido");
+    anunciar("Salvando a conclusão da prática.");
+    try {
+      await registrar("concluido");
+    } catch {
+      toast.error("Não foi possível salvar a conclusão agora.");
+      anunciar("Não foi possível salvar a conclusão. Tente de novo.", "assertive");
+      return;
+    }
     setConcluido(true);
     toast.success("Prática concluída. Que tal registrar no diário?");
+    anunciar(
+      `Progresso atualizado: ${conteudo?.titulo ?? "a prática"} está concluída. Que tal registrar no diário?`,
+    );
   }
 
 
 
   return (
     <div>
+      <RegiaoAnuncio anuncio={anuncio} />
       {conteudo ? (
         <Link
           ref={voltarRef}

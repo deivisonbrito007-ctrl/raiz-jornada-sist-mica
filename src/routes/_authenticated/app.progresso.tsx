@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Flame, Sprout, Target, Check, Minus, Plus, FileDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAnuncio } from "@/hooks/use-anuncio";
+import { RegiaoAnuncio } from "@/components/regiao-anuncio";
 import {
   getMinhaBiblioteca,
   getMeuContexto,
@@ -76,6 +78,15 @@ function Progresso() {
 
   const fetchDiario = useServerFn(listarDiario);
   const [gerando, setGerando] = useState(false);
+  const { anuncio, anunciar } = useAnuncio();
+
+  // Cada mudança no progresso da semana é anunciada ao leitor de tela.
+  useEffect(() => {
+    if (isLoading) return;
+    anunciar(
+      `Progresso atualizado: ${meta.concluidas} de ${meta.meta} práticas nesta semana. Sequência atual de ${streak} ${streak === 1 ? "dia" : "dias"}.`,
+    );
+  }, [meta.concluidas, meta.meta, streak, isLoading, anunciar]);
 
   const baixarRelatorio = async () => {
     setGerando(true);
@@ -90,8 +101,10 @@ function Progresso() {
         diario: diario ?? [],
       });
       toast.success("Relatório gerado. Verifique seus downloads.");
+      anunciar("Relatório de progresso gerado. Verifique seus downloads.");
     } catch {
       toast.error("Não foi possível gerar o relatório agora.");
+      anunciar("Não foi possível gerar o relatório agora.", "assertive");
     } finally {
       setGerando(false);
     }
@@ -99,6 +112,7 @@ function Progresso() {
 
   return (
     <div>
+      <RegiaoAnuncio anuncio={anuncio} />
       <h1 className="text-3xl text-floresta">Seu caminho</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         Progresso não é pressa. É o que você já foi capaz de olhar.
