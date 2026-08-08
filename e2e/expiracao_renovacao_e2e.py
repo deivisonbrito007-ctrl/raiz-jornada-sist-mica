@@ -333,6 +333,13 @@ async def main() -> None:
             {"cliente_id": f"eq.{uid}", "eixo_id": f"eq.{eixo['id']}", "conteudo_id": "is.null"},
         )
 
+    def restaurar() -> None:
+        """Devolve a liberação ao estado em que estava antes do teste."""
+        if estava_liberado:
+            liberar()
+        else:
+            limpar()
+
     limpar()
     falhas: list[str] = []
 
@@ -376,7 +383,7 @@ async def main() -> None:
         except Exception:
             corpo = " ".join((await page.locator("body").inner_text()).split())
             print("FALHA: player não montou. Tela:", corpo[:300])
-            limpar()
+            restaurar()
             raise SystemExit(1)
 
         selo = await selo_texto(page)
@@ -480,7 +487,7 @@ async def main() -> None:
         await page.screenshot(path=str(SCREENSHOTS / "renov_6_reliberado.png"))
         print(f"OK: renovação do terapeuta devolveu o acesso e a posição (t={pos_final:.1f}s)")
 
-        limpar()
+        restaurar()
         await browser.close()
 
     if falhas:
