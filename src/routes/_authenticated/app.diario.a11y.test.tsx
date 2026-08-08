@@ -46,7 +46,7 @@ const toastMock = { success: vi.fn(), error: vi.fn(), info: vi.fn() };
 vi.mock("sonner", () => ({ toast: toastMock }));
 
 const { Route } = await import("./app.diario");
-const Diario = (Route as any).component as () => JSX.Element;
+const Diario = (Route as any).component as () => React.ReactElement;
 
 function renderizar() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
