@@ -102,6 +102,7 @@ function AppLayout() {
       </header>
 
       <main className="mx-auto max-w-2xl px-5 py-6">
+        <AvisoRemocaoRealtime />
         <Outlet />
       </main>
 
