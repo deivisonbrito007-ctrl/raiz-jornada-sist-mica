@@ -30,6 +30,7 @@ export const Route = createFileRoute("/api/public/hooks/lembretes")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { enviarPush } = await import("@/lib/push.server");
+        const { enviarEmailLembrete } = await import("@/lib/email-lembrete.server");
 
         const agora = new Date();
         const { data: candidatos } = await supabaseAdmin
