@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 
 export type MotivoBloqueio = "validade" | "revogado" | "removido" | "falha" | "limite";
 
-
 interface Props {
   motivo: MotivoBloqueio;
   renovando: boolean;
@@ -42,16 +41,19 @@ export function AvisoMidiaBloqueada({
 }: Props) {
   const segundos = useContagem(emEspera ? esperaAte : null);
 
-  const configs: Record<MotivoBloqueio, {
-    icone: React.ReactNode;
-    titulo: string;
-    texto: string;
-    botao: string;
-    estado: string;
-    tom: "ocre" | "terracota" | "muted";
-  }> = {
+  const configs: Record<
+    MotivoBloqueio,
+    {
+      icone: React.ReactNode;
+      titulo: string;
+      texto: string;
+      botao: string;
+      estado: string;
+      tom: "ocre" | "terracota" | "muted";
+    }
+  > = {
     validade: {
-      icone: <TimerOff className="mt-0.5 h-5 w-5 shrink-0 text-ocre" aria-hidden="true" />,
+      icone: <TimerOff className="mt-0.5 h-5 w-5 shrink-0 text-ocre-forte" aria-hidden="true" />,
       titulo: "O link seguro expirou",
       texto:
         "O link de reprodução desta mídia tem tempo de validade por segurança e acabou de encerrar. Não se preocupe: o ponto onde você parou está guardado e nenhum progresso foi perdido.",
@@ -78,7 +80,9 @@ export function AvisoMidiaBloqueada({
       tom: "terracota",
     },
     falha: {
-      icone: <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />,
+      icone: (
+        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+      ),
       titulo: "Não conseguimos renovar agora",
       texto:
         "Aconteceu uma falha de conexão ao verificar o acesso. Aguarde um instante e tente de novo — o link anterior expirou, mas a prática ainda pode estar liberada.",
@@ -87,7 +91,7 @@ export function AvisoMidiaBloqueada({
       tom: "muted",
     },
     limite: {
-      icone: <Hourglass className="mt-0.5 h-5 w-5 shrink-0 text-ocre" aria-hidden="true" />,
+      icone: <Hourglass className="mt-0.5 h-5 w-5 shrink-0 text-ocre-forte" aria-hidden="true" />,
       titulo: "Muitos pedidos em pouco tempo",
       texto:
         "Para proteger sua conta, limitamos quantos links seguros podem ser gerados por minuto. Você chegou nesse limite: aguarde alguns segundos e tente de novo. Nada foi perdido — seu progresso e o ponto onde você parou seguem salvos.",
@@ -96,7 +100,6 @@ export function AvisoMidiaBloqueada({
       tom: "ocre",
     },
   };
-
 
   const cfg = configs[motivo];
 
@@ -139,7 +142,6 @@ export function AvisoMidiaBloqueada({
     contadorRef.current += 1;
     setMudanca({ id: contadorRef.current, texto: anuncios[motivo] });
   }, [motivo]);
-
 
   /** Tab circula entre os controles do aviso; Esc devolve o foco para fora. */
   const aoTeclar = useCallback(
@@ -227,7 +229,6 @@ export function AvisoMidiaBloqueada({
         {anuncio}
       </p>
 
-
       <div className="flex items-start gap-3">
         {cfg.icone}
         <div className="flex-1">
@@ -278,5 +279,4 @@ export function AvisoMidiaBloqueada({
       </div>
     </div>
   );
-
 }

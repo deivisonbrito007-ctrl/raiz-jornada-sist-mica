@@ -64,6 +64,10 @@
   --color-salvia: var(--salvia);
   --color-salvia-foreground: var(--salvia-foreground);
   --color-ocre: var(--ocre);
+  --color-ocre-forte: var(--ocre-forte);
+  --color-palco: var(--palco);
+  --color-palco-foreground: var(--palco-foreground);
+  --color-palco-realce: var(--palco-realce);
   --color-ocre-foreground: var(--ocre-foreground);
   --color-floresta: var(--floresta);
   --color-floresta-foreground: var(--floresta-foreground);
@@ -95,10 +99,17 @@
   --ring: oklch(0.482 0.121 35.8);
   --terracota: oklch(0.482 0.121 35.8);
   --terracota-foreground: oklch(0.972 0.017 88.5);
-  --salvia: oklch(0.567 0.055 128.5);
+  --salvia: oklch(0.472 0.068 128.5);
   --salvia-foreground: oklch(0.972 0.017 88.5);
   --ocre: oklch(0.686 0.126 84.5);
   --ocre-foreground: oklch(0.268 0.033 148.5);
+  /* Variante escura do ocre para ícones e textos sobre fundos claros (WCAG AA). */
+  --ocre-forte: oklch(0.482 0.113 84.5);
+  /* Palco do player: superfície escura fixa nos dois temas, com realce de
+     contraste garantido para trilho, tempos e ícones de controle. */
+  --palco: oklch(0.268 0.033 148.5);
+  --palco-foreground: oklch(0.972 0.017 88.5);
+  --palco-realce: oklch(0.762 0.126 84.5);
   --floresta: oklch(0.268 0.033 148.5);
   --floresta-foreground: oklch(0.941 0.026 88.5);
   --pergaminho: oklch(0.941 0.026 88.5);
@@ -151,6 +162,20 @@
   --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+  /* Paleta da marca adaptada ao tema escuro (contraste AA verificado por axe). */
+  --terracota: oklch(0.762 0.115 35.8);
+  --terracota-foreground: oklch(0.208 0.042 265.755);
+  --salvia: oklch(0.822 0.062 128.5);
+  --salvia-foreground: oklch(0.208 0.042 265.755);
+  --ocre: oklch(0.842 0.11 84.5);
+  --ocre-foreground: oklch(0.208 0.042 265.755);
+  --ocre-forte: oklch(0.842 0.11 84.5);
+  --floresta: oklch(0.902 0.032 148.5);
+  --floresta-foreground: oklch(0.208 0.042 265.755);
+  --pergaminho: oklch(0.208 0.042 265.755);
+  --palco: oklch(0.222 0.033 148.5);
+  --palco-foreground: oklch(0.972 0.017 88.5);
+  --palco-realce: oklch(0.762 0.126 84.5);
 }
 
 @layer base {
