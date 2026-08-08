@@ -383,7 +383,7 @@ async def main() -> None:
         selo = await selo_texto(page)
         if "Acesso expirado" not in selo:
             falhas.append(f"selo não virou 'Acesso expirado' (veio: {selo!r})")
-        if await page.get_by_role("button", name="Reproduzir").count():
+        if await page.locator('[data-foco-player="play"]').count():
             falhas.append("controles de reprodução continuaram acessíveis após expirar")
         cta = page.get_by_role("button", name="Renovar acesso")
         if not await cta.count():
@@ -398,7 +398,8 @@ async def main() -> None:
         estado["segundos"] = VALIDADE_LONGA_S
         await cta.first.click()
         try:
-            await page.get_by_role("button", name="Reproduzir").wait_for(timeout=30000)
+            # após renovar, o controle pode voltar já reproduzindo ("Pausar")
+            await page.locator('[data-foco-player="play"]').wait_for(timeout=30000)
         except Exception:
             corpo = " ".join((await page.locator("body").inner_text()).split())
             print("DEBUG tela após renovar:", corpo[:600])
@@ -441,7 +442,7 @@ async def main() -> None:
         tentar = page.get_by_role("button", name="Tentar novamente")
         if await tentar.count():
             await tentar.first.click()
-        await page.get_by_role("button", name="Reproduzir").wait_for(timeout=30000)
+        await page.locator('[data-foco-player="play"]').wait_for(timeout=30000)
         selo = await selo_texto(page)
         if "Mídia liberada" not in selo:
             falhas.append(f"selo não voltou após a renovação do terapeuta (veio: {selo!r})")
