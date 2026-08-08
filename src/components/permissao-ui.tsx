@@ -1,7 +1,12 @@
 import type { ReactElement, ReactNode } from "react";
 import { cloneElement, isValidElement } from "react";
 import { Lock } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
 import { PERMISSAO_LABEL, type Permissao } from "@/lib/permissoes";
 
@@ -68,12 +73,14 @@ export function ControlePermitido({ permissao, children, motivo }: ControleProps
   });
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="inline-flex cursor-not-allowed">{bloqueado}</span>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-xs text-xs">{texto}</TooltipContent>
-    </Tooltip>
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex cursor-not-allowed">{bloqueado}</span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs text-xs">{texto}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
