@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Flame, Sprout, Target, Check, Minus, Plus, FileDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAnuncio } from "@/hooks/use-anuncio";
+import { RegiaoAnuncio } from "@/components/regiao-anuncio";
 import {
   getMinhaBiblioteca,
   getMeuContexto,
@@ -43,9 +45,21 @@ function Progresso() {
   });
   const { data: contexto } = useQuery({ queryKey: ["contexto"], queryFn: () => fetchContexto() });
 
+  const { anuncio, anunciar } = useAnuncio();
+
+  useEffect(() => {
+    if (!erroBiblioteca) return;
+    const detalhe = (erroBiblioteca as Error).message || "Falha na consulta ao banco de dados.";
+    anunciar(`Não foi possível carregar seu progresso: ${detalhe}`, "assertive");
+  }, [erroBiblioteca, anunciar]);
+
   const mutarMeta = useMutation({
     mutationFn: (meta: number) => salvarMeta({ data: { meta } }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contexto"] }),
+    onSuccess: (_dados, meta) => {
+      queryClient.invalidateQueries({ queryKey: ["contexto"] });
+      anunciar(`Meta semanal atualizada para ${meta} práticas.`);
+    },
+    onError: () => anunciar("Não foi possível salvar sua meta semanal.", "assertive"),
   });
 
   const eixos = (data?.eixos ?? []).filter((e) => e.liberado);
@@ -79,6 +93,7 @@ function Progresso() {
 
   const baixarRelatorio = async () => {
     setGerando(true);
+    anunciar("Gerando seu relatório em PDF.");
     try {
       const diario = await fetchDiario();
       gerarRelatorioPdf({
@@ -90,8 +105,10 @@ function Progresso() {
         diario: diario ?? [],
       });
       toast.success("Relatório gerado. Verifique seus downloads.");
+      anunciar("Relatório em PDF gerado. Verifique seus downloads.");
     } catch {
       toast.error("Não foi possível gerar o relatório agora.");
+      anunciar("Não foi possível gerar o relatório agora.", "assertive");
     } finally {
       setGerando(false);
     }
@@ -99,6 +116,7 @@ function Progresso() {
 
   return (
     <div>
+      <RegiaoAnuncio anuncio={anuncio} rotulo="Avisos do progresso" />
       <h1 className="text-3xl text-floresta">Seu caminho</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         Progresso não é pressa. É o que você já foi capaz de olhar.
