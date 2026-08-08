@@ -8,6 +8,7 @@ import { getMeuContexto, listarNotificacoes, marcarNotificacoesLidas } from "@/l
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Bell } from "lucide-react";
 import { formatarData } from "@/lib/raiz-format";
+import { AvisoRemocaoRealtime } from "@/components/aviso-remocao-realtime";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,

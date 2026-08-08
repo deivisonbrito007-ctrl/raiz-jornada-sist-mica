@@ -70,7 +70,7 @@ const TETO_TIMEOUT = 2_147_483_647;
  */
 export type MudancaSincronia =
   | { tipo: "removido"; conteudoId: string }
-  | { tipo: "liberacao-removida"; liberacaoId?: string }
+  | { tipo: "liberacao-removida"; liberacaoId?: string | undefined }
   | { tipo: "sequencia-removida"; eixoId: string }
   | { tipo: "liberacao" };
 
