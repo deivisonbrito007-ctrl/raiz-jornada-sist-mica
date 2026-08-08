@@ -16,10 +16,11 @@ export const Route = createFileRoute("/_authenticated/app")({
 
 const abas = [
   { to: "/app", label: "Início", icone: Home, exact: true },
-  { to: "/app/progresso", label: "Progresso", icone: Compass, exact: false },
+  { to: "/app/jornada", label: "Jornada", icone: Compass, exact: false },
   { to: "/app/diario", label: "Diário", icone: NotebookPen, exact: false },
   { to: "/app/perfil", label: "Perfil", icone: User, exact: false },
 ];
+
 
 function AppLayout() {
   const navigate = useNavigate();

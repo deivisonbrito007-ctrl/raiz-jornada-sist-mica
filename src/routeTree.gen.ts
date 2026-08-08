@@ -21,18 +21,23 @@ import { Route as AuthenticatedEntradaRouteImport } from './routes/_authenticate
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminAcompanhamentoRouteImport } from './routes/_authenticated/admin.acompanhamento'
 import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin.auditoria'
+import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
 import { Route as AuthenticatedAdminConteudosRouteImport } from './routes/_authenticated/admin.conteudos'
 import { Route as AuthenticatedAdminEquipeRouteImport } from './routes/_authenticated/admin.equipe'
 import { Route as AuthenticatedAdminPacotesRouteImport } from './routes/_authenticated/admin.pacotes'
+import { Route as AuthenticatedAdminTrilhasRouteImport } from './routes/_authenticated/admin.trilhas'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppDiarioRouteImport } from './routes/_authenticated/app.diario'
 import { Route as AuthenticatedAppHistoricoRouteImport } from './routes/_authenticated/app.historico'
+import { Route as AuthenticatedAppJornadaRouteImport } from './routes/_authenticated/app.jornada'
 import { Route as AuthenticatedAppPerfilRouteImport } from './routes/_authenticated/app.perfil'
 import { Route as AuthenticatedAppProgressoRouteImport } from './routes/_authenticated/app.progresso'
 import { Route as AuthenticatedAdminClienteClienteIdRouteImport } from './routes/_authenticated/admin.cliente.$clienteId'
 import { Route as AuthenticatedAppConteudoConteudoIdRouteImport } from './routes/_authenticated/app.conteudo.$conteudoId'
 import { Route as AuthenticatedAppEixoEixoIdRouteImport } from './routes/_authenticated/app.eixo.$eixoId'
+import { Route as AuthenticatedAppEtapaConteudoIdRouteImport } from './routes/_authenticated/app.etapa.$conteudoId'
 import { Route as ApiPublicHooksLembretesRouteImport } from './routes/api/public/hooks/lembretes'
 
 const IndexRoute = IndexRouteImport.update({
@@ -97,10 +102,22 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminAcompanhamentoRoute =
+  AuthenticatedAdminAcompanhamentoRouteImport.update({
+    id: '/acompanhamento',
+    path: '/acompanhamento',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAuditoriaRoute =
   AuthenticatedAdminAuditoriaRouteImport.update({
     id: '/auditoria',
     path: '/auditoria',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminClientesRoute =
+  AuthenticatedAdminClientesRouteImport.update({
+    id: '/clientes',
+    path: '/clientes',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminConteudosRoute =
@@ -121,6 +138,12 @@ const AuthenticatedAdminPacotesRoute =
     path: '/pacotes',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminTrilhasRoute =
+  AuthenticatedAdminTrilhasRouteImport.update({
+    id: '/trilhas',
+    path: '/trilhas',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -137,6 +160,11 @@ const AuthenticatedAppHistoricoRoute =
     path: '/historico',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppJornadaRoute = AuthenticatedAppJornadaRouteImport.update({
+  id: '/jornada',
+  path: '/jornada',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppPerfilRoute = AuthenticatedAppPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -166,6 +194,12 @@ const AuthenticatedAppEixoEixoIdRoute =
     path: '/eixo/$eixoId',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppEtapaConteudoIdRoute =
+  AuthenticatedAppEtapaConteudoIdRouteImport.update({
+    id: '/etapa/$conteudoId',
+    path: '/etapa/$conteudoId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const ApiPublicHooksLembretesRoute = ApiPublicHooksLembretesRouteImport.update({
   id: '/api/public/hooks/lembretes',
   path: '/api/public/hooks/lembretes',
@@ -183,12 +217,16 @@ export interface FileRoutesByFullPath {
   '/entrada': typeof AuthenticatedEntradaRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/acompanhamento': typeof AuthenticatedAdminAcompanhamentoRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
+  '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
   '/admin/equipe': typeof AuthenticatedAdminEquipeRoute
   '/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
+  '/admin/trilhas': typeof AuthenticatedAdminTrilhasRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/app/jornada': typeof AuthenticatedAppJornadaRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/progresso': typeof AuthenticatedAppProgressoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -196,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
   '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
+  '/app/etapa/$conteudoId': typeof AuthenticatedAppEtapaConteudoIdRoute
   '/api/public/hooks/lembretes': typeof ApiPublicHooksLembretesRoute
 }
 export interface FileRoutesByTo {
@@ -207,12 +246,16 @@ export interface FileRoutesByTo {
   '/entrada': typeof AuthenticatedEntradaRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/acompanhamento': typeof AuthenticatedAdminAcompanhamentoRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
+  '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
   '/admin/equipe': typeof AuthenticatedAdminEquipeRoute
   '/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
+  '/admin/trilhas': typeof AuthenticatedAdminTrilhasRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/app/jornada': typeof AuthenticatedAppJornadaRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/progresso': typeof AuthenticatedAppProgressoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -220,6 +263,7 @@ export interface FileRoutesByTo {
   '/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
   '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
+  '/app/etapa/$conteudoId': typeof AuthenticatedAppEtapaConteudoIdRoute
   '/api/public/hooks/lembretes': typeof ApiPublicHooksLembretesRoute
 }
 export interface FileRoutesById {
@@ -235,12 +279,16 @@ export interface FileRoutesById {
   '/_authenticated/entrada': typeof AuthenticatedEntradaRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/_authenticated/admin/acompanhamento': typeof AuthenticatedAdminAcompanhamentoRoute
   '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
+  '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/_authenticated/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
   '/_authenticated/admin/equipe': typeof AuthenticatedAdminEquipeRoute
   '/_authenticated/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
+  '/_authenticated/admin/trilhas': typeof AuthenticatedAdminTrilhasRoute
   '/_authenticated/app/diario': typeof AuthenticatedAppDiarioRoute
   '/_authenticated/app/historico': typeof AuthenticatedAppHistoricoRoute
+  '/_authenticated/app/jornada': typeof AuthenticatedAppJornadaRoute
   '/_authenticated/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/_authenticated/app/progresso': typeof AuthenticatedAppProgressoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -248,6 +296,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
   '/_authenticated/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/_authenticated/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
+  '/_authenticated/app/etapa/$conteudoId': typeof AuthenticatedAppEtapaConteudoIdRoute
   '/api/public/hooks/lembretes': typeof ApiPublicHooksLembretesRoute
 }
 export interface FileRouteTypes {
@@ -263,12 +312,16 @@ export interface FileRouteTypes {
     | '/entrada'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/admin/acompanhamento'
     | '/admin/auditoria'
+    | '/admin/clientes'
     | '/admin/conteudos'
     | '/admin/equipe'
     | '/admin/pacotes'
+    | '/admin/trilhas'
     | '/app/diario'
     | '/app/historico'
+    | '/app/jornada'
     | '/app/perfil'
     | '/app/progresso'
     | '/admin/'
@@ -276,6 +329,7 @@ export interface FileRouteTypes {
     | '/admin/cliente/$clienteId'
     | '/app/conteudo/$conteudoId'
     | '/app/eixo/$eixoId'
+    | '/app/etapa/$conteudoId'
     | '/api/public/hooks/lembretes'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -287,12 +341,16 @@ export interface FileRouteTypes {
     | '/entrada'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/admin/acompanhamento'
     | '/admin/auditoria'
+    | '/admin/clientes'
     | '/admin/conteudos'
     | '/admin/equipe'
     | '/admin/pacotes'
+    | '/admin/trilhas'
     | '/app/diario'
     | '/app/historico'
+    | '/app/jornada'
     | '/app/perfil'
     | '/app/progresso'
     | '/admin'
@@ -300,6 +358,7 @@ export interface FileRouteTypes {
     | '/admin/cliente/$clienteId'
     | '/app/conteudo/$conteudoId'
     | '/app/eixo/$eixoId'
+    | '/app/etapa/$conteudoId'
     | '/api/public/hooks/lembretes'
   id:
     | '__root__'
@@ -314,12 +373,16 @@ export interface FileRouteTypes {
     | '/_authenticated/entrada'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/_authenticated/admin/acompanhamento'
     | '/_authenticated/admin/auditoria'
+    | '/_authenticated/admin/clientes'
     | '/_authenticated/admin/conteudos'
     | '/_authenticated/admin/equipe'
     | '/_authenticated/admin/pacotes'
+    | '/_authenticated/admin/trilhas'
     | '/_authenticated/app/diario'
     | '/_authenticated/app/historico'
+    | '/_authenticated/app/jornada'
     | '/_authenticated/app/perfil'
     | '/_authenticated/app/progresso'
     | '/_authenticated/admin/'
@@ -327,6 +390,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/cliente/$clienteId'
     | '/_authenticated/app/conteudo/$conteudoId'
     | '/_authenticated/app/eixo/$eixoId'
+    | '/_authenticated/app/etapa/$conteudoId'
     | '/api/public/hooks/lembretes'
   fileRoutesById: FileRoutesById
 }
@@ -428,11 +492,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/acompanhamento': {
+      id: '/_authenticated/admin/acompanhamento'
+      path: '/acompanhamento'
+      fullPath: '/admin/acompanhamento'
+      preLoaderRoute: typeof AuthenticatedAdminAcompanhamentoRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/auditoria': {
       id: '/_authenticated/admin/auditoria'
       path: '/auditoria'
       fullPath: '/admin/auditoria'
       preLoaderRoute: typeof AuthenticatedAdminAuditoriaRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/clientes': {
+      id: '/_authenticated/admin/clientes'
+      path: '/clientes'
+      fullPath: '/admin/clientes'
+      preLoaderRoute: typeof AuthenticatedAdminClientesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/conteudos': {
@@ -456,6 +534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPacotesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/trilhas': {
+      id: '/_authenticated/admin/trilhas'
+      path: '/trilhas'
+      fullPath: '/admin/trilhas'
+      preLoaderRoute: typeof AuthenticatedAdminTrilhasRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/app/': {
       id: '/_authenticated/app/'
       path: '/'
@@ -475,6 +560,13 @@ declare module '@tanstack/react-router' {
       path: '/historico'
       fullPath: '/app/historico'
       preLoaderRoute: typeof AuthenticatedAppHistoricoRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/jornada': {
+      id: '/_authenticated/app/jornada'
+      path: '/jornada'
+      fullPath: '/app/jornada'
+      preLoaderRoute: typeof AuthenticatedAppJornadaRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/perfil': {
@@ -512,6 +604,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppEixoEixoIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/etapa/$conteudoId': {
+      id: '/_authenticated/app/etapa/$conteudoId'
+      path: '/etapa/$conteudoId'
+      fullPath: '/app/etapa/$conteudoId'
+      preLoaderRoute: typeof AuthenticatedAppEtapaConteudoIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/api/public/hooks/lembretes': {
       id: '/api/public/hooks/lembretes'
       path: '/api/public/hooks/lembretes'
@@ -523,19 +622,25 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAcompanhamentoRoute: typeof AuthenticatedAdminAcompanhamentoRoute
   AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
+  AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
   AuthenticatedAdminConteudosRoute: typeof AuthenticatedAdminConteudosRoute
   AuthenticatedAdminEquipeRoute: typeof AuthenticatedAdminEquipeRoute
   AuthenticatedAdminPacotesRoute: typeof AuthenticatedAdminPacotesRoute
+  AuthenticatedAdminTrilhasRoute: typeof AuthenticatedAdminTrilhasRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminClienteClienteIdRoute: typeof AuthenticatedAdminClienteClienteIdRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAcompanhamentoRoute: AuthenticatedAdminAcompanhamentoRoute,
   AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
+  AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
   AuthenticatedAdminConteudosRoute: AuthenticatedAdminConteudosRoute,
   AuthenticatedAdminEquipeRoute: AuthenticatedAdminEquipeRoute,
   AuthenticatedAdminPacotesRoute: AuthenticatedAdminPacotesRoute,
+  AuthenticatedAdminTrilhasRoute: AuthenticatedAdminTrilhasRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminClienteClienteIdRoute:
     AuthenticatedAdminClienteClienteIdRoute,
@@ -547,22 +652,26 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppDiarioRoute: typeof AuthenticatedAppDiarioRoute
   AuthenticatedAppHistoricoRoute: typeof AuthenticatedAppHistoricoRoute
+  AuthenticatedAppJornadaRoute: typeof AuthenticatedAppJornadaRoute
   AuthenticatedAppPerfilRoute: typeof AuthenticatedAppPerfilRoute
   AuthenticatedAppProgressoRoute: typeof AuthenticatedAppProgressoRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppConteudoConteudoIdRoute: typeof AuthenticatedAppConteudoConteudoIdRoute
   AuthenticatedAppEixoEixoIdRoute: typeof AuthenticatedAppEixoEixoIdRoute
+  AuthenticatedAppEtapaConteudoIdRoute: typeof AuthenticatedAppEtapaConteudoIdRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppDiarioRoute: AuthenticatedAppDiarioRoute,
   AuthenticatedAppHistoricoRoute: AuthenticatedAppHistoricoRoute,
+  AuthenticatedAppJornadaRoute: AuthenticatedAppJornadaRoute,
   AuthenticatedAppPerfilRoute: AuthenticatedAppPerfilRoute,
   AuthenticatedAppProgressoRoute: AuthenticatedAppProgressoRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppConteudoConteudoIdRoute:
     AuthenticatedAppConteudoConteudoIdRoute,
   AuthenticatedAppEixoEixoIdRoute: AuthenticatedAppEixoEixoIdRoute,
+  AuthenticatedAppEtapaConteudoIdRoute: AuthenticatedAppEtapaConteudoIdRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =
