@@ -167,8 +167,11 @@ function AdminTrilhas() {
     const j = i + direcao;
     if (i < 0 || j < 0 || j >= lista.length) return;
     const nova = [...lista];
-    const [item] = nova.splice(i, 1);
+    const item = nova[i];
+    if (!item) return;
+    nova.splice(i, 1);
     nova.splice(j, 0, item);
+
     mutReordenar.mutate({
       data: { trilhaId, ordens: nova.map((e, idx) => ({ id: e.id, ordem: idx })) },
     });
