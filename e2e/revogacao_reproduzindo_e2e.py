@@ -293,7 +293,9 @@ async def conferir_estado_bloqueado(page, falhas: list[str], rotulo: str, tocava
         )
     if "Player indisponível" not in corpo_html:
         falhas.append(
-            f"[{rotulo}] leitor de tela não anunciou 'Player indisponível'; html: {corpo_html[:600]}"
+            f"[{rotulo}] leitor de tela não anunciou 'Player indisponível'; sr: "
+            + repr([t for t in re.findall(r">([^<>]{5,80})<", corpo_html) if "Player" in t or "indispon" in t])
+            + f" | trecho: {corpo_html[-700:]}"
         )
 
 
