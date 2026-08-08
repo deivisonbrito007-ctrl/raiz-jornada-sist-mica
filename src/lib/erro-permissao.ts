@@ -186,6 +186,8 @@ function texto(erro: unknown): string {
     if (e.codigo === CODIGO_ACESSO_RESTRITO) return MENSAGEM_ACESSO_RESTRITO;
     if (typeof e.message === "string") return e.message;
     if (typeof e.error === "string") return e.error;
+    // Objeto sem mensagem legível: não devolvemos "[object Object]".
+    return "";
   }
   return String(erro);
 }
