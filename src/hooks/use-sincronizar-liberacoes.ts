@@ -92,7 +92,7 @@ export function useSincronizarLiberacoes(onMudanca?: (mudanca?: MudancaSincronia
         setTimeout(() => {
           if (!ativo) return;
           invalidarTudo(queryClient);
-          onMudanca?.();
+          onMudanca?.({ tipo: "liberacao" });
         }, espera + 250),
       );
     }
