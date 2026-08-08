@@ -1,154 +1,149 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { mensagemPainel } from "@/lib/erro-permissao";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Trash2, Upload } from "lucide-react";
+import { Plus } from "lucide-react";
 import {
-  adminApagarConteudo,
-  adminListarConteudos,
-  adminSalvarConteudo,
-} from "@/lib/raiz.functions";
-import { supabase } from "@/integrations/supabase/client";
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
+import { mensagemPainel } from "@/lib/erro-permissao";
 import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
-import { ControlePermitido, SecaoSemPermissao, SePode } from "@/components/permissao-ui";
+import { ControlePermitido, SecaoSemPermissao } from "@/components/permissao-ui";
+import { useConteudos, type ConteudoAdmin } from "@/hooks/useConteudos";
+import {
+  FILTROS_VAZIOS,
+  FilterBar,
+  temFiltroAtivo,
+  type FiltrosConteudos,
+} from "@/components/AdminConteudos/FilterBar";
+import { ConteudoCard } from "@/components/AdminConteudos/ConteudoCard";
+import {
+  ConteudoFormDialog,
+  formularioVazio,
+  type FormularioConteudo,
+} from "@/components/AdminConteudos/ConteudoFormDialog";
+import { BatchActionsToolbar } from "@/components/AdminConteudos/BatchActionsToolbar";
+import { EmptyState } from "@/components/AdminConteudos/EmptyState";
 
 export const Route = createFileRoute("/_authenticated/admin/conteudos")({
   component: AdminConteudos,
 });
 
-type Tipo = "video" | "audio" | "exercicio" | "texto" | "tarefa";
-
-type Formulario = {
-  id?: string;
-  eixoId: string;
-  tipo: Tipo;
-  titulo: string;
-  descricao: string;
-  corpoTexto: string;
-  storagePath: string;
-  duracaoSegundos: number;
-  ordem: number;
-};
-
-const vazio = (eixoId: string): Formulario => ({
-  eixoId,
-  tipo: "audio",
-  titulo: "",
-  descricao: "",
-  corpoTexto: "",
-  storagePath: "",
-  duracaoSegundos: 0,
-  ordem: 0,
-});
-
 function AdminConteudos() {
-  const queryClient = useQueryClient();
-  const fetchTudo = useServerFn(adminListarConteudos);
-  const salvar = useServerFn(adminSalvarConteudo);
-  const apagar = useServerFn(adminApagarConteudo);
-
   const { pode, carregando } = useMinhasPermissoes();
   const podeGerenciar = pode("gerenciar_conteudos");
-  const { data } = useQuery({
-    queryKey: ["admin-conteudos"],
-    queryFn: () => fetchTudo(),
-    enabled: podeGerenciar,
-  });
-  const [form, setForm] = useState<Formulario | null>(null);
-  const [busca, setBusca] = useState("");
-  const [eixoFiltro, setEixoFiltro] = useState("todos");
-  const [tipoFiltro, setTipoFiltro] = useState("todos");
-  const [statusFiltro, setStatusFiltro] = useState("todos");
 
-  const termo = busca.trim().toLowerCase();
-  const filtrando =
-    termo !== "" || eixoFiltro !== "todos" || tipoFiltro !== "todos" || statusFiltro !== "todos";
+  const {
+    conteudos,
+    eixos,
+    salvar,
+    salvando,
+    apagar,
+    batchDelete,
+    excluindoLote,
+    moverParaEixo,
+    movendo,
+    reorder,
+  } = useConteudos(podeGerenciar);
 
-  const conteudosFiltrados = useMemo(
+  const [filtros, setFiltros] = useState<FiltrosConteudos>(FILTROS_VAZIOS);
+  const [form, setForm] = useState<FormularioConteudo | null>(null);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [ordemLocal, setOrdemLocal] = useState<Record<string, string[]>>({});
+
+  const sensores = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const termo = filtros.busca.trim().toLowerCase();
+  const filtrando = temFiltroAtivo(filtros);
+
+  const filtrados = useMemo(
     () =>
-      (data?.conteudos ?? []).filter((c) => {
-        if (eixoFiltro !== "todos" && c.eixo_id !== eixoFiltro) return false;
-        if (tipoFiltro !== "todos" && c.tipo !== tipoFiltro) return false;
-        if (statusFiltro === "com_midia" && !c.storage_path) return false;
-        if (statusFiltro === "sem_midia" && c.storage_path) return false;
-        if (termo && !`${c.titulo} ${c.descricao ?? ""}`.toLowerCase().includes(termo))
-          return false;
+      conteudos.filter((c) => {
+        if (filtros.eixo !== "todos" && c.eixo_id !== filtros.eixo) return false;
+        if (filtros.tipo !== "todos" && c.tipo !== filtros.tipo) return false;
+        if (filtros.status === "com_midia" && !c.storage_path) return false;
+        if (filtros.status === "sem_midia" && c.storage_path) return false;
+        if (filtros.status === "com_capa" && !c.thumbnail_path) return false;
+        if (termo && !`${c.titulo} ${c.descricao ?? ""}`.toLowerCase().includes(termo)) return false;
         return true;
       }),
-    [data?.conteudos, eixoFiltro, tipoFiltro, statusFiltro, termo],
+    [conteudos, filtros.eixo, filtros.tipo, filtros.status, termo],
   );
-  const [enviando, setEnviando] = useState(false);
-  const [subindo, setSubindo] = useState(false);
 
-  function recarregar() {
-    queryClient.invalidateQueries({ queryKey: ["admin-conteudos"] });
-    queryClient.invalidateQueries({ queryKey: ["admin-resumo"] });
+  function ordenarEixo(eixoId: string, lista: ConteudoAdmin[]) {
+    const local = ordemLocal[eixoId];
+    if (!local) return lista;
+    return [...lista].sort((a, b) => {
+      const ia = local.indexOf(a.id);
+      const ib = local.indexOf(b.id);
+      if (ia === -1 || ib === -1) return a.ordem - b.ordem;
+      return ia - ib;
+    });
   }
 
-  async function enviarArquivo(arquivo: File) {
-    if (!form) return;
-    setSubindo(true);
+  async function persistirOrdem(eixoId: string, lista: ConteudoAdmin[]) {
+    setOrdemLocal((atual) => ({ ...atual, [eixoId]: lista.map((c) => c.id) }));
+    await reorder(lista);
+  }
+
+  function aoArrastar(eixoId: string, lista: ConteudoAdmin[], evento: DragEndEvent) {
+    const { active, over } = evento;
+    if (!over || active.id === over.id) return;
+    const de = lista.findIndex((c) => c.id === active.id);
+    const para = lista.findIndex((c) => c.id === over.id);
+    if (de < 0 || para < 0) return;
+    void persistirOrdem(eixoId, arrayMove(lista, de, para));
+  }
+
+  function moverComTeclado(eixoId: string, lista: ConteudoAdmin[], id: string, direcao: -1 | 1) {
+    const de = lista.findIndex((c) => c.id === id);
+    const para = de + direcao;
+    if (de < 0 || para < 0 || para >= lista.length) return;
+    void persistirOrdem(eixoId, arrayMove(lista, de, para));
+  }
+
+  async function excluir(id: string) {
     try {
-      const caminho = `${form.eixoId}/${Date.now()}-${arquivo.name.replace(/[^\w.-]/g, "_")}`;
-      const { error } = await supabase.storage.from("midias").upload(caminho, arquivo, {
-        cacheControl: "3600",
-        upsert: false,
-      });
-      if (error) throw new Error(error.message);
-      setForm({ ...form, storagePath: caminho });
-      toast.success("Mídia enviada");
+      await apagar(id);
+      toast.success("Prática excluída");
     } catch (erro) {
       toast.error(mensagemPainel(erro));
-    } finally {
-      setSubindo(false);
     }
   }
 
-  async function submeter() {
-    if (!form || !form.titulo.trim()) return;
-    setEnviando(true);
+  async function submeter(entrada: Parameters<typeof salvar>[0]) {
     try {
-      await salvar({
-        data: {
-          ...(form.id ? { id: form.id } : {}),
-          eixoId: form.eixoId,
-          tipo: form.tipo,
-          titulo: form.titulo,
-          descricao: form.descricao,
-          corpoTexto: form.corpoTexto || null,
-          storagePath: form.storagePath || null,
-          duracaoSegundos: Number(form.duracaoSegundos) || 0,
-          ordem: Number(form.ordem) || 0,
-        },
-      });
+      await salvar(entrada);
       setForm(null);
-      recarregar();
       toast.success("Conteúdo salvo");
     } catch (erro) {
       toast.error(mensagemPainel(erro));
-    } finally {
-      setEnviando(false);
     }
   }
+
+  const eixosVisiveis = eixos
+    .filter((eixo) => filtros.eixo === "todos" || eixo.id === filtros.eixo)
+    .filter((eixo) => !filtrando || filtrados.some((c) => c.eixo_id === eixo.id));
 
   if (!carregando && !podeGerenciar) {
     return (
       <div>
-        <h1 className="text-3xl text-floresta">Conteúdos</h1>
+        <h1 className="font-display text-3xl text-floresta">Conteúdos</h1>
         <SecaoSemPermissao
           permissao="gerenciar_conteudos"
           className="mt-6"
@@ -162,297 +157,129 @@ function AdminConteudos() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl text-floresta">Conteúdos</h1>
+          <h1 className="font-display text-3xl text-floresta">Conteúdos</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Organize as práticas de cada eixo. Nada fica visível antes de você liberar.
           </p>
         </div>
         <ControlePermitido permissao="gerenciar_conteudos">
           <Button
-            onClick={() => setForm(vazio(data?.eixos[0]?.id ?? ""))}
-            disabled={!data?.eixos.length}
-            className="rounded-full bg-terracota px-6 text-terracota-foreground hover:bg-terracota/90"
+            onClick={() => setForm(formularioVazio(eixos[0]?.id ?? "", conteudos.length + 1))}
+            disabled={!eixos.length}
+            className="min-h-11 rounded-full bg-terracota px-6 text-terracota-foreground hover:bg-terracota/90 focus-visible:ring-2 focus-visible:ring-floresta"
           >
-            <Plus className="mr-2 h-4 w-4" /> Nova prática
+            <Plus className="mr-2 h-4 w-4" aria-hidden="true" /> Nova prática
           </Button>
         </ControlePermitido>
       </div>
 
-      <div className="mt-8 space-y-3">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            placeholder="Buscar prática por título ou descrição"
-            className="rounded-full pl-11"
-          />
-        </div>
-        <div className="grid gap-2 sm:grid-cols-3">
-          <Select value={eixoFiltro} onValueChange={setEixoFiltro}>
-            <SelectTrigger className="rounded-full">
-              <SelectValue placeholder="Eixo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os eixos</SelectItem>
-              {(data?.eixos ?? []).map((e) => (
-                <SelectItem key={e.id} value={e.id}>
-                  {e.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={tipoFiltro} onValueChange={setTipoFiltro}>
-            <SelectTrigger className="rounded-full">
-              <SelectValue placeholder="Tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os tipos</SelectItem>
-              {Object.entries(TIPO_LABEL).map(([valor, label]) => (
-                <SelectItem key={valor} value={valor}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={statusFiltro} onValueChange={setStatusFiltro}>
-            <SelectTrigger className="rounded-full">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os status</SelectItem>
-              <SelectItem value="com_midia">Com mídia enviada</SelectItem>
-              <SelectItem value="sem_midia">Sem mídia</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {filtrando && (
-          <button
-            type="button"
-            onClick={() => {
-              setBusca("");
-              setEixoFiltro("todos");
-              setTipoFiltro("todos");
-              setStatusFiltro("todos");
-            }}
-            className="text-xs font-medium text-terracota underline"
-          >
-            Limpar filtros
-          </button>
-        )}
+      <div className="mt-8">
+        <FilterBar
+          filtros={filtros}
+          eixos={eixos}
+          onChange={setFiltros}
+          quantidade={filtrados.length}
+        />
       </div>
 
-      <div className="mt-6 space-y-6">
-        {(data?.eixos ?? [])
-          .filter((eixo) => eixoFiltro === "todos" || eixo.id === eixoFiltro)
-          .filter((eixo) => !filtrando || conteudosFiltrados.some((c) => c.eixo_id === eixo.id))
-          .map((eixo) => {
-            const conteudos = conteudosFiltrados.filter((c) => c.eixo_id === eixo.id);
+      <div className="mt-4">
+        <BatchActionsToolbar
+          quantidade={selecionados.length}
+          eixos={eixos}
+          ocupado={excluindoLote || movendo}
+          onExcluir={async () => {
+            await batchDelete(selecionados);
+            setSelecionados([]);
+          }}
+          onMoverParaEixo={async (eixoId) => {
+            await moverParaEixo({ ids: selecionados, eixoId });
+            setSelecionados([]);
+          }}
+          onLimpar={() => setSelecionados([])}
+        />
+      </div>
+
+      {filtrados.length === 0 ? (
+        <div className="mt-6">
+          <EmptyState
+            filtrando={filtrando}
+            podeCriar={Boolean(eixos.length)}
+            onNova={() => setForm(formularioVazio(eixos[0]?.id ?? "", 1))}
+          />
+        </div>
+      ) : (
+        <div className="mt-6 space-y-6">
+          {eixosVisiveis.map((eixo) => {
+            const lista = ordenarEixo(
+              eixo.id,
+              filtrados.filter((c) => c.eixo_id === eixo.id),
+            );
             return (
-              <section
-                key={eixo.id}
-                className="rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]"
-              >
-                <h2 className="text-xl text-floresta">{eixo.nome}</h2>
+              <section key={eixo.id} className="rounded-3xl bg-card p-6 shadow-organico">
+                <h2 className="font-display text-xl text-floresta">{eixo.nome}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{eixo.descricao}</p>
-                <ul className="mt-4 space-y-2">
-                  {conteudos.map((conteudo) => (
-                    <li
-                      key={conteudo.id}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-secondary px-4 py-3"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-floresta">
-                          {conteudo.titulo}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {TIPO_LABEL[conteudo.tipo] ?? conteudo.tipo} ·{" "}
-                          {formatarDuracao(conteudo.duracao_segundos)} · ordem {conteudo.ordem}
-                          {conteudo.storage_path ? " · mídia enviada" : ""}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-full border-floresta/20 text-floresta"
-                          onClick={() =>
+
+                <DndContext
+                  sensors={sensores}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(evento) => aoArrastar(eixo.id, lista, evento)}
+                >
+                  <SortableContext
+                    items={lista.map((c) => c.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <ul className="mt-4 space-y-2">
+                      {lista.map((conteudo) => (
+                        <ConteudoCard
+                          key={conteudo.id}
+                          conteudo={conteudo}
+                          selecionado={selecionados.includes(conteudo.id)}
+                          onSelecionar={(marcado) =>
+                            setSelecionados((atual) =>
+                              marcado
+                                ? [...atual, conteudo.id]
+                                : atual.filter((id) => id !== conteudo.id),
+                            )
+                          }
+                          onEditar={() =>
                             setForm({
                               id: conteudo.id,
                               eixoId: conteudo.eixo_id,
-                              tipo: conteudo.tipo as Tipo,
+                              tipo: conteudo.tipo,
                               titulo: conteudo.titulo,
                               descricao: conteudo.descricao ?? "",
                               corpoTexto: conteudo.corpo_texto ?? "",
                               storagePath: conteudo.storage_path ?? "",
-                              duracaoSegundos: conteudo.duracao_segundos ?? 0,
-                              ordem: conteudo.ordem ?? 0,
+                              thumbnailPath: conteudo.thumbnail_path ?? "",
+                              duracaoSegundos: conteudo.duracao_segundos,
+                              ordem: conteudo.ordem,
                             })
                           }
-                        >
-                          Editar
-                        </Button>
-                        <SePode permissao="gerenciar_conteudos">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            aria-label={`Apagar ${conteudo.titulo}`}
-                            className="rounded-full text-destructive"
-                            onClick={async () => {
-                              await apagar({ data: { id: conteudo.id } });
-                              recarregar();
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </SePode>
-                      </div>
-                    </li>
-                  ))}
-                  {conteudos.length === 0 && (
-                    <li className="text-xs text-muted-foreground">
-                      {filtrando ? "Nenhuma prática com esses filtros." : "Nenhuma prática ainda."}
-                    </li>
-                  )}
-                </ul>
+                          onExcluir={() => void excluir(conteudo.id)}
+                          onMover={(direcao) =>
+                            moverComTeclado(eixo.id, lista, conteudo.id, direcao)
+                          }
+                        />
+                      ))}
+                      {lista.length === 0 && (
+                        <li className="text-xs text-muted-foreground">Nenhuma prática ainda.</li>
+                      )}
+                    </ul>
+                  </SortableContext>
+                </DndContext>
               </section>
             );
           })}
-      </div>
+        </div>
+      )}
 
-      <Dialog open={Boolean(form)} onOpenChange={(aberto) => !aberto && setForm(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-floresta">
-              {form?.id ? "Editar prática" : "Nova prática"}
-            </DialogTitle>
-          </DialogHeader>
-          {form && (
-            <div className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="text-sm text-floresta">
-                  Eixo
-                  <Select
-                    value={form.eixoId}
-                    onValueChange={(v) => setForm({ ...form, eixoId: v })}
-                  >
-                    <SelectTrigger className="mt-1 rounded-xl">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(data?.eixos ?? []).map((e) => (
-                        <SelectItem key={e.id} value={e.id}>
-                          {e.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </label>
-                <label className="text-sm text-floresta">
-                  Tipo
-                  <Select
-                    value={form.tipo}
-                    onValueChange={(v) => setForm({ ...form, tipo: v as Tipo })}
-                  >
-                    <SelectTrigger className="mt-1 rounded-xl">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(TIPO_LABEL).map(([valor, label]) => (
-                        <SelectItem key={valor} value={valor}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </label>
-              </div>
-
-              <label className="block text-sm text-floresta">
-                Título
-                <Input
-                  value={form.titulo}
-                  onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-                  className="mt-1 rounded-xl"
-                />
-              </label>
-
-              <label className="block text-sm text-floresta">
-                Descrição
-                <Textarea
-                  value={form.descricao}
-                  onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-                  rows={3}
-                  className="mt-1 rounded-xl"
-                />
-              </label>
-
-              {(form.tipo === "video" || form.tipo === "audio") && (
-                <div className="rounded-2xl bg-secondary p-4">
-                  <p className="text-sm font-medium text-floresta">Mídia (privada)</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {form.storagePath || "Nenhum arquivo enviado"}
-                  </p>
-                  <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-full bg-floresta px-4 py-2 text-xs font-medium text-floresta-foreground">
-                    <Upload className="h-4 w-4" />
-                    {subindo ? "Enviando..." : "Enviar arquivo"}
-                    <input
-                      type="file"
-                      accept={form.tipo === "video" ? "video/*" : "audio/*"}
-                      className="hidden"
-                      onChange={(e) => {
-                        const arquivo = e.target.files?.[0];
-                        if (arquivo) void enviarArquivo(arquivo);
-                      }}
-                    />
-                  </label>
-                </div>
-              )}
-
-              {form.tipo !== "video" && form.tipo !== "audio" && (
-                <label className="block text-sm text-floresta">
-                  Corpo do texto / instruções
-                  <Textarea
-                    value={form.corpoTexto}
-                    onChange={(e) => setForm({ ...form, corpoTexto: e.target.value })}
-                    rows={8}
-                    className="mt-1 rounded-xl"
-                  />
-                </label>
-              )}
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="text-sm text-floresta">
-                  Duração (segundos)
-                  <Input
-                    type="number"
-                    value={form.duracaoSegundos}
-                    onChange={(e) => setForm({ ...form, duracaoSegundos: Number(e.target.value) })}
-                    className="mt-1 rounded-xl"
-                  />
-                </label>
-                <label className="text-sm text-floresta">
-                  Ordem
-                  <Input
-                    type="number"
-                    value={form.ordem}
-                    onChange={(e) => setForm({ ...form, ordem: Number(e.target.value) })}
-                    className="mt-1 rounded-xl"
-                  />
-                </label>
-              </div>
-
-              <Button
-                onClick={submeter}
-                disabled={enviando || !form.titulo.trim()}
-                className="w-full rounded-full bg-terracota py-6 text-terracota-foreground hover:bg-terracota/90"
-              >
-                {enviando ? "Salvando..." : "Salvar prática"}
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <ConteudoFormDialog
+        form={form}
+        eixos={eixos}
+        salvando={salvando}
+        onFechar={() => setForm(null)}
+        onSalvar={submeter}
+      />
     </div>
   );
 }

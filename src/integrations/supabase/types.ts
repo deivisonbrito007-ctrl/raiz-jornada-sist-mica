@@ -134,6 +134,7 @@ export type Database = {
           id: string
           ordem: number
           storage_path: string | null
+          thumbnail_path: string | null
           tipo: Database["public"]["Enums"]["conteudo_tipo"]
           titulo: string
         }
@@ -146,6 +147,7 @@ export type Database = {
           id?: string
           ordem?: number
           storage_path?: string | null
+          thumbnail_path?: string | null
           tipo?: Database["public"]["Enums"]["conteudo_tipo"]
           titulo: string
         }
@@ -158,6 +160,7 @@ export type Database = {
           id?: string
           ordem?: number
           storage_path?: string | null
+          thumbnail_path?: string | null
           tipo?: Database["public"]["Enums"]["conteudo_tipo"]
           titulo?: string
         }
