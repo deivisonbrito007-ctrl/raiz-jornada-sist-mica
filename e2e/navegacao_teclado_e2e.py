@@ -32,6 +32,12 @@ from pathlib import Path
 import requests
 from playwright.async_api import async_playwright
 
+# helpers de expiração reaproveitados do E2E de URL assinada
+import sys
+
+sys.path.insert(0, str(Path(__file__).parent))
+from expiracao_url_e2e import encurtar_validade, wav_de_silencio  # noqa: E402
+
 BASE_URL = os.environ.get("E2E_BASE_URL", "http://localhost:8080")
 SCREENSHOTS = Path(__file__).parent / "screenshots"
 SCREENSHOTS.mkdir(parents=True, exist_ok=True)
