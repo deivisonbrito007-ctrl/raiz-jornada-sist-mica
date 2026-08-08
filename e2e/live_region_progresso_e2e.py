@@ -180,30 +180,23 @@ async def main() -> None:
             falhas.append(f"anúncio repetido ao voltar para progresso: {revisita!r}")
 
         # ---------- 4. concluir uma prática anuncia a conclusão ----------
-        await page.get_by_role("link", name="Início").first.click()
-        await page.wait_for_url(re.compile(r"/app$"), timeout=20000)
-        await page.wait_for_timeout(1500)
-        alvo = None
         if conteudo_reaberto:
-            especifico = page.locator(f"a[href*='/app/conteudo/{conteudo_reaberto}']")
-            if await especifico.count() > 0:
-                alvo = especifico.first
-        if alvo is None:
+            await page.goto(f"{BASE_URL}/app/conteudo/{conteudo_reaberto}", wait_until="domcontentloaded")
+        else:
+            await page.get_by_role("link", name="Início").first.click()
+            await page.wait_for_url(re.compile(r"/app$"), timeout=20000)
+            await page.wait_for_timeout(1500)
             praticas = page.locator("a[href*='/app/conteudo/']")
             if await praticas.count() > 0:
-                alvo = praticas.first
+                await praticas.first.click()
+                await page.wait_for_url(re.compile(r"/app/conteudo/"), timeout=20000)
 
-        if alvo is None:
+        if "/app/conteudo/" not in page.url:
             print("4) nenhuma prática acessível na biblioteca: fase de conclusão não exercida")
         else:
-            await alvo.click()
-            await page.wait_for_url(re.compile(r"/app/(conteudo|eixo)/"), timeout=20000)
-            if "/app/eixo/" in page.url:
-                item = page.locator("a[href*='/app/conteudo/']").first
-                if await item.count() > 0:
-                    await item.click()
-                    await page.wait_for_url(re.compile(r"/app/conteudo/"), timeout=20000)
-
+            await page.wait_for_timeout(2000)
+            botoes = await page.get_by_role("button").all_inner_texts()
+            print("   botões no player:", [" ".join(b.split()) for b in botoes])
             botao = page.get_by_role("button", name=re.compile("Marcar como concluída", re.I))
             if await botao.count() == 0:
                 print("4) prática já concluída ou bloqueada: conclusão não exercida em", page.url)
@@ -217,10 +210,11 @@ async def main() -> None:
                 await page.screenshot(path=str(SCREENSHOTS / "live_4_concluida.png"))
 
                 # ---------- 5. voltar ao player não repete a conclusão ----------
-                await page.get_by_role("link", name="Início").first.click()
-                await page.wait_for_url(re.compile(r"/app$"), timeout=20000)
+                await page.get_by_role("link", name="Progresso").first.click()
+                await page.wait_for_url(re.compile(r"/app/progresso"), timeout=20000)
                 await page.wait_for_timeout(800)
-                await page.locator(f"a[href*='{url_player.split('/app')[-1].split('?')[0]}']").first.click()
+                # volta pelo histórico do router (client-side, sem recarregar)
+                await page.go_back()
                 await page.wait_for_url(re.compile(r"/app/conteudo/"), timeout=20000)
                 await page.wait_for_timeout(2500)
                 repetido = await texto_live(page)
