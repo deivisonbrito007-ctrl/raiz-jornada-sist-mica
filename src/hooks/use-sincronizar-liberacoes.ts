@@ -42,12 +42,26 @@ export function removerPraticaDoCache(queryClient: QueryClient, conteudoId: stri
 }
 
 /**
+ * Apaga do cache qualquer resquício de uma sequência (eixo) removida.
+ */
+export function removerSequenciaDoCache(queryClient: QueryClient, eixoId: string) {
+  queryClient.removeQueries({ queryKey: ["trilha", eixoId] });
+  invalidarTudo(queryClient);
+}
+
+/** limite do setTimeout (~24,8 dias): acima disso o navegador dispara na hora */
+const TETO_TIMEOUT = 2_147_483_647;
+
+/**
  * Mantém a biblioteca e o player em sincronia com o terapeuta, em tempo real.
  *
- * Duas fontes de mudança chegam pelo banco, sem recarregar a página:
- *   - `liberacoes`: o terapeuta libera ou revoga o acesso da pessoa;
+ * Três fontes de mudança chegam pelo banco, sem recarregar a página:
+ *   - `liberacoes`: o terapeuta libera ou revoga o acesso da pessoa. Quando a
+ *     liberação está agendada (`liberar_em` no futuro), um temporizador
+ *     revalida exatamente no instante em que ela passa a valer ou expira;
  *   - `conteudos`: uma prática é removida ou editada no acervo — na remoção o
- *     cache dela é descartado na hora, junto de resquícios locais.
+ *     cache dela é descartado na hora, junto de resquícios locais;
+ *   - `eixos`: uma sequência inteira é removida ou renomeada.
  *
  * O `onMudanca` permite que o player reaja no mesmo instante (parar a mídia,
  * mostrar o aviso de bloqueio etc.).
@@ -58,6 +72,23 @@ export function useSincronizarLiberacoes(onMudanca?: () => void) {
   useEffect(() => {
     let ativo = true;
     const canais: ReturnType<typeof supabase.channel>[] = [];
+    const temporizadores: ReturnType<typeof setTimeout>[] = [];
+
+    /** revalida no instante exato em que a liberação agendada entra/sai de vigor */
+    function agendarVirada(liberarEm?: string | null) {
+      if (!liberarEm) return;
+      const alvo = new Date(liberarEm).getTime();
+      if (Number.isNaN(alvo)) return;
+      const espera = alvo - Date.now();
+      if (espera <= 0 || espera > TETO_TIMEOUT) return;
+      temporizadores.push(
+        setTimeout(() => {
+          if (!ativo) return;
+          invalidarTudo(queryClient);
+          onMudanca?.();
+        }, espera + 250),
+      );
+    }
 
     async function assinar() {
       const { data } = await supabase.auth.getUser();
@@ -75,9 +106,10 @@ export function useSincronizarLiberacoes(onMudanca?: () => void) {
               table: "liberacoes",
               filter: `cliente_id=eq.${uid}`,
             },
-            () => {
+            (evento?: { new?: { liberar_em?: string | null } | null }) => {
               // sequências, metas e heatmap também dependem das liberações
               invalidarTudo(queryClient);
+              agendarVirada(evento?.new?.liberar_em ?? null);
               onMudanca?.();
             },
           )
@@ -102,12 +134,41 @@ export function useSincronizarLiberacoes(onMudanca?: () => void) {
           )
           .subscribe(),
       );
+
+      canais.push(
+        supabase
+          .channel(`${CANAL_EIXOS}-${uid}`)
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "eixos" },
+            (evento?: { eventType?: string; old?: { id?: string } | null }) => {
+              const antigo = evento?.old ?? null;
+              if (evento?.eventType === "DELETE" && antigo?.id) {
+                removerSequenciaDoCache(queryClient, antigo.id);
+              } else {
+                invalidarTudo(queryClient);
+              }
+              onMudanca?.();
+            },
+          )
+          .subscribe(),
+      );
+
+      // liberações agendadas já existentes: programa a virada de cada uma
+      const { data: agendadas } = await supabase
+        .from("liberacoes")
+        .select("liberar_em")
+        .eq("cliente_id", uid)
+        .not("liberar_em", "is", null);
+      if (!ativo) return;
+      for (const linha of agendadas ?? []) agendarVirada(linha.liberar_em);
     }
 
     void assinar();
 
     return () => {
       ativo = false;
+      for (const temporizador of temporizadores) clearTimeout(temporizador);
       for (const canal of canais) void supabase.removeChannel(canal);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
