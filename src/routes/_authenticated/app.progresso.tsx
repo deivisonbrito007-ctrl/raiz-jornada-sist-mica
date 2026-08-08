@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Flame, Sprout, Target, Check, Minus, Plus, FileDown, Loader2 } from "lucide-react";
@@ -46,6 +46,12 @@ function Progresso() {
   const { data: contexto } = useQuery({ queryKey: ["contexto"], queryFn: () => fetchContexto() });
 
   const { anuncio, anunciar } = useAnuncio();
+
+  useEffect(() => {
+    if (!erroBiblioteca) return;
+    const detalhe = (erroBiblioteca as Error).message || "Falha na consulta ao banco de dados.";
+    anunciar(`Não foi possível carregar seu progresso: ${detalhe}`, "assertive");
+  }, [erroBiblioteca, anunciar]);
 
   const mutarMeta = useMutation({
     mutationFn: (meta: number) => salvarMeta({ data: { meta } }),
