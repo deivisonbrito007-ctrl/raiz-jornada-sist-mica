@@ -358,6 +358,7 @@ async def main() -> None:
 
         # 7) Volta para a biblioteca só com teclado, estado coerente com o servidor
         await page.goto(f"{BASE_URL}/app", wait_until="domcontentloaded")
+        await page.locator(f'a[href$="/app/eixo/{eixo["id"]}"]').first.wait_for(timeout=20000)
         await page.evaluate("() => document.body.focus()")
         await tab_ate(page, no_eixo)
         print("OK: biblioteca continua navegável por teclado depois do ciclo")
