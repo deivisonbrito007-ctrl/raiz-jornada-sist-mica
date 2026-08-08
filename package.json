@@ -21,6 +21,7 @@
     "test:e2e:expiracao": "python3 e2e/expiracao_url_e2e.py",
     "test:e2e:isolamento": "python3 e2e/isolamento_dados_e2e.py",
     "test:e2e:revogacao": "python3 e2e/revogacao_reproduzindo_e2e.py",
+    "test:a11y": "vitest run src/**/*.a11y.test.tsx",
     "test:rls": "vitest run --config vitest.rls.config.ts"
   },
   "dependencies": {
