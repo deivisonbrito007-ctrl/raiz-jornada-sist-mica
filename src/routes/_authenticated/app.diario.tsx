@@ -30,6 +30,7 @@ function Diario() {
 
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [anuncio, setAnuncio] = useState("");
 
   const { data: entradas } = useQuery({ queryKey: ["diario"], queryFn: () => fetchDiario() });
   const { data: conteudo } = useQuery({
@@ -45,17 +46,22 @@ function Diario() {
   async function enviar() {
     if (!texto.trim()) return;
     setEnviando(true);
+    setAnuncio("Guardando sua reflexão...");
     try {
       await salvar({ data: { texto, conteudoId: conteudoId ?? null } });
       setTexto("");
       queryClient.invalidateQueries({ queryKey: ["diario"] });
       toast.success("Reflexão guardada.");
+      setAnuncio("Reflexão guardada.");
     } catch (erro) {
-      toast.error(erro instanceof Error ? erro.message : "Não foi possível salvar");
+      const mensagem = erro instanceof Error ? erro.message : "Não foi possível salvar";
+      toast.error(mensagem);
+      setAnuncio(`Erro ao salvar: ${mensagem}`);
     } finally {
       setEnviando(false);
     }
   }
+
 
   return (
     <div>
