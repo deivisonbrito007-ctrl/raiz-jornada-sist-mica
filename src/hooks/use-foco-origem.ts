@@ -22,7 +22,7 @@ export function primeiroControleRelevante(): HTMLElement | null {
   for (const el of candidatos) {
     if (el.getAttribute("aria-hidden") === "true") continue;
     if (el.closest('[role="alert"]')) continue; // não devolver o foco ao próprio aviso
-    if (el.offsetParent === null && el.getClientRects().length === 0) continue;
+    if (el.hidden || el.closest("[hidden]")) continue;
     return el;
   }
   return null;
@@ -48,7 +48,7 @@ export function useFocoOrigem(aberto: boolean) {
   /** Devolve o foco à origem (ou ao primeiro controle relevante). */
   const devolverFoco = useCallback(() => {
     const origem = origemRef.current;
-    const vivo = origem?.isConnected && (origem.offsetParent !== null || origem.getClientRects().length > 0);
+    const vivo = Boolean(origem?.isConnected) && !origem!.hasAttribute("disabled");
     const alvo = vivo ? origem! : primeiroControleRelevante();
     if (!alvo) return;
     alvo.focus();
