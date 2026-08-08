@@ -113,6 +113,7 @@ async def main() -> None:
                 c["url"] = BASE_URL
                 await context.add_cookies([c])
         page = await context.new_page()
+        page.on("console", lambda m: print("   [console]", m.type, m.text[:200]) if m.type in ("error", "warning") else None)
 
         await page.goto(BASE_URL, wait_until="domcontentloaded")
         await page.evaluate(
