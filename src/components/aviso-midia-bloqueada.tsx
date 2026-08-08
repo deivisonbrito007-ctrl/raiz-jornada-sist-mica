@@ -116,10 +116,30 @@ export function AvisoMidiaBloqueada({
   // O aviso é o único caminho possível daqui: o foco vai para o botão de nova
   // tentativa assim que aparece — inclusive durante a espera, porque ele
   // continua focável (aria-disabled) para quem usa teclado ou leitor de tela
-  // acompanhar a contagem e saber quando pode acionar.
+  // acompanhar a contagem e saber quando pode acionar. Também rolamos o aviso
+  // até a vista, para quem enxerga acompanhar a mesma mudança.
   useEffect(() => {
     (botaoRef.current ?? caixaRef.current)?.focus();
+    caixaRef.current?.scrollIntoView?.({ block: "center" });
   }, [motivo]);
+
+  // Anúncio imediato (assertivo) do que acabou de acontecer com a prática: só
+  // dispara na virada de estado, para o leitor de tela interromper a leitura
+  // atual e contar que a mídia expirou, foi revogada ou foi removida.
+  const [mudanca, setMudanca] = useState<{ id: number; texto: string } | null>(null);
+  const contadorRef = useRef(0);
+  useEffect(() => {
+    const anuncios: Record<MotivoBloqueio, string> = {
+      validade: "O link seguro desta prática expirou. A reprodução foi interrompida.",
+      revogado: "Esta prática não está mais liberada. A reprodução foi interrompida.",
+      removido: "Esta prática foi removida pelo terapeuta. A reprodução foi interrompida.",
+      falha: "Não conseguimos verificar o acesso a esta prática agora.",
+      limite: "Muitos pedidos de acesso em pouco tempo. Aguarde para tentar de novo.",
+    };
+    contadorRef.current += 1;
+    setMudanca({ id: contadorRef.current, texto: anuncios[motivo] });
+  }, [motivo]);
+
 
   /** Tab circula entre os controles do aviso; Esc devolve o foco para fora. */
   const aoTeclar = useCallback(
