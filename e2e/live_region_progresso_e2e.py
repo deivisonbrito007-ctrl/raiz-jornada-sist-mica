@@ -231,6 +231,8 @@ async def main() -> None:
                 await page.wait_for_url(re.compile(r"/app/progresso"), timeout=20000)
                 await page.get_by_role("heading", name="Seu caminho").wait_for(timeout=30000)
                 atualizado = await esperar_live(page, padrao_meta)
+                print("   url:", page.url, "| regions:", await page.locator(LIVE).all_inner_texts())
+                print("   card meta:", " ".join((await page.get_by_text(re.compile(r"/\d+ práticas")).first.inner_text()).split()))
                 print("6) live region no progresso após concluir:", repr(atualizado))
                 if not padrao_meta.search(atualizado):
                     falhas.append(f"progresso não anunciou os números atualizados: {atualizado!r}")
