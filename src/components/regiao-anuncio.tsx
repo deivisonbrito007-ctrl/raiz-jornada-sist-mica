@@ -40,6 +40,7 @@ export function RegiaoAnuncio({
   if (anunciar) {
     return (
       <p
+        data-testid="anuncio-live"
         role={assertivo ? "alert" : "status"}
         aria-live={assertivo ? "assertive" : "polite"}
         aria-atomic="true"
