@@ -448,6 +448,13 @@ function Player() {
 
   return (
     <div>
+      {/* Liberação do acesso: anúncio assertivo único para leitores de tela */}
+      <div role="alert" aria-live="assertive" aria-atomic="true" className="sr-only">
+        {anuncioLiberacao ? (
+          <span key={anuncioLiberacao.id}>{anuncioLiberacao.texto}</span>
+        ) : null}
+      </div>
+
       {conteudo ? (
         <Link
           ref={voltarRef}
