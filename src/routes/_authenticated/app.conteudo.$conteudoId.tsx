@@ -607,6 +607,9 @@ function Player() {
           <div>
             <StatusMidiaBadge status="revogada" />
           </div>
+          <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+            Player indisponível: esta prática não está mais liberada.
+          </p>
           <AvisoMidiaBloqueada
             motivo="revogado"
             renovando={renovando}
