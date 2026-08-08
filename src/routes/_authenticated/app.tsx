@@ -47,7 +47,7 @@ function AppLayout() {
     <div className="min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-3">
-          <Link to="/app">
+          <Link to="/app" aria-label="Raiz — ir para a biblioteca" className="inline-flex min-h-11 items-center">
             <RaizWordmark />
           </Link>
           <div className="flex items-center gap-1">
@@ -60,7 +60,10 @@ function AppLayout() {
                 }
               }}
             >
-              <PopoverTrigger className="relative rounded-full p-2 text-floresta transition-colors hover:bg-secondary">
+              <PopoverTrigger
+                aria-label="Avisos"
+                className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-floresta transition-colors hover:bg-secondary"
+              >
                 <Bell className="h-5 w-5" />
                 {naoLidas > 0 && (
                   <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-terracota" />
@@ -87,14 +90,14 @@ function AppLayout() {
             {contexto?.papel === "terapeuta" && (
               <Link
                 to="/admin"
-                className="rounded-full px-3 py-2 text-xs font-medium text-salvia hover:bg-secondary"
+                className="inline-flex min-h-11 items-center rounded-full px-3 py-2 text-xs font-medium text-salvia hover:bg-secondary"
               >
                 Painel
               </Link>
             )}
             <button
               onClick={sair}
-              className="rounded-full px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary"
+              className="inline-flex min-h-11 items-center rounded-full px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary"
             >
               Sair
             </button>
@@ -107,7 +110,7 @@ function AppLayout() {
         <Outlet />
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-floresta/15 bg-floresta">
+      <nav aria-label="Navegação principal" className="fixed bottom-0 left-0 right-0 z-20 border-t border-floresta/15 bg-floresta">
         <div className="mx-auto flex max-w-2xl items-stretch justify-around px-2 py-2">
           {abas.map((aba) => (
             <Link
@@ -116,7 +119,7 @@ function AppLayout() {
               activeOptions={{ exact: aba.exact }}
               activeProps={{ className: "text-ocre" }}
               inactiveProps={{ className: "text-floresta-foreground/60" }}
-              className="flex flex-1 flex-col items-center gap-1 rounded-xl py-2 text-[11px] font-medium"
+              className="flex min-h-11 flex-1 flex-col items-center justify-center gap-1 rounded-xl py-2 text-[11px] font-medium"
             >
               <aba.icone className="h-5 w-5" />
               {aba.label}
