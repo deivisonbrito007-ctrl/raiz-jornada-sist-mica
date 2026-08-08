@@ -20,6 +20,7 @@ import { AvisoMidiaBloqueada, MotivoBloqueio } from "@/components/aviso-midia-bl
 import { StatusMidiaBadge } from "@/components/status-midia";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 import { useFocoPlayer } from "@/hooks/use-foco-player";
+import { useMovimentoReduzido } from "@/hooks/use-movimento-reduzido";
 
 
 export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")({
@@ -38,6 +39,9 @@ function ehMidiaTipo(tipo?: string) {
 
 function Player() {
   const { conteudoId } = Route.useParams();
+  // Barra de progresso e avisos param de animar quando o sistema pede menos
+  // movimento — a informação continua, só sem interpolação visual.
+  const movimentoReduzido = useMovimentoReduzido();
   // Route.useSearch pode não existir em ambientes de teste com router simulado
   const { retomar: retomarAoAbrir } = (Route.useSearch?.() ?? {}) as { retomar?: boolean };
   const navigate = useNavigate();
@@ -549,7 +553,9 @@ function Player() {
                   aria-valuetext={`${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}`}
                 >
                   <div
-                    className="h-full rounded-full bg-ocre transition-all"
+                    className={`h-full rounded-full bg-ocre ${
+                      movimentoReduzido ? "" : "transition-all"
+                    }`}
                     style={{ width: `${total ? (tempo / total) * 100 : 0}%` }}
                   />
                 </div>

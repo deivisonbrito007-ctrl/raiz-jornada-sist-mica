@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
+import { useMovimentoReduzido } from "@/hooks/use-movimento-reduzido";
 import {
   useSincronizarLiberacoes,
   type MudancaSincronia,
@@ -56,6 +57,7 @@ export function avisoDaMudanca(mudanca?: MudancaSincronia): Aviso | null {
 export function AvisoRemocaoRealtime() {
   const [aviso, setAviso] = useState<Aviso | null>(null);
   const caixaRef = useRef<HTMLDivElement | null>(null);
+  const movimentoReduzido = useMovimentoReduzido();
 
   useSincronizarLiberacoes((mudanca) => {
     const novo = avisoDaMudanca(mudanca);
@@ -78,7 +80,10 @@ export function AvisoRemocaoRealtime() {
       aria-labelledby="aviso-remocao-titulo"
       aria-describedby="aviso-remocao-orientacao"
       tabIndex={-1}
-      className="mx-auto mb-4 max-w-2xl rounded-2xl border border-terracota/40 bg-terracota/10 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
+      data-movimento-reduzido={movimentoReduzido ? "true" : "false"}
+      className={`mx-auto mb-4 max-w-2xl rounded-2xl border border-terracota/40 bg-terracota/10 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota ${
+        movimentoReduzido ? "" : "animate-fade-in"
+      }`}
     >
       <div className="flex items-start gap-3">
         <AlertTriangle aria-hidden="true" className="mt-0.5 h-5 w-5 text-terracota" />
