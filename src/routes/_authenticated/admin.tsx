@@ -105,8 +105,22 @@ function AdminLayout() {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-8">
-        <Outlet />
+        {contexto && visiveis.length === 0 ? (
+          <div
+            role="status"
+            className="rounded-3xl border border-dashed border-border p-8 text-sm text-muted-foreground"
+          >
+            <p className="font-medium text-foreground">Nenhuma área liberada para você ainda</p>
+            <p className="mt-1">
+              Seu acesso administrativo existe, mas nenhuma permissão foi concedida. Peça a um gestor
+              da equipe para liberar as áreas que você precisa.
+            </p>
+          </div>
+        ) : (
+          <Outlet />
+        )}
       </main>
+
     </div>
   );
 }
