@@ -144,7 +144,8 @@ function montar() {
 
 async function avisarMudanca() {
   await waitFor(() => expect(handlers.length).toBeGreaterThan(0));
-  handlers.forEach((h) => h());
+  // apenas o canal de liberações (o primeiro assinado) participa deste cenário
+  handlers[0]!();
 }
 
 beforeEach(() => {
