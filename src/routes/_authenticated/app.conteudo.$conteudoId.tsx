@@ -87,6 +87,8 @@ function Player() {
   const [terminou, setTerminou] = useState(false);
   const [concluido, setConcluido] = useState(false);
   const [bloqueio, setBloqueio] = useState<MotivoBloqueio | null>(null);
+  /** o link seguro está perto de vencer: mostramos o aviso antes de interromper */
+  const [prestesAExpirar, setPrestesAExpirar] = useState(false);
   /** espelho do bloqueio para leitura dentro de callbacks de tempo real */
   const bloqueioRef = useRef<MotivoBloqueio | null>(null);
   /** ordem das revalidações concorrentes — só a última pode aplicar estado */
