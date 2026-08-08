@@ -47,10 +47,17 @@ function Player() {
   const salvarProgresso = useServerFn(marcarProgresso);
   const persistirPosicao = useServerFn(salvarPosicao);
 
-  const { data, isLoading } = useQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useQuery({
     queryKey: ["conteudo", conteudoId],
     queryFn: () => fetchConteudo({ data: { conteudoId } }),
   });
+
 
   // Remoção da prática tem aviso próprio (e anúncio próprio no leitor de tela);
   // as outras mudanças passam pela revalidação da liberação.
