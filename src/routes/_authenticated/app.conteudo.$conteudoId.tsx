@@ -721,7 +721,7 @@ function Player() {
             renovando={renovando}
             emEspera={emEspera}
             esperaAte={esperaAte}
-            eixoId={eixoConhecidoRef.current ?? undefined}
+            {...(eixoConhecidoRef.current ? { eixoId: eixoConhecidoRef.current } : {})}
             onRenovar={renovarMidia}
             onSair={() => voltarRef.current?.focus()}
           />
