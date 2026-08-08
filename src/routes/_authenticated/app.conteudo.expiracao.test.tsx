@@ -226,11 +226,10 @@ describe("player — expiração da URL assinada", () => {
     expect(toastError).toHaveBeenCalledWith("Esta prática não está mais liberada para você.");
     expect(document.querySelector("audio")).toBeNull();
 
-    await user.click(screen.getByRole("button", { name: "Marcar como concluída" }));
+    // com o acesso bloqueado, o CTA de concluir sai da tela em vez de falhar no clique
+    expect(screen.queryByRole("button", { name: "Marcar como concluída" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Ir ao diário/i })).toBeNull();
     expect(salvarProgresso).not.toHaveBeenCalled();
-    expect(toastError).toHaveBeenCalledWith(
-      "Esta prática não está mais liberada. Fale com seu terapeuta se quiser continuar.",
-    );
   });
 
   it("falha de rede na renovação: mensagem separada de erro de conexão e botão de tentar", async () => {

@@ -259,7 +259,7 @@ describe("botão Renovar acesso", () => {
     await user.click(tentar).catch(() => {});
     fireEvent.click(tentar);
     expect(fetchConteudo).toHaveBeenCalledTimes(1);
-    expect(toastError).toHaveBeenCalledTimes(1);
+    expect(toastError).toHaveBeenLastCalledWith("Esta prática não está mais liberada para você.");
     expect(toastSuccess).not.toHaveBeenCalled();
   });
 
