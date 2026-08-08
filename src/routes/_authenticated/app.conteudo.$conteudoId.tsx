@@ -628,6 +628,7 @@ function Player() {
             <div className="mt-5 flex flex-wrap gap-3">
               <Button
                 onClick={concluir}
+                data-foco-player="concluir"
                 disabled={concluido}
                 className="rounded-full bg-salvia px-6 text-salvia-foreground hover:bg-salvia/90"
               >
