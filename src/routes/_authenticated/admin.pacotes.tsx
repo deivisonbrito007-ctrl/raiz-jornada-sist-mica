@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { COBRANCA_LABEL, formatarPreco } from "@/lib/raiz-format";
+import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
+import { ControlePermitido, SecaoSemPermissao } from "@/components/permissao-ui";
 
 export const Route = createFileRoute("/_authenticated/admin/pacotes")({
   component: AdminPacotes,
@@ -45,7 +47,13 @@ function AdminPacotes() {
   const queryClient = useQueryClient();
   const fetchResumo = useServerFn(adminResumo);
   const salvar = useServerFn(adminSalvarPacote);
-  const { data } = useQuery({ queryKey: ["admin-resumo"], queryFn: () => fetchResumo() });
+  const { pode, carregando } = useMinhasPermissoes();
+  const podeGerenciar = pode("gerenciar_pacotes");
+  const { data } = useQuery({
+    queryKey: ["admin-resumo"],
+    queryFn: () => fetchResumo(),
+    enabled: podeGerenciar,
+  });
   const [form, setForm] = useState<Formulario | null>(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -73,6 +81,15 @@ function AdminPacotes() {
     }
   }
 
+  if (!carregando && !podeGerenciar) {
+    return (
+      <div>
+        <h1 className="text-3xl text-floresta">Pacotes</h1>
+        <SecaoSemPermissao permissao="gerenciar_pacotes" className="mt-6" titulo="Pacotes restritos" />
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -82,12 +99,14 @@ function AdminPacotes() {
             Defina jornadas e valores. O controle de pagamento é manual, por cliente.
           </p>
         </div>
-        <Button
-          onClick={() => setForm(vazio)}
-          className="rounded-full bg-terracota px-6 text-terracota-foreground hover:bg-terracota/90"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Novo pacote
-        </Button>
+        <ControlePermitido permissao="gerenciar_pacotes">
+          <Button
+            onClick={() => setForm(vazio)}
+            className="rounded-full bg-terracota px-6 text-terracota-foreground hover:bg-terracota/90"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Novo pacote
+          </Button>
+        </ControlePermitido>
       </div>
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
@@ -109,6 +128,7 @@ function AdminPacotes() {
             <p className="mt-2 text-xs text-salvia">
               {(pacote.eixos_incluidos ?? []).length} eixo(s) incluído(s)
             </p>
+            <ControlePermitido permissao="gerenciar_pacotes">
             <Button
               variant="outline"
               size="sm"
@@ -126,6 +146,7 @@ function AdminPacotes() {
             >
               Editar
             </Button>
+            </ControlePermitido>
           </article>
         ))}
         {(data?.pacotes ?? []).length === 0 && (

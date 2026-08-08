@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TIPO_LABEL, formatarDuracao } from "@/lib/raiz-format";
+import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
+import { ControlePermitido, SecaoSemPermissao, SePode } from "@/components/permissao-ui";
 
 export const Route = createFileRoute("/_authenticated/admin/conteudos")({
   component: AdminConteudos,
@@ -59,7 +61,13 @@ function AdminConteudos() {
   const salvar = useServerFn(adminSalvarConteudo);
   const apagar = useServerFn(adminApagarConteudo);
 
-  const { data } = useQuery({ queryKey: ["admin-conteudos"], queryFn: () => fetchTudo() });
+  const { pode, carregando } = useMinhasPermissoes();
+  const podeGerenciar = pode("gerenciar_conteudos");
+  const { data } = useQuery({
+    queryKey: ["admin-conteudos"],
+    queryFn: () => fetchTudo(),
+    enabled: podeGerenciar,
+  });
   const [form, setForm] = useState<Formulario | null>(null);
   const [busca, setBusca] = useState("");
   const [eixoFiltro, setEixoFiltro] = useState("todos");
@@ -137,6 +145,19 @@ function AdminConteudos() {
     }
   }
 
+  if (!carregando && !podeGerenciar) {
+    return (
+      <div>
+        <h1 className="text-3xl text-floresta">Conteúdos</h1>
+        <SecaoSemPermissao
+          permissao="gerenciar_conteudos"
+          className="mt-6"
+          titulo="Biblioteca restrita"
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -146,13 +167,15 @@ function AdminConteudos() {
             Organize as práticas de cada eixo. Nada fica visível antes de você liberar.
           </p>
         </div>
-        <Button
-          onClick={() => setForm(vazio(data?.eixos[0]?.id ?? ""))}
-          disabled={!data?.eixos.length}
-          className="rounded-full bg-terracota px-6 text-terracota-foreground hover:bg-terracota/90"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Nova prática
-        </Button>
+        <ControlePermitido permissao="gerenciar_conteudos">
+          <Button
+            onClick={() => setForm(vazio(data?.eixos[0]?.id ?? ""))}
+            disabled={!data?.eixos.length}
+            className="rounded-full bg-terracota px-6 text-terracota-foreground hover:bg-terracota/90"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Nova prática
+          </Button>
+        </ControlePermitido>
       </div>
 
       <div className="mt-8 space-y-3">
@@ -269,17 +292,20 @@ function AdminConteudos() {
                         >
                           Editar
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="rounded-full text-destructive"
-                          onClick={async () => {
-                            await apagar({ data: { id: conteudo.id } });
-                            recarregar();
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <SePode permissao="gerenciar_conteudos">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-label={`Apagar ${conteudo.titulo}`}
+                            className="rounded-full text-destructive"
+                            onClick={async () => {
+                              await apagar({ data: { id: conteudo.id } });
+                              recarregar();
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </SePode>
                       </div>
                     </li>
                   ))}
