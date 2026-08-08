@@ -9,3 +9,8 @@ if (!("ResizeObserver" in globalThis)) {
   }
   (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ResizeObserverMock;
 }
+
+// ProseMirror (TipTap) chama document.elementFromPoint, ausente no jsdom.
+if (typeof document !== "undefined" && !document.elementFromPoint) {
+  (document as unknown as { elementFromPoint: () => null }).elementFromPoint = () => null;
+}

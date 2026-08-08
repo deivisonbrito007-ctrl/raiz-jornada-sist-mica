@@ -135,3 +135,41 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Como usar a nova aba Conteúdos
+
+A aba **Conteúdos** (`/app/admin/conteudos`, visível para terapeuta e equipe com a permissão
+`gerenciar_conteudos`) é a biblioteca de práticas da Raiz. Cada prática pertence a um eixo e só
+aparece para o cliente depois de ser liberada em **Clientes**.
+
+### Criar ou editar uma prática
+
+1. Clique em **Nova prática** (ou em **Editar** dentro de um card).
+2. Escolha o **eixo** e o **tipo** (vídeo, áudio, exercício, texto ou tarefa).
+3. Preencha **título** e **descrição**. O botão *Salvar prática* só libera com o título preenchido.
+4. Para tipos de leitura (exercício, texto, tarefa) use o **editor de texto** com negrito, itálico,
+   títulos, listas e citação — o conteúdo é salvo como HTML em `corpo_texto`.
+5. Para vídeo e áudio, envie o arquivo em **Mídia**: o app mostra nome, tamanho e barra de
+   progresso, e aceita apenas `video/*` ou `audio/*` conforme o tipo.
+6. Opcionalmente envie uma **imagem de capa** (PNG, JPG ou WebP). Ela é usada como miniatura do
+   card; sem capa, o card mostra o ícone do tipo.
+7. Ajuste **duração** (em segundos) e **ordem** e salve.
+
+### Organizar a biblioteca
+
+- **Filtros**: busca por título/descrição e filtros por eixo, tipo e status de mídia. Filtros ativos
+  ficam destacados; use **Limpar filtros** para voltar ao estado inicial.
+- **Reordenar**: arraste o card pela alça à esquerda (ou use as setas ↑/↓ pelo teclado). A nova
+  ordem é gravada no banco assim que você solta o item.
+- **Ações em lote**: marque os checkboxes dos cards para abrir a barra de ações e então
+  **excluir os selecionados** ou **mover para outro eixo**.
+
+Toda a tela segue a identidade da Raiz (verde-floresta, papel, terracota, sálvia e ouro; títulos em
+Fraunces), com foco visível, rótulos acessíveis nos ícones e alvos de toque de 44px.
+
+### Rodar localmente e testar
+
+```sh
+npm run dev
+npx vitest run src/components/AdminConteudos
+```

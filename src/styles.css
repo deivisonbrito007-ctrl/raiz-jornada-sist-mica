@@ -72,6 +72,11 @@
   --color-floresta: var(--floresta);
   --color-floresta-foreground: var(--floresta-foreground);
   --color-pergaminho: var(--pergaminho);
+  /* Apelidos da paleta da marca usados na biblioteca de conteúdos. */
+  --color-papel: var(--card);
+  --color-papel-foreground: var(--card-foreground);
+  --color-ouro: var(--ocre);
+  --color-ouro-foreground: var(--ocre-foreground);
   --font-serif: "Fraunces", ui-serif, Georgia, serif;
   --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
 }
@@ -200,5 +205,47 @@
       "SOFT" 40,
       "WONK" 1;
     letter-spacing: -0.01em;
+  }
+}
+
+@utility shadow-organico {
+  box-shadow: var(--shadow-organico);
+}
+
+/* Editor de texto rico (TipTap) na biblioteca de conteúdos. */
+@layer base {
+  .editor-rico .ProseMirror {
+    min-height: 10rem;
+    outline: none;
+  }
+  .editor-rico .ProseMirror p {
+    margin-bottom: 0.5rem;
+  }
+  .editor-rico .ProseMirror h2,
+  .editor-rico .ProseMirror h3 {
+    font-family: var(--font-serif);
+    margin-bottom: 0.35rem;
+  }
+  .editor-rico .ProseMirror h2 {
+    font-size: 1.25rem;
+  }
+  .editor-rico .ProseMirror h3 {
+    font-size: 1.05rem;
+  }
+  .editor-rico .ProseMirror ul,
+  .editor-rico .ProseMirror ol {
+    padding-left: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  .editor-rico .ProseMirror ul {
+    list-style: disc;
+  }
+  .editor-rico .ProseMirror ol {
+    list-style: decimal;
+  }
+  .editor-rico .ProseMirror blockquote {
+    border-left: 3px solid var(--color-ouro);
+    padding-left: 0.75rem;
+    font-style: italic;
   }
 }

@@ -806,6 +806,7 @@ export const adminSalvarConteudo = createServerFn({ method: "POST" })
         descricao: z.string().max(2000).default(""),
         corpoTexto: z.string().max(20000).nullable().optional(),
         storagePath: z.string().max(500).nullable().optional(),
+        thumbnailPath: z.string().max(500).nullable().optional(),
         duracaoSegundos: z.number().int().min(0).default(0),
         ordem: z.number().int().min(0).default(0),
       })
@@ -823,6 +824,7 @@ export const adminSalvarConteudo = createServerFn({ method: "POST" })
       descricao: data.descricao,
       corpo_texto: data.corpoTexto ?? null,
       storage_path: data.storagePath ?? null,
+      thumbnail_path: data.thumbnailPath ?? null,
       duracao_segundos: data.duracaoSegundos,
       ordem: data.ordem,
     };
@@ -900,7 +902,7 @@ export const adminListarConteudos = createServerFn({ method: "GET" })
       context.supabase
         .from("conteudos")
         .select(
-          "id, eixo_id, tipo, titulo, descricao, corpo_texto, storage_path, duracao_segundos, ordem",
+          "id, eixo_id, tipo, titulo, descricao, corpo_texto, storage_path, thumbnail_path, duracao_segundos, ordem",
         )
         .order("ordem"),
     ]);
