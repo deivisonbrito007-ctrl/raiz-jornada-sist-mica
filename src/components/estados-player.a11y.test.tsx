@@ -2,7 +2,7 @@ import type React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { axe } from "@/test/axe";
+import { esperarSemViolacoes } from "@/test/axe";
 
 /**
  * Estados sem mídia tocando (sem arquivo enviado e falha de carregamento):
@@ -26,7 +26,7 @@ describe("estado: mídia ainda não enviada", () => {
     const regiao = screen.getByRole("region", { name: "A mídia ainda não foi enviada" });
     expect(regiao.getAttribute("aria-busy")).toBe("false");
     expect(screen.getByRole("status").textContent).toContain("Player indisponível");
-    expect(await axe(regiao)).toHaveNoViolations();
+    await esperarSemViolacoes(regiao);
   });
 
   it("dá caminho de teclado para verificar de novo, diário e trilha", async () => {
@@ -56,7 +56,7 @@ describe("estado: falha ao carregar a prática", () => {
   it("é um alerta nomeado, sem violações de acessibilidade", async () => {
     render(<AvisoFalhaCarregamento carregando={false} onTentar={() => {}} />);
     const alerta = screen.getByRole("alert", { name: "Não conseguimos carregar esta prática" });
-    expect(await axe(alerta)).toHaveNoViolations();
+    await esperarSemViolacoes(alerta);
   });
 
   it("põe o foco no botão de nova tentativa e mantém saída por teclado", async () => {
