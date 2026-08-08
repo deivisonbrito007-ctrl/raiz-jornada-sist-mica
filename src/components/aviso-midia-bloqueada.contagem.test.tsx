@@ -25,6 +25,17 @@ function montar(props: Partial<React.ComponentProps<typeof AvisoMidiaBloqueada>>
   );
 }
 
+/**
+ * Relógios que não pertencem à contagem (infra dos timers falsos).
+ * Serve de linha de base: montar com espera deve somar exatamente um.
+ */
+function relogiosDeFundo() {
+  const { unmount } = montar({ emEspera: false, esperaAte: null });
+  const total = vi.getTimerCount();
+  unmount();
+  return total;
+}
+
 /** Texto de ajuda ligado ao botão — é onde a contagem aparece na tela. */
 function ajuda() {
   const botao = screen.getByRole("button");
@@ -99,17 +110,11 @@ describe("contagem regressiva do player com timers falsos", () => {
   });
 
   it("sem espera ativa não há relógio rodando por trás", () => {
-    const base = vi.getTimerCount();
-    const { unmount } = render(
-      <AvisoMidiaBloqueada
-        motivo="validade"
-        renovando={false}
-        emEspera={false}
-        onRenovar={() => {}}
-      />,
-    );
+    const base = relogiosDeFundo();
+    const { unmount } = montar({ emEspera: false, esperaAte: null });
     expect(vi.getTimerCount()).toBe(base);
     unmount();
+    expect(vi.getTimerCount()).toBe(base);
   });
 });
 
@@ -123,7 +128,7 @@ describe("troca rápida de telas durante a espera", () => {
   });
 
   it("sair do player durante a espera encerra o relógio da contagem", () => {
-    const base = vi.getTimerCount();
+    const base = relogiosDeFundo();
     const { unmount } = montar();
     expect(vi.getTimerCount()).toBe(base + 1);
     unmount();
@@ -154,7 +159,7 @@ describe("troca rápida de telas durante a espera", () => {
   });
 
   it("idas e vindas repetidas não acumulam relógios nem anúncios duplicados", () => {
-    const base = vi.getTimerCount();
+    const base = relogiosDeFundo();
     for (let i = 0; i < 5; i++) {
       const { unmount } = montar();
       act(() => vi.advanceTimersByTime(500));
