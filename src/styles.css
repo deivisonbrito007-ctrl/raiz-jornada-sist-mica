@@ -177,3 +177,27 @@
     letter-spacing: -0.01em;
   }
 }
+
+/*
+ * Preferência de menos movimento (prefers-reduced-motion: reduce).
+ *
+ * Rede de segurança global: mesmo em componentes de terceiros (Radix, sonner)
+ * as animações viram quase instantâneas em vez de deslizar/escalar, e a rolagem
+ * deixa de ser suave. Os componentes do player e dos avisos também checam a
+ * preferência em JS (useMovimentoReduzido) para não animar de propósito.
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}

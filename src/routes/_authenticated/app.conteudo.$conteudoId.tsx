@@ -549,7 +549,9 @@ function Player() {
                   aria-valuetext={`${formatarDuracao(Math.floor(tempo))} de ${formatarDuracao(Math.floor(total))}`}
                 >
                   <div
-                    className="h-full rounded-full bg-ocre transition-all"
+                    className={`h-full rounded-full bg-ocre ${
+                      movimentoReduzido ? "" : "transition-all"
+                    }`}
                     style={{ width: `${total ? (tempo / total) * 100 : 0}%` }}
                   />
                 </div>

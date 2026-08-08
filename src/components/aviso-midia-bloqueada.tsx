@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { TimerOff, Lock, AlertCircle, Hourglass } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { rolagem, useMovimentoReduzido } from "@/hooks/use-movimento-reduzido";
 
 export type MotivoBloqueio = "validade" | "revogado" | "removido" | "falha" | "limite";
 
@@ -41,6 +42,9 @@ export function AvisoMidiaBloqueada({
   onSair,
 }: Props) {
   const segundos = useContagem(emEspera ? esperaAte : null);
+  // Quem pede menos movimento recebe o aviso sem entrada animada e sem rolagem
+  // suave: o conteúdo e o foco chegam iguais, só sem deslocamento na tela.
+  const movimentoReduzido = useMovimentoReduzido();
 
   const configs: Record<MotivoBloqueio, {
     icone: React.ReactNode;
@@ -120,8 +124,8 @@ export function AvisoMidiaBloqueada({
   // até a vista, para quem enxerga acompanhar a mesma mudança.
   useEffect(() => {
     (botaoRef.current ?? caixaRef.current)?.focus();
-    caixaRef.current?.scrollIntoView?.({ block: "center" });
-  }, [motivo]);
+    caixaRef.current?.scrollIntoView?.({ block: "center", behavior: rolagem(movimentoReduzido) });
+  }, [motivo, movimentoReduzido]);
 
   // Anúncio imediato (assertivo) do que acabou de acontecer com a prática: só
   // dispara na virada de estado, para o leitor de tela interromper a leitura
@@ -215,7 +219,10 @@ export function AvisoMidiaBloqueada({
       aria-busy={renovando}
       tabIndex={-1}
       onKeyDown={aoTeclar}
-      className={`mt-6 rounded-3xl border p-6 outline-none focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2 ${borda}`}
+      data-movimento-reduzido={movimentoReduzido ? "true" : "false"}
+      className={`mt-6 rounded-3xl border p-6 outline-none focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2 ${borda} ${
+        movimentoReduzido ? "motion-reduce:animate-none" : "animate-scale-in"
+      }`}
     >
       {/* Mudança que acabou de acontecer: anúncio assertivo, uma única vez */}
       <div role="alert" aria-live="assertive" aria-atomic="true" className="sr-only">
