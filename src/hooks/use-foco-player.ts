@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import { rolarParaVista } from "@/lib/rolar-para-vista";
 
 /**
  * Guarda qual controle do player estava em foco quando o acesso caiu (link
@@ -32,6 +33,31 @@ function gravar(conteudoId: string, controle: ControlePlayer | null) {
   } catch {
     /* sessionStorage indisponível: a restauração apenas não acontece */
   }
+}
+
+/**
+ * Ordem de preferência quando o controle guardado não existe mais na tela.
+ * Começa pelo comando principal (tocar/pausar) e desce para os controles de
+ * navegação; se nada disso existir, qualquer controle marcado serve.
+ */
+const PREFERENCIA: ControlePlayer[] = ["play", "voltar15", "avancar15", "concluir"];
+
+/**
+ * Primeiro controle relevante do player disponível agora.
+ *
+ * Usado como rede de segurança: o controle que estava em foco antes do bloqueio
+ * pode ter desaparecido (o player foi remontado com outros comandos, a prática
+ * mudou de formato ou aquele botão deixou de ser oferecido). Em vez de deixar o
+ * foco cair no `body` — que faria o leitor de tela perder o contexto e o Tab
+ * voltar ao começo da página — devolvemos o foco a um ponto útil e previsível.
+ */
+export function primeiroControleRelevante(): HTMLElement | null {
+  for (const nome of PREFERENCIA) {
+    const el = document.querySelector<HTMLElement>(`[data-foco-player="${nome}"]`);
+    if (el && !el.hasAttribute("disabled")) return el;
+  }
+  const candidatos = Array.from(document.querySelectorAll<HTMLElement>("[data-foco-player]"));
+  return candidatos.find((el) => !el.hasAttribute("disabled")) ?? null;
 }
 
 /** Nome do controle do player em foco agora, se houver. */
@@ -83,10 +109,15 @@ export function useFocoPlayer(conteudoId: string, opcoes: { bloqueado: boolean; 
     if (bloqueado || !liberado || jaRestauradoRef.current) return;
     const desejado = ultimoRef.current ?? ler(conteudoId);
     if (!desejado) return;
-    const alvo = document.querySelector<HTMLElement>(`[data-foco-player="${desejado}"]`);
+    const alvo =
+      document.querySelector<HTMLElement>(`[data-foco-player="${desejado}"]`) ??
+      primeiroControleRelevante();
     if (!alvo) return;
     jaRestauradoRef.current = true;
     alvo.focus();
+    // o controle pode estar fora da vista (a página mudou de tamanho enquanto o
+    // aviso ocupava a tela): trazemos ele junto com o foco
+    rolarParaVista(alvo, "center");
     gravar(conteudoId, null);
   }, [bloqueado, liberado, conteudoId]);
 
