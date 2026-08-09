@@ -297,8 +297,19 @@ function AdminClientes() {
                     {cliente.nome || cliente.email}
                   </h2>
                   <p className="truncate text-sm text-muted-foreground">{cliente.email}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Acesso {cliente.status} · {atribuicoes.length} trilha(s) atribuída(s)
+                  <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span
+                      className={`rounded-full px-3 py-1 font-medium ${
+                        cliente.modo === "acompanhado"
+                          ? "bg-secondary text-floresta"
+                          : "bg-terracota/10 text-terracota"
+                      }`}
+                    >
+                      {MODO_LABEL[cliente.modo]}
+                    </span>
+                    <span>
+                      Acesso {cliente.status} · {atribuicoes.length} trilha(s) atribuída(s)
+                    </span>
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-wrap justify-end gap-2">
