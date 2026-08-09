@@ -311,7 +311,9 @@ export const adminListarClientes = createServerFn({ method: "GET" })
     });
 
     const [acessos, perfis, convites, atribuicoes, trilhas] = await Promise.all([
-      supabase.from("clientes_acesso").select("user_id, terapeuta_id, telefone, observacoes, status"),
+      supabase
+        .from("clientes_acesso")
+        .select("user_id, terapeuta_id, telefone, observacoes, status, modo, modo_desde"),
       supabase.from("profiles").select("id, nome, email, created_at").order("nome"),
       supabase
         .from("convites_clientes")
