@@ -118,8 +118,10 @@ describe("aba Início do painel", () => {
   it("sem nenhum cliente ainda, mostra zeros com frases de convite", async () => {
     fetchInicio.mockResolvedValue(VAZIO);
     montar();
+    // Zero nunca aparece como número seco: cada cartão traz um convite.
     const resumo = await screen.findByRole("region", { name: /resumo/i });
-    expect(within(resumo).getAllByText("0")).toHaveLength(6);
+    expect(within(resumo).queryByText("0")).not.toBeInTheDocument();
+    expect(within(resumo).getAllByRole("link")).toHaveLength(6);
     expect(await screen.findByText(/nenhuma pendência para hoje/i)).toBeInTheDocument();
     expect(screen.getByText(/nenhuma revisão programada/i)).toBeInTheDocument();
   });
@@ -127,7 +129,8 @@ describe("aba Início do painel", () => {
   it("mostra prioridades, agenda e atividade quando há dados", async () => {
     fetchInicio.mockResolvedValue(COM_DADOS);
     montar();
-    expect(await screen.findByText(/solicitou contato/i)).toBeInTheDocument();
+    const prioridades = await screen.findByRole("region", { name: /prioridades do dia/i });
+    expect(within(prioridades).getByText(/solicitou contato/i)).toBeInTheDocument();
 
     const agenda = screen.getByRole("region", { name: /agenda de revisões/i });
     expect(within(agenda).getAllByText("Ana Souza").length).toBeGreaterThan(0);
@@ -158,8 +161,10 @@ describe("aba Início do painel", () => {
     fetchInicio.mockResolvedValue(VAZIO);
     montar();
     const acoes = await screen.findByRole("region", { name: /ações rápidas/i });
-    expect(within(acoes).getByRole("link", { name: /clientes/i })).toBeInTheDocument();
-    expect(within(acoes).queryByRole("link", { name: /conteúdos/i })).not.toBeInTheDocument();
+    expect(within(acoes).getByRole("link", { name: /cadastrar cliente/i })).toBeInTheDocument();
+    expect(within(acoes).getByRole("link", { name: /registrar revisão/i })).toBeInTheDocument();
+    expect(within(acoes).queryByRole("link", { name: /criar conteúdo/i })).not.toBeInTheDocument();
+    expect(within(acoes).queryByRole("link", { name: /liberar trilha/i })).not.toBeInTheDocument();
   });
 
   it("na falha, tranquiliza e oferece tentar de novo", async () => {
