@@ -74,7 +74,11 @@ function AuthPage() {
             emailRedirectTo: destinoSeguro
               ? `${window.location.origin}${destinoSeguro}`
               : window.location.origin,
-            data: { nome, papel: souTerapeuta ? "terapeuta" : "cliente" },
+            data: {
+              nome,
+              papel: souTerapeuta ? "terapeuta" : "cliente",
+              caminho_entrada: souTerapeuta ? "terapeuta" : caminho,
+            },
           },
         });
         if (error) throw error;
