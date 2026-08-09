@@ -149,10 +149,12 @@ describe("prioridades do dia", () => {
   });
 
   it("ordena por urgência: apoio, revisão, devolutiva, plano, convite", () => {
+    // Dois planos: o da revisão vencida e o pausado — os dois pedem atenção.
     expect(montarPrioridades(completo, AGORA).map((p) => p.tipo)).toEqual([
       "apoio",
       "revisao",
       "devolutiva",
+      "plano",
       "plano",
       "convite",
     ]);
