@@ -3,10 +3,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, CalendarCheck, Lock, Users } from "lucide-react";
 
-import { getMinhaJornada } from "@/lib/trilhas.functions";
+import { getMinhaEtapa, getMinhaJornada } from "@/lib/trilhas.functions";
 import { ETAPA_LABEL, NIVEL_LABEL, type Nivel, type TipoEtapa } from "@/lib/etapas";
 import { formatarData, formatarDuracao } from "@/lib/raiz-format";
 import { PedirApoio } from "@/components/pedir-apoio";
+import { usePreCarregarProximas } from "@/hooks/use-pre-carregar-proximas";
 import { ConsentimentoPrimeiroAcesso } from "@/components/consentimento-primeiro-acesso";
 
 export const Route = createFileRoute("/_authenticated/app/jornada")({
@@ -32,6 +33,18 @@ function MinhaJornada() {
   const queryClient = useQueryClient();
   const carregar = useServerFn(getMinhaJornada);
   const { data, isLoading } = useQuery({ queryKey: ["minha-jornada"], queryFn: () => carregar() });
+
+  // Adianta a próxima etapa das trilhas ativas para o toque abrir sem espera.
+  const carregarEtapa = useServerFn(getMinhaEtapa);
+  const proximas = (data?.trilhas ?? [])
+    .filter((t) => t.status === "ativa" && t.proximaEtapaId)
+    .map((t) => t.proximaEtapaId as string);
+  usePreCarregarProximas(
+    proximas.map((conteudoId) => ({
+      queryKey: ["minha-etapa", conteudoId],
+      carregar: () => carregarEtapa({ data: { conteudoId } }),
+    })),
+  );
 
   if (isLoading) {
     return (
