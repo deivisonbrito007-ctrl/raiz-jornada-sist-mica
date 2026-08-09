@@ -3,8 +3,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Home, Compass, NotebookPen, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { limparCachePersistido } from "@/lib/cache-persistente";
 import { RaizWordmark } from "@/components/raiz-logo";
-import { getMeuContexto, listarNotificacoes, marcarNotificacoesLidas } from "@/lib/raiz.functions";
+import { listarNotificacoes, marcarNotificacoesLidas } from "@/lib/raiz.functions";
+import { useMeuContexto } from "@/hooks/use-meu-contexto";
+import { CHAVES } from "@/lib/cache-chaves";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Bell } from "lucide-react";
 import { formatarData } from "@/lib/raiz-format";
@@ -25,13 +28,12 @@ const abas = [
 function AppLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const fetchContexto = useServerFn(getMeuContexto);
   const fetchNotificacoes = useServerFn(listarNotificacoes);
   const lerNotificacoes = useServerFn(marcarNotificacoesLidas);
 
-  const { data: contexto } = useQuery({ queryKey: ["contexto"], queryFn: () => fetchContexto() });
+  const { data: contexto } = useMeuContexto();
   const { data: notificacoes } = useQuery({
-    queryKey: ["notificacoes"],
+    queryKey: CHAVES.notificacoes,
     queryFn: () => fetchNotificacoes(),
   });
 
@@ -40,6 +42,7 @@ function AppLayout() {
   async function sair() {
     await queryClient.cancelQueries();
     queryClient.clear();
+    limparCachePersistido();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
@@ -56,7 +59,7 @@ function AppLayout() {
               onOpenChange={(aberto) => {
                 if (aberto && naoLidas > 0) {
                   void lerNotificacoes().then(() =>
-                    queryClient.invalidateQueries({ queryKey: ["notificacoes"] }),
+                    queryClient.invalidateQueries({ queryKey: CHAVES.notificacoes }),
                   );
                 }
               }}

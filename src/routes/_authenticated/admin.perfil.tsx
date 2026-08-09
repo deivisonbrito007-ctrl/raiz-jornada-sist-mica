@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { limparCachePersistido } from "@/lib/cache-persistente";
 import { useMeuContexto } from "@/hooks/use-meu-contexto";
 import { Button } from "@/components/ui/button";
 import { PERMISSAO_LABEL, ehPermissao } from "@/lib/permissoes";
@@ -24,6 +25,7 @@ function AdminPerfil() {
   async function sair() {
     await queryClient.cancelQueries();
     queryClient.clear();
+    limparCachePersistido();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }

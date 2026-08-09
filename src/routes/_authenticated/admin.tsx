@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { podeAdministrarEmCache } from "@/lib/acesso-admin";
+import { limparCachePersistido } from "@/lib/cache-persistente";
 import { useMeuContexto } from "@/hooks/use-meu-contexto";
 import { useVigiaPermissoes } from "@/hooks/use-vigia-permissoes";
 
@@ -49,6 +50,7 @@ function AdminLayout() {
     if (!contexto) return;
     if (contexto.podeAdministrar) return;
     queryClient.clear();
+    limparCachePersistido();
     toast.error("Seu acesso administrativo foi removido.");
     navigate({ to: "/app", replace: true });
   }, [contexto, navigate, queryClient]);
