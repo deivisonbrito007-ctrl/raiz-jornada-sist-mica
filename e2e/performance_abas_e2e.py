@@ -131,6 +131,8 @@ async def abrir_menu_se_preciso(page, alvo) -> None:
     if await gatilho.count() and await gatilho.is_visible():
         await gatilho.click()
         await alvo.wait_for(state="visible", timeout=8_000)
+        # a gaveta anima ao abrir; espera-se o fim para não medir a animação
+        await page.wait_for_timeout(600)
 
 
 async def medir_troca(page, rotulo: str, rota: str, erros: list[str]) -> float:
