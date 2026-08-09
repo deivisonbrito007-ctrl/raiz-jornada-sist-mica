@@ -1,617 +1,357 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Copy, Send, Sprout } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-  adminAtribuirTrilha,
-  adminAtualizarCliente,
-  adminConvidarCliente,
   adminDefinirStatusAtribuicao,
   adminListarClientes,
+  adminListarPlanos,
+  adminSalvarPlano,
 } from "@/lib/trilhas.functions";
 import {
-  FREQUENCIAS,
-  NIVEIS,
   NIVEL_LABEL,
   STATUS_ATRIBUICAO,
   STATUS_ATRIBUICAO_LABEL,
   type Nivel,
   type StatusAtribuicao,
 } from "@/lib/etapas";
+import {
+  objetivoResumido,
+  progressoPlano,
+  statusClasse,
+  statusEfetivo,
+} from "@/lib/planos";
 import { formatarData } from "@/lib/raiz-format";
-import { PedidosAcompanhamento } from "@/components/painel/pedidos-acompanhamento";
-import { adminTornarAutoguiado } from "@/lib/acompanhamento.functions";
-import { MODO_LABEL, MODOS_USO, type ModoUso } from "@/lib/modo-uso";
+import {
+  AssistentePlano,
+  type TrilhaDetalhe,
+} from "@/components/painel/planos/assistente-plano";
+import { planoVazio, type EstadoPlano } from "@/components/painel/planos/tipos";
 
 export const Route = createFileRoute("/_authenticated/admin/clientes")({
   head: () => ({
     meta: [
-      { title: "Clientes e atribuições — Raiz" },
+      { title: "Planos de acompanhamento — Raiz" },
       {
         name: "description",
         content:
-          "Convide clientes, defina o vínculo de acompanhamento e atribua trilhas com objetivo, frequência e nível.",
+          "Crie e acompanhe planos personalizados: cliente, trilha, objetivo, frequência, prazo e revisão.",
       },
-      { property: "og:title", content: "Clientes e atribuições — Raiz" },
+      { property: "og:title", content: "Planos de acompanhamento — Raiz" },
       {
         property: "og:description",
-        content: "Gestão de clientes e atribuição de trilhas no acompanhamento Raiz.",
+        content: "Orientação personalizada da terapeuta para cada cliente no Raiz.",
       },
     ],
   }),
-  component: AdminClientes,
+  component: AdminPlanos,
 });
 
-const campoClasse =
-  "w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground";
-
-type FormAtribuicao = {
-  clienteId: string;
-  clienteNome: string;
-  trilhaId: string;
-  objetivo: string;
-  mensagem: string;
-  frequencia: string;
-  dataInicio: string;
-  dataRevisao: string;
-  nivel: Nivel;
-  podeSozinho: boolean;
-  exigeAcompanhamento: boolean;
-  somenteEmSessao: boolean;
-  orientacoesEspeciais: string;
-};
-
-function hoje() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function AdminClientes() {
+function AdminPlanos() {
   const queryClient = useQueryClient();
-  const carregar = useServerFn(adminListarClientes);
-  const convidar = useServerFn(adminConvidarCliente);
-  const atualizar = useServerFn(adminAtualizarCliente);
-  const atribuir = useServerFn(adminAtribuirTrilha);
+  const carregarPlanos = useServerFn(adminListarPlanos);
+  const carregarClientes = useServerFn(adminListarClientes);
+  const salvar = useServerFn(adminSalvarPlano);
   const definirStatus = useServerFn(adminDefinirStatusAtribuicao);
 
-  const { data, isLoading } = useQuery({ queryKey: ["admin-clientes"], queryFn: () => carregar() });
-  const invalidar = () => queryClient.invalidateQueries({ queryKey: ["admin-clientes"] });
-
-  const [convite, setConvite] = useState({ email: "", nome: "", telefone: "" });
-  const [form, setForm] = useState<FormAtribuicao | null>(null);
-  const [modoFiltro, setModoFiltro] = useState<"todos" | ModoUso>("todos");
-  const tornarAutoguiado = useServerFn(adminTornarAutoguiado);
-
-  const mutTornarAutoguiado = useMutation({
-    mutationFn: tornarAutoguiado,
-    onSuccess: () => {
-      toast.success("Acompanhamento encerrado. A pessoa segue por conta própria.");
-      void invalidar();
-      void queryClient.invalidateQueries({ queryKey: ["admin-pedidos-acompanhamento"] });
-    },
-    onError: () => toast.error("Não foi possível alterar o modo de uso"),
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-planos"],
+    queryFn: () => carregarPlanos(),
+  });
+  const { data: dadosClientes } = useQuery({
+    queryKey: ["admin-clientes"],
+    queryFn: () => carregarClientes(),
   });
 
+  const [assistenteAberto, setAssistenteAberto] = useState(false);
+  const [inicial, setInicial] = useState<EstadoPlano | null>(null);
+  const [busca, setBusca] = useState("");
+  const [statusFiltro, setStatusFiltro] = useState<"todos" | StatusAtribuicao>("todos");
 
-  const mutConvidar = useMutation({
-    mutationFn: convidar,
-    onSuccess: () => {
-      toast.success("Convite criado");
-      setConvite({ email: "", nome: "", telefone: "" });
-      void invalidar();
-    },
-    onError: () => toast.error("Não foi possível criar o convite"),
-  });
+  const invalidar = () => {
+    void queryClient.invalidateQueries({ queryKey: ["admin-planos"] });
+    void queryClient.invalidateQueries({ queryKey: ["admin-clientes"] });
+  };
 
-  const mutAtualizar = useMutation({
-    mutationFn: atualizar,
+  const mutSalvar = useMutation({
+    mutationFn: salvar,
     onSuccess: () => {
-      toast.success("Cadastro atualizado");
-      void invalidar();
+      toast.success("Plano de acompanhamento salvo");
+      setAssistenteAberto(false);
+      setInicial(null);
+      invalidar();
     },
-  });
-
-  const mutAtribuir = useMutation({
-    mutationFn: atribuir,
-    onSuccess: () => {
-      toast.success("Trilha atribuída");
-      setForm(null);
-      void invalidar();
-    },
-    onError: () => toast.error("Não foi possível atribuir a trilha"),
+    onError: () => toast.error("Não foi possível salvar o plano"),
   });
 
   const mutStatus = useMutation({
     mutationFn: definirStatus,
     onSuccess: () => {
       toast.success("Status atualizado");
-      void invalidar();
+      invalidar();
     },
+    onError: () => toast.error("Não foi possível atualizar o status"),
   });
 
-  const trilhasPublicadas = (data?.trilhas ?? []).filter((t) => t.status === "publicado");
-  const todosClientes = data?.clientes ?? [];
-  const contagemModo = (modo: ModoUso) => todosClientes.filter((c) => c.modo === modo).length;
-  const clientesVisiveis =
-    modoFiltro === "todos" ? todosClientes : todosClientes.filter((c) => c.modo === modoFiltro);
+  const planos = data?.planos ?? [];
+  const etapas = data?.etapas ?? [];
+  const perfis = data?.perfis ?? [];
+  const trilhas = (data?.trilhas ?? []) as TrilhaDetalhe[];
+  const conteudos = data?.conteudos ?? [];
+
+  const nomeDe = (id: string | null) => {
+    if (!id) return "—";
+    const p = perfis.find((x) => x.id === id);
+    return p?.nome || p?.email || "—";
+  };
+
+  const clientesAssistente = (dadosClientes?.clientes ?? []).map((c) => ({
+    id: c.id,
+    nome: c.nome ?? "",
+    email: c.email ?? "",
+  }));
+
+  const linhas = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    return planos
+      .map((p) => {
+        const etapasDoPlano = etapas.filter((e) => e.atribuicao_id === p.id);
+        return {
+          plano: p,
+          status: statusEfetivo(p),
+          progresso: progressoPlano(etapasDoPlano),
+          cliente: nomeDe(p.cliente_id),
+          trilha: p.trilhas?.nome ?? "Trilha",
+        };
+      })
+      .filter((l) => (statusFiltro === "todos" ? true : l.status === statusFiltro))
+      .filter((l) =>
+        termo ? `${l.cliente} ${l.trilha} ${l.plano.objetivo}`.toLowerCase().includes(termo) : true,
+      );
+  }, [busca, etapas, planos, statusFiltro, perfis]);
+
+  function editar(planoId: string) {
+    const p = planos.find((x) => x.id === planoId);
+    if (!p) return;
+    const etapasDoPlano = etapas
+      .filter((e) => e.atribuicao_id === planoId)
+      .sort((a, b) => a.ordem - b.ordem);
+    setInicial({
+      ...planoVazio(p.cliente_id),
+      id: p.id,
+      clienteId: p.cliente_id,
+      trilhaId: p.trilha_id,
+      objetivo: p.objetivo ?? "",
+      motivoIndicacao: p.motivo_indicacao ?? "",
+      mensagem: p.mensagem ?? "",
+      audioPath: p.audio_path ?? null,
+      orientacoesEspeciais: p.orientacoes_especiais ?? "",
+      frequencia: p.frequencia,
+      dataInicio: p.data_inicio,
+      dataRevisao: p.data_revisao ?? "",
+      lembretesAtivos: Boolean(p.lembretes_ativos),
+      nivel: p.nivel as Nivel,
+      podeSozinho: p.pode_sozinho,
+      exigeAcompanhamento: p.exige_acompanhamento,
+      somenteEmSessao: p.somente_em_sessao,
+      permiteRepetir: p.permite_repetir,
+      observacoes: p.observacoes ?? "",
+      etapas: etapasDoPlano.map((e) => {
+        const conteudo = conteudos.find((c) => c.id === e.conteudo_id);
+        return {
+          chave: e.id,
+          conteudoId: e.conteudo_id,
+          titulo: e.titulo_personalizado || conteudo?.titulo || "",
+          descricao: e.descricao_personalizada || conteudo?.descricao || "",
+          duracaoSegundos: conteudo?.duracao_segundos ?? 0,
+          obrigatoria: e.obrigatoria,
+          visivel: e.visivel,
+          permiteRepetir: e.permite_repetir,
+          prazoDias: e.prazo_dias ?? null,
+          personalizada: !e.conteudo_id,
+        };
+      }),
+    });
+    setAssistenteAberto(true);
+  }
 
   return (
-    <section className="space-y-8">
-      <header>
-        <h1 className="font-display text-2xl text-floresta">Clientes e atribuições</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Convide, acompanhe e defina qual trilha cada pessoa percorre entre as sessões.
-        </p>
-      </header>
-
-      <div className="rounded-3xl border border-border bg-card p-5 shadow-organico">
-        <h2 className="font-display text-lg text-floresta">Convidar cliente</h2>
-        <form
-          className="mt-4 grid gap-4 sm:grid-cols-4"
-          onSubmit={(evento) => {
-            evento.preventDefault();
-            mutConvidar.mutate({ data: convite });
+    <section className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl text-floresta">Planos de acompanhamento</h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            Cada plano é a sua orientação para uma pessoa: trilha, objetivo, frequência, prazo e
+            revisão. A escolha da trilha é sempre sua.
+          </p>
+        </div>
+        <Button
+          type="button"
+          className="min-h-11 rounded-full"
+          onClick={() => {
+            setInicial(null);
+            setAssistenteAberto(true);
           }}
         >
-          <div className="sm:col-span-2">
-            <Label htmlFor="convite-email">E-mail</Label>
-            <Input
-              id="convite-email"
-              type="email"
-              required
-              value={convite.email}
-              onChange={(e) => setConvite({ ...convite, email: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label htmlFor="convite-nome">Nome</Label>
-            <Input
-              id="convite-nome"
-              value={convite.nome}
-              onChange={(e) => setConvite({ ...convite, nome: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label htmlFor="convite-telefone">Telefone</Label>
-            <Input
-              id="convite-telefone"
-              value={convite.telefone}
-              onChange={(e) => setConvite({ ...convite, telefone: e.target.value })}
-            />
-          </div>
-          <div className="sm:col-span-4">
-            <Button type="submit" className="min-h-11 rounded-full" disabled={mutConvidar.isPending}>
-              <Send className="h-4 w-4" />
-              Criar convite
-            </Button>
-          </div>
-        </form>
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Criar plano de acompanhamento
+        </Button>
+      </header>
 
-        {(data?.convites ?? []).length > 0 && (
-          <ul className="mt-5 space-y-2">
-            {(data?.convites ?? []).slice(0, 8).map((c) => (
-              <li
-                key={c.id}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl bg-secondary px-4 py-3 text-sm"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-foreground">{c.email}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {c.status === "pendente" ? "Aguardando primeiro acesso" : "Convite aceito"} ·
-                    criado em {formatarData(c.created_at)}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="min-h-11 shrink-0 rounded-full"
-                  onClick={() => {
-                    void navigator.clipboard.writeText(
-                      `${window.location.origin}/auth?convite=${c.token}`,
-                    );
-                    toast.success("Link do convite copiado");
-                  }}
-                >
-                  <Copy className="h-4 w-4" />
-                  Copiar link
-                </Button>
-              </li>
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="min-w-56 flex-1">
+          <label className="text-xs text-muted-foreground" htmlFor="busca-planos">
+            Buscar por cliente, trilha ou objetivo
+          </label>
+          <Input id="busca-planos" value={busca} onChange={(e) => setBusca(e.target.value)} />
+        </div>
+        <div>
+          <label className="block text-xs text-muted-foreground" htmlFor="filtro-status">
+            Status
+          </label>
+          <select
+            id="filtro-status"
+            className="min-h-11 rounded-xl border border-border bg-card px-3 text-sm"
+            value={statusFiltro}
+            onChange={(e) => setStatusFiltro(e.target.value as "todos" | StatusAtribuicao)}
+          >
+            <option value="todos">Todos</option>
+            {STATUS_ATRIBUICAO.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_ATRIBUICAO_LABEL[s]}
+              </option>
             ))}
-          </ul>
-        )}
+          </select>
+        </div>
       </div>
 
-      <PedidosAcompanhamento />
+      {isLoading && <Skeleton className="h-48 rounded-3xl" />}
 
-      <div
-        role="group"
-        aria-label="Filtrar clientes por modo de uso"
-        className="flex flex-wrap gap-2"
-      >
-        {(["todos", ...MODOS_USO] as const).map((valor) => {
-          const ativo = modoFiltro === valor;
-          const rotulo =
-            valor === "todos"
-              ? `Todos (${todosClientes.length})`
-              : `${MODO_LABEL[valor]} (${contagemModo(valor)})`;
-          return (
-            <button
-              key={valor}
-              type="button"
-              aria-pressed={ativo}
-              onClick={() => setModoFiltro(valor)}
-              className={`min-h-11 rounded-full border px-4 text-sm transition-colors ${
-                ativo
-                  ? "border-floresta bg-floresta text-primary-foreground"
-                  : "border-border bg-card text-muted-foreground hover:bg-secondary"
-              }`}
-            >
-              {rotulo}
-            </button>
-          );
-        })}
-      </div>
-
-      {isLoading && (
-        <p role="status" className="text-sm text-muted-foreground">
-          Carregando clientes...
-        </p>
-      )}
-
-      {!isLoading && todosClientes.length === 0 && (
+      {!isLoading && linhas.length === 0 && (
         <div className="rounded-3xl border border-dashed border-border p-8 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">Nenhum cliente vinculado ainda</p>
+          <p className="font-medium text-foreground">Nenhum plano por aqui</p>
           <p className="mt-1">
-            Envie um convite acima. O vínculo é criado automaticamente quando a pessoa entra pela
-            primeira vez. Quem se cadastra por conta própria aparece aqui como “
-            {MODO_LABEL.autoguiado}”.
+            Crie o primeiro plano para combinar trilha, objetivo e ritmo com uma pessoa.
           </p>
         </div>
       )}
 
-      {!isLoading && todosClientes.length > 0 && clientesVisiveis.length === 0 && (
-        <p className="rounded-2xl bg-secondary/50 p-6 text-sm text-muted-foreground">
-          Nenhuma pessoa neste modo de uso.
-        </p>
-      )}
+      <ul className="space-y-3">
+        {linhas.map(({ plano, status, progresso, cliente, trilha }) => (
+          <li key={plano.id} className="rounded-3xl border border-border bg-card p-5 shadow-organico">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="font-display text-lg text-floresta">{cliente}</p>
+                <p className="text-sm text-foreground">{trilha}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {objetivoResumido(plano.objetivo ?? "")}
+                </p>
+                <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <span className={`rounded-full px-3 py-1 font-medium ${statusClasse(status)}`}>
+                    {STATUS_ATRIBUICAO_LABEL[status]}
+                  </span>
+                  <span>{NIVEL_LABEL[plano.nivel as Nivel]}</span>
+                  <span>Início {formatarData(plano.data_inicio)}</span>
+                  <span>
+                    Revisão {plano.data_revisao ? formatarData(plano.data_revisao) : "sem data"}
+                  </span>
+                  <span>Terapeuta: {nomeDe(plano.terapeuta_id)}</span>
+                </p>
+              </div>
 
-      <ul className="space-y-4">
-        {clientesVisiveis.map((cliente) => {
-          const atribuicoes = (data?.atribuicoes ?? []).filter((a) => a.cliente_id === cliente.id);
-          return (
-            <li
-              key={cliente.id}
-              className="rounded-3xl border border-border bg-card p-5 shadow-organico"
-            >
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
-                <div className="min-w-0">
-                  <h2 className="truncate font-display text-lg text-floresta">
-                    {cliente.nome || cliente.email}
-                  </h2>
-                  <p className="truncate text-sm text-muted-foreground">{cliente.email}</p>
-                  <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span
-                      className={`rounded-full px-3 py-1 font-medium ${
-                        cliente.modo === "acompanhado"
-                          ? "bg-secondary text-floresta"
-                          : "bg-terracota/10 text-terracota"
-                      }`}
-                    >
-                      {MODO_LABEL[cliente.modo]}
-                    </span>
+              <div className="flex shrink-0 flex-col items-end gap-2">
+                <div className="w-36">
+                  <div className="flex justify-between text-[11px] text-muted-foreground">
                     <span>
-                      Acesso {cliente.status} · {atribuicoes.length} trilha(s) atribuída(s)
+                      {progresso.concluidas}/{progresso.total}
                     </span>
-                  </p>
+                    <span>{progresso.percentual}%</span>
+                  </div>
+                  <div
+                    className="mt-1 h-1.5 overflow-hidden rounded-full bg-secondary"
+                    role="progressbar"
+                    aria-valuenow={progresso.percentual}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`Progresso do plano de ${cliente}`}
+                  >
+                    <div
+                      className="h-full rounded-full bg-salvia"
+                      style={{ width: `${progresso.percentual}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="flex shrink-0 flex-wrap justify-end gap-2">
+
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-h-11 rounded-full"
+                    onClick={() => editar(plano.id)}
+                  >
+                    Editar
+                  </Button>
                   <select
-                    aria-label={`Status do acesso de ${cliente.nome || cliente.email}`}
+                    aria-label={`Ações do plano de ${cliente}`}
                     className="min-h-11 rounded-full border border-border bg-card px-3 text-sm"
-                    value={cliente.status}
+                    value={plano.status}
                     onChange={(e) =>
-                      mutAtualizar.mutate({
+                      mutStatus.mutate({
                         data: {
-                          clienteId: cliente.id,
-                          status: e.target.value as "ativo" | "pausado" | "encerrado",
+                          atribuicaoId: plano.id,
+                          status: e.target.value as StatusAtribuicao,
                         },
                       })
                     }
                   >
-                    <option value="ativo">Ativo</option>
-                    <option value="pausado">Pausado</option>
-                    <option value="encerrado">Encerrado</option>
+                    {STATUS_ATRIBUICAO.map((s) => (
+                      <option key={s} value={s}>
+                        {STATUS_ATRIBUICAO_LABEL[s]}
+                      </option>
+                    ))}
                   </select>
-                  <Button
-                    className="min-h-11 rounded-full"
-                    onClick={() =>
-                      setForm({
-                        clienteId: cliente.id,
-                        clienteNome: cliente.nome || cliente.email,
-                        trilhaId: trilhasPublicadas[0]?.id ?? "",
-                        objetivo: "",
-                        mensagem: "",
-                        frequencia: FREQUENCIAS[0],
-                        dataInicio: hoje(),
-                        dataRevisao: "",
-                        nivel: "leve",
-                        podeSozinho: true,
-                        exigeAcompanhamento: false,
-                        somenteEmSessao: false,
-                        orientacoesEspeciais: "",
-                      })
-                    }
+                  <Link
+                    to="/admin/cliente/$clienteId"
+                    params={{ clienteId: plano.cliente_id }}
+                    className="inline-flex min-h-11 items-center rounded-full border border-border px-4 text-sm text-floresta hover:bg-secondary"
                   >
-                    <Sprout className="h-4 w-4" />
-                    Atribuir trilha
-                  </Button>
-                  {cliente.modo === "acompanhado" && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="min-h-11 rounded-full"
-                      disabled={mutTornarAutoguiado.isPending}
-                      onClick={() => {
-                        if (
-                          !window.confirm(
-                            `Encerrar o acompanhamento de ${cliente.nome || cliente.email}? A pessoa passa a usar por conta própria e mantém o histórico.`,
-                          )
-                        )
-                          return;
-                        mutTornarAutoguiado.mutate({ data: { clienteId: cliente.id, motivo: "" } });
-                      }}
-                    >
-                      Encerrar acompanhamento
-                    </Button>
-                  )}
+                    Ver cliente
+                  </Link>
                 </div>
               </div>
-
-              {atribuicoes.length > 0 && (
-                <ul className="mt-4 space-y-2">
-                  {atribuicoes.map((a) => (
-                    <li
-                      key={a.id}
-                      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl bg-secondary px-4 py-3 text-sm"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-foreground">
-                          {(data?.trilhas ?? []).find((t) => t.id === a.trilha_id)?.nome ??
-                            "Trilha"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {NIVEL_LABEL[a.nivel as Nivel]} · início {formatarData(a.data_inicio)}
-                          {a.data_revisao ? ` · revisão ${formatarData(a.data_revisao)}` : ""}
-                        </p>
-                      </div>
-                      <select
-                        aria-label="Status da atribuição"
-                        className="min-h-11 shrink-0 rounded-full border border-border bg-card px-3 text-sm"
-                        value={a.status}
-                        onChange={(e) =>
-                          mutStatus.mutate({
-                            data: {
-                              atribuicaoId: a.id,
-                              status: e.target.value as StatusAtribuicao,
-                            },
-                          })
-                        }
-                      >
-                        {STATUS_ATRIBUICAO.map((s) => (
-                          <option key={s} value={s}>
-                            {STATUS_ATRIBUICAO_LABEL[s]}
-                          </option>
-                        ))}
-                      </select>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <div className="mt-4">
-                <Label htmlFor={`obs-${cliente.id}`}>Observações internas</Label>
-                <Textarea
-                  id={`obs-${cliente.id}`}
-                  rows={2}
-                  defaultValue={cliente.observacoes}
-                  onBlur={(e) =>
-                    e.target.value !== cliente.observacoes &&
-                    mutAtualizar.mutate({
-                      data: { clienteId: cliente.id, observacoes: e.target.value },
-                    })
-                  }
-                />
-              </div>
-            </li>
-          );
-        })}
+            </div>
+          </li>
+        ))}
       </ul>
 
-      <Dialog open={Boolean(form)} onOpenChange={(aberto) => !aberto && setForm(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="font-display">
-              Atribuir trilha {form ? `para ${form.clienteNome}` : ""}
-            </DialogTitle>
-          </DialogHeader>
-          {form && (
-            <form
-              className="space-y-4"
-              onSubmit={(evento) => {
-                evento.preventDefault();
-                if (!form.trilhaId) {
-                  toast.error("Publique uma trilha antes de atribuir");
-                  return;
-                }
-                mutAtribuir.mutate({
-                  data: {
-                    trilhaId: form.trilhaId,
-                    clienteId: form.clienteId,
-                    objetivo: form.objetivo,
-                    mensagem: form.mensagem,
-                    frequencia: form.frequencia,
-                    dataInicio: form.dataInicio,
-                    dataRevisao: form.dataRevisao || null,
-                    nivel: form.nivel,
-                    podeSozinho: form.podeSozinho,
-                    exigeAcompanhamento: form.exigeAcompanhamento,
-                    somenteEmSessao: form.somenteEmSessao,
-                    permiteRepetir: true,
-                    orientacoesEspeciais: form.orientacoesEspeciais,
-                    observacoes: "",
-                    etapasObrigatorias: [],
-                  },
-                });
-              }}
-            >
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="atrib-trilha">Trilha publicada</Label>
-                  <select
-                    id="atrib-trilha"
-                    className={campoClasse}
-                    value={form.trilhaId}
-                    onChange={(e) => setForm({ ...form, trilhaId: e.target.value })}
-                  >
-                    {trilhasPublicadas.length === 0 && <option value="">Nenhuma publicada</option>}
-                    {trilhasPublicadas.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.nome}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="atrib-nivel">Nível para esta pessoa</Label>
-                  <select
-                    id="atrib-nivel"
-                    className={campoClasse}
-                    value={form.nivel}
-                    onChange={(e) => setForm({ ...form, nivel: e.target.value as Nivel })}
-                  >
-                    {NIVEIS.map((n) => (
-                      <option key={n} value={n}>
-                        {NIVEL_LABEL[n]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="atrib-inicio">Início</Label>
-                  <Input
-                    id="atrib-inicio"
-                    type="date"
-                    value={form.dataInicio}
-                    onChange={(e) => setForm({ ...form, dataInicio: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="atrib-revisao">Revisão prevista</Label>
-                  <Input
-                    id="atrib-revisao"
-                    type="date"
-                    value={form.dataRevisao}
-                    onChange={(e) => setForm({ ...form, dataRevisao: e.target.value })}
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="atrib-frequencia">Frequência sugerida</Label>
-                  <select
-                    id="atrib-frequencia"
-                    className={campoClasse}
-                    value={form.frequencia}
-                    onChange={(e) => setForm({ ...form, frequencia: e.target.value })}
-                  >
-                    {FREQUENCIAS.map((f) => (
-                      <option key={f} value={f}>
-                        {f}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="atrib-objetivo">Objetivo personalizado</Label>
-                <Textarea
-                  id="atrib-objetivo"
-                  rows={2}
-                  value={form.objetivo}
-                  onChange={(e) => setForm({ ...form, objetivo: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="atrib-mensagem">Mensagem de orientação</Label>
-                <Textarea
-                  id="atrib-mensagem"
-                  rows={3}
-                  value={form.mensagem}
-                  onChange={(e) => setForm({ ...form, mensagem: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="atrib-especiais">Orientações especiais</Label>
-                <Textarea
-                  id="atrib-especiais"
-                  rows={2}
-                  value={form.orientacoesEspeciais}
-                  onChange={(e) => setForm({ ...form, orientacoesEspeciais: e.target.value })}
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-6">
-                <label className="flex items-center gap-2 text-sm text-foreground">
-                  <Checkbox
-                    checked={form.podeSozinho}
-                    onCheckedChange={(v) => setForm({ ...form, podeSozinho: v === true })}
-                  />
-                  Pode ser feita sozinha
-                </label>
-                <label className="flex items-center gap-2 text-sm text-foreground">
-                  <Checkbox
-                    checked={form.exigeAcompanhamento}
-                    onCheckedChange={(v) => setForm({ ...form, exigeAcompanhamento: v === true })}
-                  />
-                  Exige acompanhamento
-                </label>
-                <label className="flex items-center gap-2 text-sm text-foreground">
-                  <Checkbox
-                    checked={form.somenteEmSessao}
-                    onCheckedChange={(v) => setForm({ ...form, somenteEmSessao: v === true })}
-                  />
-                  Somente em sessão
-                </label>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="min-h-11 rounded-full"
-                  onClick={() => setForm(null)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  className="min-h-11 rounded-full"
-                  disabled={mutAtribuir.isPending}
-                >
-                  Atribuir trilha
-                </Button>
-              </div>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
+      <AssistentePlano
+        aberto={assistenteAberto}
+        aoFechar={() => {
+          setAssistenteAberto(false);
+          setInicial(null);
+        }}
+        clientes={clientesAssistente}
+        trilhas={trilhas}
+        conteudos={conteudos}
+        planos={planos.map((p) => ({
+          id: p.id,
+          cliente_id: p.cliente_id,
+          trilha_id: p.trilha_id,
+          status: p.status as StatusAtribuicao,
+          data_inicio: p.data_inicio,
+          data_revisao: p.data_revisao,
+          liberar_em: p.liberar_em,
+        }))}
+        inicial={inicial}
+        salvando={mutSalvar.isPending}
+        aoSalvar={(envio) => mutSalvar.mutate({ data: envio })}
+      />
     </section>
   );
 }

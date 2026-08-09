@@ -18,29 +18,44 @@ export type Database = {
         Row: {
           atribuicao_id: string
           concluida_em: string | null
-          conteudo_id: string
+          conteudo_id: string | null
           created_at: string
+          descricao_personalizada: string
           id: string
           obrigatoria: boolean
           ordem: number
+          permite_repetir: boolean
+          prazo_dias: number | null
+          titulo_personalizado: string
+          visivel: boolean
         }
         Insert: {
           atribuicao_id: string
           concluida_em?: string | null
-          conteudo_id: string
+          conteudo_id?: string | null
           created_at?: string
+          descricao_personalizada?: string
           id?: string
           obrigatoria?: boolean
           ordem?: number
+          permite_repetir?: boolean
+          prazo_dias?: number | null
+          titulo_personalizado?: string
+          visivel?: boolean
         }
         Update: {
           atribuicao_id?: string
           concluida_em?: string | null
-          conteudo_id?: string
+          conteudo_id?: string | null
           created_at?: string
+          descricao_personalizada?: string
           id?: string
           obrigatoria?: boolean
           ordem?: number
+          permite_repetir?: boolean
+          prazo_dias?: number | null
+          titulo_personalizado?: string
+          visivel?: boolean
         }
         Relationships: [
           {
@@ -69,7 +84,11 @@ export type Database = {
           exige_acompanhamento: boolean
           frequencia: string
           id: string
+          lembretes_ativos: boolean
+          liberada_em: string | null
+          liberar_em: string | null
           mensagem: string
+          motivo_indicacao: string
           nivel: Database["public"]["Enums"]["nivel_profundidade"]
           objetivo: string
           observacoes: string
@@ -91,7 +110,11 @@ export type Database = {
           exige_acompanhamento?: boolean
           frequencia?: string
           id?: string
+          lembretes_ativos?: boolean
+          liberada_em?: string | null
+          liberar_em?: string | null
           mensagem?: string
+          motivo_indicacao?: string
           nivel?: Database["public"]["Enums"]["nivel_profundidade"]
           objetivo?: string
           observacoes?: string
@@ -113,7 +136,11 @@ export type Database = {
           exige_acompanhamento?: boolean
           frequencia?: string
           id?: string
+          lembretes_ativos?: boolean
+          liberada_em?: string | null
+          liberar_em?: string | null
           mensagem?: string
+          motivo_indicacao?: string
           nivel?: Database["public"]["Enums"]["nivel_profundidade"]
           objetivo?: string
           observacoes?: string
@@ -1245,7 +1272,14 @@ export type Database = {
       acesso_status: "ativo" | "pausado" | "encerrado"
       apoio_status: "aberta" | "em_atendimento" | "respondida" | "encerrada"
       app_role: "terapeuta" | "cliente"
-      atribuicao_status: "ativa" | "pausada" | "concluida" | "encerrada"
+      atribuicao_status:
+        | "rascunho"
+        | "aguardando_inicio"
+        | "em_andamento"
+        | "aguardando_revisao"
+        | "pausado"
+        | "concluido"
+        | "encerrado"
       conteudo_tipo: "video" | "audio" | "exercicio" | "texto" | "tarefa"
       diario_visibilidade: "somente_eu" | "compartilhado"
       etapa_tipo:
@@ -1397,7 +1431,15 @@ export const Constants = {
       acesso_status: ["ativo", "pausado", "encerrado"],
       apoio_status: ["aberta", "em_atendimento", "respondida", "encerrada"],
       app_role: ["terapeuta", "cliente"],
-      atribuicao_status: ["ativa", "pausada", "concluida", "encerrada"],
+      atribuicao_status: [
+        "rascunho",
+        "aguardando_inicio",
+        "em_andamento",
+        "aguardando_revisao",
+        "pausado",
+        "concluido",
+        "encerrado",
+      ],
       conteudo_tipo: ["video", "audio", "exercicio", "texto", "tarefa"],
       diario_visibilidade: ["somente_eu", "compartilhado"],
       etapa_tipo: [

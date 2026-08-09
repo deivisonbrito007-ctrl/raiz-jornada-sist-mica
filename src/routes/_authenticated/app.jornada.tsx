@@ -37,7 +37,7 @@ function MinhaJornada() {
   // Adianta a próxima etapa das trilhas ativas para o toque abrir sem espera.
   const carregarEtapa = useServerFn(getMinhaEtapa);
   const proximas = (data?.trilhas ?? [])
-    .filter((t) => t.status === "ativa" && t.proximaEtapaId)
+    .filter((t) => t.status === "em_andamento" && t.proximaEtapaId)
     .map((t) => t.proximaEtapaId as string);
   usePreCarregarProximas(
     proximas.map((conteudoId) => ({
