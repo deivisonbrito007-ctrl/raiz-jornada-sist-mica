@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { erroSeguro } from "./erro-permissao";
 import { garantirPermissao } from "./permissao-guard";
 import { atorAuditoria, registrarAuditoria } from "./auditoria-equipe";
+import { normalizarModo } from "./modo-uso";
 
 /* ---------------------------------------------------------------- terapeuta */
 
