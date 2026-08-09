@@ -327,7 +327,7 @@ function Player() {
       toast.error("Não foi possível renovar o acesso à mídia.");
     } finally {
       setRenovando(false);
-      void invalidarPorEvento(queryClient, "aoMudarLiberacoes");
+      void invalidarPorEvento(queryClient, "aoRenovarAcesso");
     }
   }
 

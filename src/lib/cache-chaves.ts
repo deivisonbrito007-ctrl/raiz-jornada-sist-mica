@@ -65,6 +65,19 @@ export const GRUPOS = {
     CHAVES.progresso,
     CHAVES.historico,
   ],
+  /**
+   * Renovação de acesso no player: a própria tela já buscou a URL assinada nova,
+   * então a raiz `conteudo` fica de fora para não disparar uma segunda busca.
+   */
+  aoRenovarAcesso: [
+    CHAVES.biblioteca,
+    CHAVES.trilha,
+    CHAVES.jornada,
+    CHAVES.etapa,
+    CHAVES.progresso,
+    CHAVES.historico,
+    CHAVES.contexto,
+  ],
   aoMudarPermissoes: [
     CHAVES.contexto,
     CHAVES.adminResumo,
