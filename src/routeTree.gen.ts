@@ -29,6 +29,7 @@ import { Route as AuthenticatedAdminConteudosRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminEquipeRouteImport } from './routes/_authenticated/admin.equipe'
 import { Route as AuthenticatedAdminInicioRouteImport } from './routes/_authenticated/admin.inicio'
 import { Route as AuthenticatedAdminPacotesRouteImport } from './routes/_authenticated/admin.pacotes'
+import { Route as AuthenticatedAdminPerfilRouteImport } from './routes/_authenticated/admin.perfil'
 import { Route as AuthenticatedAdminTrilhasRouteImport } from './routes/_authenticated/admin.trilhas'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppDiarioRouteImport } from './routes/_authenticated/app.diario'
@@ -151,6 +152,12 @@ const AuthenticatedAdminPacotesRoute =
     path: '/pacotes',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPerfilRoute =
+  AuthenticatedAdminPerfilRouteImport.update({
+    id: '/perfil',
+    path: '/perfil',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminTrilhasRoute =
   AuthenticatedAdminTrilhasRouteImport.update({
     id: '/trilhas',
@@ -238,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/admin/equipe': typeof AuthenticatedAdminEquipeRoute
   '/admin/inicio': typeof AuthenticatedAdminInicioRoute
   '/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
+  '/admin/perfil': typeof AuthenticatedAdminPerfilRoute
   '/admin/trilhas': typeof AuthenticatedAdminTrilhasRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
@@ -269,6 +277,7 @@ export interface FileRoutesByTo {
   '/admin/equipe': typeof AuthenticatedAdminEquipeRoute
   '/admin/inicio': typeof AuthenticatedAdminInicioRoute
   '/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
+  '/admin/perfil': typeof AuthenticatedAdminPerfilRoute
   '/admin/trilhas': typeof AuthenticatedAdminTrilhasRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
@@ -304,6 +313,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/equipe': typeof AuthenticatedAdminEquipeRoute
   '/_authenticated/admin/inicio': typeof AuthenticatedAdminInicioRoute
   '/_authenticated/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
+  '/_authenticated/admin/perfil': typeof AuthenticatedAdminPerfilRoute
   '/_authenticated/admin/trilhas': typeof AuthenticatedAdminTrilhasRoute
   '/_authenticated/app/diario': typeof AuthenticatedAppDiarioRoute
   '/_authenticated/app/historico': typeof AuthenticatedAppHistoricoRoute
@@ -339,6 +349,7 @@ export interface FileRouteTypes {
     | '/admin/equipe'
     | '/admin/inicio'
     | '/admin/pacotes'
+    | '/admin/perfil'
     | '/admin/trilhas'
     | '/app/diario'
     | '/app/historico'
@@ -370,6 +381,7 @@ export interface FileRouteTypes {
     | '/admin/equipe'
     | '/admin/inicio'
     | '/admin/pacotes'
+    | '/admin/perfil'
     | '/admin/trilhas'
     | '/app/diario'
     | '/app/historico'
@@ -404,6 +416,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/equipe'
     | '/_authenticated/admin/inicio'
     | '/_authenticated/admin/pacotes'
+    | '/_authenticated/admin/perfil'
     | '/_authenticated/admin/trilhas'
     | '/_authenticated/app/diario'
     | '/_authenticated/app/historico'
@@ -573,6 +586,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPacotesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/perfil': {
+      id: '/_authenticated/admin/perfil'
+      path: '/perfil'
+      fullPath: '/admin/perfil'
+      preLoaderRoute: typeof AuthenticatedAdminPerfilRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/trilhas': {
       id: '/_authenticated/admin/trilhas'
       path: '/trilhas'
@@ -669,6 +689,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminEquipeRoute: typeof AuthenticatedAdminEquipeRoute
   AuthenticatedAdminInicioRoute: typeof AuthenticatedAdminInicioRoute
   AuthenticatedAdminPacotesRoute: typeof AuthenticatedAdminPacotesRoute
+  AuthenticatedAdminPerfilRoute: typeof AuthenticatedAdminPerfilRoute
   AuthenticatedAdminTrilhasRoute: typeof AuthenticatedAdminTrilhasRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminClienteClienteIdRoute: typeof AuthenticatedAdminClienteClienteIdRoute
@@ -683,6 +704,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminEquipeRoute: AuthenticatedAdminEquipeRoute,
   AuthenticatedAdminInicioRoute: AuthenticatedAdminInicioRoute,
   AuthenticatedAdminPacotesRoute: AuthenticatedAdminPacotesRoute,
+  AuthenticatedAdminPerfilRoute: AuthenticatedAdminPerfilRoute,
   AuthenticatedAdminTrilhasRoute: AuthenticatedAdminTrilhasRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminClienteClienteIdRoute:
