@@ -22,7 +22,9 @@ export const CHAVES = {
   diario: ["diario"] as const,
   notificacoes: ["notificacoes"] as const,
   preferenciasLembretes: ["preferencias-lembretes"] as const,
+  adminInicio: ["admin-inicio"] as const,
   adminResumo: ["admin-resumo"] as const,
+
   adminClientes: ["admin-clientes"] as const,
   adminTrilhas: ["admin-trilhas"] as const,
   adminConteudos: ["admin-conteudos"] as const,
