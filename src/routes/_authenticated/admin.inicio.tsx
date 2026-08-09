@@ -1,190 +1,194 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, Flame } from "lucide-react";
-import { adminResumo } from "@/lib/raiz.functions";
-import { adminAcompanhamento } from "@/lib/trilhas.functions";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useMemo } from "react";
+import { UserPlus, ClipboardList, RefreshCw } from "lucide-react";
+
+import { adminInicio } from "@/lib/inicio.functions";
+import { CHAVES } from "@/lib/cache-chaves";
+import {
+  dataExtensa,
+  montarAgenda,
+  montarLinhaDoTempo,
+  montarPrioridades,
+  montarResumo,
+} from "@/lib/inicio-painel";
+import { useMeuContexto } from "@/hooks/use-meu-contexto";
 import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
-import { GRUPOS_PAINEL } from "@/components/painel/navegacao";
-import { calcularStreak, formatarData } from "@/lib/raiz-format";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SecaoSemPermissao } from "@/components/permissao-ui";
+import { CartoesResumo } from "@/components/painel/inicio/cartao-resumo";
+import { ListaPrioridades } from "@/components/painel/inicio/lista-prioridades";
+import { AgendaRevisoes } from "@/components/painel/inicio/agenda-revisoes";
+import { LinhaDoTempo } from "@/components/painel/inicio/linha-do-tempo";
+import { AcoesRapidas } from "@/components/painel/inicio/acoes-rapidas";
 
 export const Route = createFileRoute("/_authenticated/admin/inicio")({
   component: AdminInicio,
 });
 
 function AdminInicio() {
-  const { pode, carregando } = useMinhasPermissoes();
+  const { pode, carregando: carregandoPermissoes } = useMinhasPermissoes();
+  const { data: contexto } = useMeuContexto();
   const podeVerClientes = pode("ver_clientes");
-  const fetchResumo = useServerFn(adminResumo);
-  const fetchAcompanhamento = useServerFn(adminAcompanhamento);
+  const fetchInicio = useServerFn(adminInicio);
 
-  const { data: resumo, isLoading } = useQuery({
-    queryKey: ["admin-resumo"],
-    queryFn: () => fetchResumo(),
-    enabled: podeVerClientes,
-  });
-  const { data: acompanhamento } = useQuery({
-    queryKey: ["admin-acompanhamento"],
-    queryFn: () => fetchAcompanhamento(),
+  const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+    queryKey: CHAVES.adminInicio,
+    queryFn: () => fetchInicio(),
     enabled: podeVerClientes,
   });
 
-  const metricas = [
-    { label: "Clientes ativos", valor: resumo?.metricas.clientesAtivos ?? 0 },
-    { label: "Trilhas em andamento", valor: resumo?.metricas.trilhasEmAndamento ?? 0 },
-    { label: "Conclusão média", valor: `${resumo?.metricas.conclusaoMedia ?? 0}%` },
-  ];
+  const derivado = useMemo(() => {
+    if (!data) return null;
+    const agora = new Date();
+    return {
+      resumo: montarResumo(data, agora),
+      prioridades: montarPrioridades(data, agora),
+      agenda: montarAgenda(data, agora),
+      linhaDoTempo: montarLinhaDoTempo(data, agora),
+    };
+  }, [data]);
 
-  const apoioPendente = (acompanhamento?.apoio ?? []).filter(
-    (a) => a.status === "aberta" || a.status === "em_atendimento",
-  );
-  const nomePorId = new Map(
-    (acompanhamento?.perfis ?? []).map((p) => [p.id, p.nome ?? p.email ?? "Cliente"]),
-  );
-
-  const recentes = [...(resumo?.clientes ?? [])]
-    .filter((c) => c.ultimaAtividade)
-    .sort((a, b) => String(b.ultimaAtividade).localeCompare(String(a.ultimaAtividade)))
-    .slice(0, 5);
-
-  const atalhos = GRUPOS_PAINEL.flatMap((g) => g.itens).filter(
-    (i) => !i.externo && i.to !== "/admin/inicio" && (!i.permissao || pode(i.permissao)),
-  );
+  const primeiroNome = (contexto?.perfil?.nome ?? "").trim().split(" ")[0];
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-display text-3xl text-floresta">Bom te ver por aqui</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Um panorama do acompanhamento antes de você entrar em cada área.
-        </p>
-      </div>
-
-      {podeVerClientes && (
-        <section aria-labelledby="titulo-metricas">
-          <h2 id="titulo-metricas" className="sr-only">
-            Métricas gerais
-          </h2>
-          {isLoading ? (
-            <Skeleton className="h-28 rounded-3xl" />
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-3">
-              {metricas.map((m) => (
-                <div
-                  key={m.label}
-                  className="rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)]"
-                >
-                  <p className="text-xs uppercase tracking-wider text-salvia">{m.label}</p>
-                  <p className="mt-2 font-display text-4xl text-floresta">{m.valor}</p>
-                </div>
-              ))}
-            </div>
+      <header className="space-y-4">
+        <div>
+          <p className="text-xs uppercase tracking-wider text-salvia">{dataExtensa()}</p>
+          <h1 className="mt-1 font-display text-3xl text-floresta">
+            {primeiroNome ? `Olá, ${primeiroNome}` : "Olá"}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Aqui está o que precisa da sua atenção hoje.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {podeVerClientes && (
+            <Link
+              to="/admin/clientes"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-floresta px-5 text-sm font-medium text-primary-foreground hover:opacity-90"
+            >
+              <UserPlus className="size-4" aria-hidden="true" />
+              Adicionar cliente
+            </Link>
           )}
-        </section>
+          {pode("gerenciar_liberacoes") && (
+            <Link
+              to="/admin/clientes"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-card px-5 text-sm font-medium text-floresta shadow-[var(--shadow-organico)] hover:bg-card/80"
+            >
+              <ClipboardList className="size-4" aria-hidden="true" />
+              Criar plano de acompanhamento
+            </Link>
+          )}
+        </div>
+      </header>
+
+      {!carregandoPermissoes && !podeVerClientes && (
+        <SecaoSemPermissao
+          permissao="ver_clientes"
+          titulo="Indicadores de clientes restritos"
+        />
       )}
 
-      {podeVerClientes && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <section
-            aria-labelledby="titulo-apoio"
-            className="rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)]"
+      {podeVerClientes && isError && (
+        <div
+          role="alert"
+          className="rounded-3xl border border-dashed border-border p-6 text-sm text-muted-foreground"
+        >
+          <p className="font-medium text-foreground">Não conseguimos carregar o panorama agora</p>
+          <p className="mt-1">
+            Pode ter sido uma falha de conexão. Seus dados estão salvos — tente novamente em
+            instantes.
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-card px-5 text-sm font-medium text-floresta shadow-[var(--shadow-organico)]"
           >
-            <h2 id="titulo-apoio" className="font-display text-xl text-floresta">
-              Pedidos de apoio em aberto
-            </h2>
-            {apoioPendente.length === 0 ? (
-              <p className="mt-3 text-sm text-muted-foreground">
-                Nenhum pedido aguardando resposta.
-              </p>
-            ) : (
-              <ul className="mt-3 space-y-3">
-                {apoioPendente.slice(0, 5).map((a) => (
-                  <li key={a.id} className="rounded-2xl bg-secondary p-3">
-                    <p className="text-sm font-medium text-floresta">
-                      {nomePorId.get(a.cliente_id) ?? "Cliente"}
-                    </p>
-                    <p className="line-clamp-2 text-xs text-muted-foreground">{a.mensagem}</p>
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      {formatarData(a.created_at)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Link
-              to="/admin/acompanhamento"
-              className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-salvia hover:text-floresta"
-            >
-              Ir para Monitoramento <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </section>
-
-          <section
-            aria-labelledby="titulo-recentes"
-            className="rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)]"
-          >
-            <h2 id="titulo-recentes" className="font-display text-xl text-floresta">
-              Atividade recente
-            </h2>
-            {recentes.length === 0 ? (
-              <p className="mt-3 text-sm text-muted-foreground">
-                Ainda não há práticas registradas.
-              </p>
-            ) : (
-              <ul className="mt-3 space-y-2">
-                {recentes.map((c) => (
-                  <li key={c.id}>
-                    <Link
-                      to="/admin/cliente/$clienteId"
-                      params={{ clienteId: c.id }}
-                      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl px-3 py-2.5 hover:bg-secondary"
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-medium text-floresta">
-                          {c.nome ?? c.email}
-                        </span>
-                        <span className="block truncate text-xs text-muted-foreground">
-                          {c.ultimaAtividade ? formatarData(c.ultimaAtividade) : ""}
-                        </span>
-                      </span>
-                      <span className="flex shrink-0 items-center gap-1 text-terracota">
-                        <Flame className="h-4 w-4" aria-hidden="true" />
-                        <span className="font-display text-lg leading-none">
-                          {calcularStreak(c.datasConclusao ?? [])}
-                        </span>
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+            <RefreshCw className={`size-4 ${isRefetching ? "animate-spin" : ""}`} aria-hidden="true" />
+            Tentar de novo
+          </button>
         </div>
       )}
 
-      {!carregando && !podeVerClientes && (
-        <p className="rounded-3xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-          Você ainda não tem permissão para ver dados de clientes. Abaixo estão as áreas liberadas
-          para você.
+      {podeVerClientes && isLoading && (
+        <div className="space-y-8" aria-hidden="true">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-[6.5rem] rounded-3xl" />
+            ))}
+          </div>
+          <Skeleton className="h-56 rounded-3xl" />
+          <Skeleton className="h-48 rounded-3xl" />
+        </div>
+      )}
+
+      {podeVerClientes && isLoading && (
+        <p role="status" className="sr-only">
+          Carregando o panorama do acompanhamento.
         </p>
       )}
 
-      <section aria-labelledby="titulo-atalhos">
-        <h2 id="titulo-atalhos" className="font-display text-xl text-floresta">
-          Atalhos
-        </h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {atalhos.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="flex min-h-11 items-center gap-3 rounded-2xl bg-card p-4 shadow-[var(--shadow-organico)] transition-transform hover:-translate-y-0.5"
+      {podeVerClientes && derivado && (
+        <>
+          <section aria-labelledby="titulo-resumo">
+            <h2 id="titulo-resumo" className="font-display text-xl text-floresta">
+              Resumo
+            </h2>
+            <div className="mt-3">
+              <CartoesResumo cartoes={derivado.resumo} />
+            </div>
+          </section>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <section
+              aria-labelledby="titulo-prioridades"
+              className="rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)]"
             >
-              <item.icone className="h-5 w-5 shrink-0 text-salvia" aria-hidden="true" />
-              <span className="truncate text-sm font-medium text-floresta">{item.label}</span>
-            </Link>
-          ))}
+              <h2 id="titulo-prioridades" className="font-display text-xl text-floresta">
+                Prioridades do dia
+              </h2>
+              <div className="mt-3">
+                <ListaPrioridades itens={derivado.prioridades.slice(0, 8)} />
+              </div>
+            </section>
+
+            <section
+              aria-labelledby="titulo-atividade"
+              className="rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)]"
+            >
+              <h2 id="titulo-atividade" className="font-display text-xl text-floresta">
+                Atividade recente
+              </h2>
+              <div className="mt-4">
+                <LinhaDoTempo eventos={derivado.linhaDoTempo} />
+              </div>
+            </section>
+          </div>
+
+          <section
+            aria-labelledby="titulo-agenda"
+            className="rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)]"
+          >
+            <h2 id="titulo-agenda" className="font-display text-xl text-floresta">
+              Agenda de revisões
+            </h2>
+            <div className="mt-3">
+              <AgendaRevisoes itens={derivado.agenda} />
+            </div>
+          </section>
+        </>
+      )}
+
+      <section aria-labelledby="titulo-acoes">
+        <h2 id="titulo-acoes" className="font-display text-xl text-floresta">
+          Ações rápidas
+        </h2>
+        <div className="mt-3">
+          <AcoesRapidas pode={pode} />
         </div>
       </section>
     </div>
