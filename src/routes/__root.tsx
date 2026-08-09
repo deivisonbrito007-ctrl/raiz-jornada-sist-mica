@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import {
   Outlet,
   createRootRouteWithContext,
@@ -13,6 +13,9 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { iniciarDiagnostico, medirNavegacao } from "@/lib/diagnostico";
+import { ProvedorCache } from "@/components/provedor-cache";
+import { definirUsuarioCache, limparCachePersistido } from "@/lib/cache-persistente";
+
 
 function NotFoundComponent() {
   return (
