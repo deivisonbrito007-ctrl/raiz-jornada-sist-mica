@@ -22,6 +22,7 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAcompanhamentoRouteImport } from './routes/_authenticated/admin.acompanhamento'
+import { Route as AuthenticatedAdminAjudaRouteImport } from './routes/_authenticated/admin.ajuda'
 import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin.auditoria'
 import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
 import { Route as AuthenticatedAdminConteudosRouteImport } from './routes/_authenticated/admin.conteudos'
@@ -109,6 +110,11 @@ const AuthenticatedAdminAcompanhamentoRoute =
     path: '/acompanhamento',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAjudaRoute = AuthenticatedAdminAjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminAuditoriaRoute =
   AuthenticatedAdminAuditoriaRouteImport.update({
     id: '/auditoria',
@@ -225,6 +231,7 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/acompanhamento': typeof AuthenticatedAdminAcompanhamentoRoute
+  '/admin/ajuda': typeof AuthenticatedAdminAjudaRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
@@ -255,6 +262,7 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/acompanhamento': typeof AuthenticatedAdminAcompanhamentoRoute
+  '/admin/ajuda': typeof AuthenticatedAdminAjudaRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
@@ -289,6 +297,7 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/acompanhamento': typeof AuthenticatedAdminAcompanhamentoRoute
+  '/_authenticated/admin/ajuda': typeof AuthenticatedAdminAjudaRoute
   '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/_authenticated/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
@@ -323,6 +332,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/acompanhamento'
+    | '/admin/ajuda'
     | '/admin/auditoria'
     | '/admin/clientes'
     | '/admin/conteudos'
@@ -353,6 +363,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/acompanhamento'
+    | '/admin/ajuda'
     | '/admin/auditoria'
     | '/admin/clientes'
     | '/admin/conteudos'
@@ -386,6 +397,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/acompanhamento'
+    | '/_authenticated/admin/ajuda'
     | '/_authenticated/admin/auditoria'
     | '/_authenticated/admin/clientes'
     | '/_authenticated/admin/conteudos'
@@ -510,6 +522,13 @@ declare module '@tanstack/react-router' {
       path: '/acompanhamento'
       fullPath: '/admin/acompanhamento'
       preLoaderRoute: typeof AuthenticatedAdminAcompanhamentoRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/ajuda': {
+      id: '/_authenticated/admin/ajuda'
+      path: '/ajuda'
+      fullPath: '/admin/ajuda'
+      preLoaderRoute: typeof AuthenticatedAdminAjudaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/auditoria': {
@@ -643,6 +662,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAcompanhamentoRoute: typeof AuthenticatedAdminAcompanhamentoRoute
+  AuthenticatedAdminAjudaRoute: typeof AuthenticatedAdminAjudaRoute
   AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
   AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
   AuthenticatedAdminConteudosRoute: typeof AuthenticatedAdminConteudosRoute
@@ -656,6 +676,7 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAcompanhamentoRoute: AuthenticatedAdminAcompanhamentoRoute,
+  AuthenticatedAdminAjudaRoute: AuthenticatedAdminAjudaRoute,
   AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
   AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
   AuthenticatedAdminConteudosRoute: AuthenticatedAdminConteudosRoute,
