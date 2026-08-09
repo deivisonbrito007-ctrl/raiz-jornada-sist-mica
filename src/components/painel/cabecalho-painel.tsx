@@ -57,7 +57,7 @@ export function CabecalhoPainel({ nome, email, termoBusca, onBusca }: Props) {
           <div className="min-w-0">
             {trilha.length > 0 && (
               <nav aria-label="Trilha de navegação" className="flex items-center gap-1.5">
-                {trilha.map((t) => (
+                {trilha.map((t, i) => (
                   <span key={t.label} className="flex items-center gap-1.5">
                     {t.to ? (
                       <Link
@@ -71,9 +71,11 @@ export function CabecalhoPainel({ nome, email, termoBusca, onBusca }: Props) {
                         {t.label}
                       </span>
                     )}
-                    <span aria-hidden="true" className="text-[11px] text-muted-foreground">
-                      ›
-                    </span>
+                    {i < trilha.length - 1 && (
+                      <span aria-hidden="true" className="text-[11px] text-muted-foreground">
+                        ›
+                      </span>
+                    )}
                   </span>
                 ))}
               </nav>
