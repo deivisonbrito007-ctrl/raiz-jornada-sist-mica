@@ -29,6 +29,9 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth, rpc } }));
+vi.mock("@/lib/cadastro.functions", () => ({
+  existeTerapeuta: async () => ({ existe: estado.existeTerapeuta }),
+}));
 vi.mock("sonner", () => ({ toast: { error: toastError, success: vi.fn() } }));
 
 const { Route } = await import("./auth");
