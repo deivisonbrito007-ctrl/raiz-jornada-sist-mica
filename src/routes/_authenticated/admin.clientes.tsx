@@ -138,6 +138,10 @@ function AdminClientes() {
   });
 
   const trilhasPublicadas = (data?.trilhas ?? []).filter((t) => t.status === "publicado");
+  const todosClientes = data?.clientes ?? [];
+  const contagemModo = (modo: ModoUso) => todosClientes.filter((c) => c.modo === modo).length;
+  const clientesVisiveis =
+    modoFiltro === "todos" ? todosClientes : todosClientes.filter((c) => c.modo === modoFiltro);
 
   return (
     <section className="space-y-8">
