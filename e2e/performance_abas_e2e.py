@@ -85,27 +85,40 @@ async def esperar_estavel(page, rota: str, tempo_limite: float = 15.0) -> None:
     """Espera a URL bater, o conteúdo aparecer e não haver skeleton/pendente."""
     inicio = time.monotonic()
     while time.monotonic() - inicio < tempo_limite:
-        pronto = await page.evaluate(
+        estado = await page.evaluate(
             """(rota) => {
               const url = location.pathname;
               const casa = url === rota || url.startsWith(rota + '/');
-              if (!casa) return false;
+              if (!casa) return { pronto: false, motivo: 'url=' + url };
               const main = document.querySelector('main');
-              if (!main) return false;
+              if (!main) return { pronto: false, motivo: 'sem <main>' };
               const pendente = main.querySelector('[data-carregando="true"],[aria-busy="true"],[data-slot="skeleton"],.animate-pulse');
-              if (pendente) return false;
-              return main.innerText.trim().length > 0;
+              const texto = main.innerText.trim().length;
+              if (!texto) return { pronto: false, motivo: 'main vazio' };
+              if (pendente)
+                return {
+                  pronto: false,
+                  pintado: true,
+                  motivo: 'pendente: ' + (pendente.className || pendente.tagName).toString().slice(0, 60),
+                };
+              return { pronto: true };
             }""",
             rota,
         )
-        if pronto:
+        decorrido = time.monotonic() - inicio
+        # Alguns painéis mantêm animações contínuas: após 3s com a tela já
+        # pintada, considera-se estável para não travar a medição.
+        if estado.get("pronto") or (estado.get("pintado") and decorrido > 3.0):
             # dois frames para garantir a pintura
             await page.evaluate(
                 "() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))"
             )
             return
         await page.wait_for_timeout(16)
-    raise TimeoutError(f"rota {rota} não estabilizou em {tempo_limite}s")
+    raise TimeoutError(
+        f"rota {rota} não estabilizou em {tempo_limite}s ({estado.get('motivo')})"
+    )
+
 
 
 async def medir_troca(page, rotulo: str, rota: str, erros: list[str]) -> float:
