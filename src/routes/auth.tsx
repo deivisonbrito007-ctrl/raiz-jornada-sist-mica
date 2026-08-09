@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { existeTerapeuta as consultarExisteTerapeuta } from "@/lib/cadastro.functions";
 import { RaizLogo } from "@/components/raiz-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,8 +41,8 @@ function AuthPage() {
   const [existeTerapeuta, setExisteTerapeuta] = useState(true);
 
   useEffect(() => {
-    existeTerapeuta()
-      .then(({ existe }) => setExisteTerapeuta(existe))
+    consultarExisteTerapeuta()
+      .then((r: { existe: boolean }) => setExisteTerapeuta(r.existe))
       .catch(() => setExisteTerapeuta(true));
   }, []);
 
