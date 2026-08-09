@@ -243,7 +243,6 @@ async function permitirAcao(
   supabase: Parameters<typeof garantirPermissao>[0],
   userId: string,
   acao: string,
-  alvoId: string,
 ) {
   await garantirPermissao(supabase, userId, "gerenciar_liberacoes", acao, {
     tabela: "atribuicoes",
@@ -266,7 +265,7 @@ export const adminEnviarOrientacao = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await permitirAcao(supabase, userId, "adminEnviarOrientacao", data.atribuicaoId);
+    await permitirAcao(supabase, userId, "adminEnviarOrientacao");
 
     const { data: atualizado, error } = await supabase
       .from("atribuicoes")
@@ -310,7 +309,7 @@ export const adminAlterarPrazoRevisao = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await permitirAcao(supabase, userId, "adminAlterarPrazoRevisao", data.atribuicaoId);
+    await permitirAcao(supabase, userId, "adminAlterarPrazoRevisao");
 
     const { error } = await supabase
       .from("atribuicoes")
@@ -340,7 +339,7 @@ export const adminLiberarProximaEtapa = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await permitirAcao(supabase, userId, "adminLiberarProximaEtapa", data.atribuicaoId);
+    await permitirAcao(supabase, userId, "adminLiberarProximaEtapa");
 
     let etapaId = data.etapaId;
     if (!etapaId) {
@@ -406,7 +405,7 @@ export const adminMarcarRevisao = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await permitirAcao(supabase, userId, "adminMarcarRevisao", data.atribuicaoId);
+    await permitirAcao(supabase, userId, "adminMarcarRevisao");
 
     const { data: plano, error } = await supabase
       .from("atribuicoes")
