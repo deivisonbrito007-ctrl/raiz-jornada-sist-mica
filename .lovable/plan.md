@@ -1,64 +1,90 @@
-# Aba “Clientes” — central de organização
+# Dois modos de uso: acompanhado e autoguiado
 
-Hoje a página é um formulário de convite seguido de uma lista de cartões com um seletor de status. Vamos transformá-la numa central: cabeçalho com contagens e busca, filtros, tabela com as informações de acompanhamento, menu de ações e um perfil do cliente organizado em abas.
+Hoje todo cliente entra por convite da terapeuta e recebe conteúdo liberado por ela. Vamos abrir um segundo caminho: quem chega por conta própria adquire um pacote e percorre trilhas autoguiadas, sem acompanhamento — podendo pedir acompanhamento depois, dentro do app.
 
-## Cabeçalho
+O ponto central é que **modo é uma propriedade da pessoa** (como ela usa o Raiz) e **não do conteúdo em si**; a trilha só diz em quais modos ela pode ser usada.
 
-- Título “Clientes”, com total e quantos estão ativos.
-- Busca por nome, e-mail ou telefone (estado na URL, então o filtro sobrevive ao recarregar e pode ser compartilhado).
-- **Adicionar cliente** — abre um formulário de ficha prévia (nome, e-mail, telefone, observações). A ficha aparece na lista como “Cadastro sem convite”.
-- **Enviar convite** — dispara o convite (para uma ficha existente ou direto para um e-mail novo) e mostra o link para copiar.
+## Os dois modos
 
-## Filtros e ordenação
+| | Acompanhado | Autoguiado |
+| --- | --- | --- |
+| Como entra | convite da terapeuta | cadastro aberto |
+| Terapeuta responsável | sim | nenhuma |
+| O que abre o conteúdo | plano atribuído pela terapeuta | pacote adquirido |
+| Trilhas | as marcadas como acompanhadas ou ambas | só as marcadas como autoguiadas ou ambas |
+| Mensagens, revisões, apoio | sim | sem canal de apoio individual; orientações fixas da trilha |
+| Diário e progresso | iguais, com o compartilhamento sob controle da pessoa | iguais, e nada é compartilhado com ninguém |
 
-Filtros combináveis: Ativo, Aguardando convite, Com trilha em andamento, Sem trilha ativa, Aguardando revisão, Pausado, Encerrado, Arquivado, Terapeuta responsável e Última atividade (7 / 30 / mais de 30 dias).
+Trilhas mais profundas continuam existindo só no modo acompanhado — segurança primeiro.
 
-Ordenação por nome, última atividade ou próxima revisão. Paginação de 20 por página. Arquivados ficam fora da lista padrão.
+## Cadastro
 
-## Listagem
+A tela de entrada passa a ter duas portas claras:
 
-Cada linha traz: iniciais (ou foto quando houver), nome e e-mail, status, terapeuta responsável, trilha atual, progresso da trilha, última atividade, próxima revisão e um marcador quando há solicitação de apoio pendente. No celular cada cliente vira um cartão, sem rolagem horizontal.
+- **Tenho um convite da minha terapeuta** — fluxo atual, com consentimento e vínculo.
+- **Quero começar por conta própria** — cadastro simples, consentimento próprio (que deixa explícito que não há acompanhamento profissional e traz o aviso de não emergência), e queda direta na vitrine de pacotes.
 
-## Menu de ações
+Quem entra sozinho vê, antes de pagar, uma amostra: a apresentação das áreas, a primeira etapa de orientação de uma trilha de entrada e o diário liberado. O restante abre com o pacote.
 
-Abrir perfil · Criar plano de acompanhamento · Enviar mensagem ou orientação · Reenviar convite · Pausar acesso · Encerrar acompanhamento · Arquivar cliente.
+## Painel do cliente nos dois modos
 
-- **Enviar mensagem**: chega como aviso dentro do app e também por e-mail/push, respeitando os canais que o cliente permitiu nas preferências dele.
-- **Arquivar**: encerra o acompanhamento e retira o acesso ao app. Pede confirmação explícita, explicando o efeito, e é reversível por “Reativar”.
-- Cada ação só aparece para quem tem a permissão correspondente, e toda mudança de acesso vai para a auditoria.
+Mesma casa, ênfase diferente:
 
-## Perfil do cliente em abas
+- **Acompanhado**: cartão da trilha atual com a mensagem da terapeuta, próxima revisão, “Preciso de apoio”.
+- **Autoguiado**: cartão “Continuar minha prática” com escolha de trilha entre as adquiridas, meta semanal, sequência e um bloco discreto “Quero acompanhamento da terapeuta”.
 
-`/admin/cliente/<id>` passa a ter oito abas, mantendo o que já existe hoje (pacote, liberações, registros) redistribuído:
+Progresso, histórico, heatmap, diário, lembretes e acessibilidade continuam idênticos — nenhum retrabalho ali.
 
-1. **Visão geral** — só o necessário para acompanhar: status, terapeuta, trilha atual com progresso, próxima revisão, última atividade, pendências e observações internas.
-2. **Plano atual** — a atribuição ativa, etapas e mensagem enviada.
-3. **Trilhas anteriores** — planos concluídos ou encerrados.
-4. **Registros compartilhados** — apenas o que o cliente escolheu compartilhar.
-5. **Check-ins** — antes e depois das práticas.
-6. **Solicitações de apoio** — com resposta.
-7. **Consentimentos e privacidade** — termos aceitos e o que a terapeuta pode ver.
-8. **Histórico de acesso** — convite, primeiro acesso, pausas, encerramentos, arquivamento.
+## Painel da terapeuta: organização dos cadastros
 
-## Privacidade
+A aba **Clientes** ganha uma separação por modo, em vez de misturar tudo:
 
-- O diário privado continua invisível para a equipe — isso já é garantido no banco, e a tela vai deixar explícito que só o compartilhado aparece, com data do compartilhamento.
-- Ficha sem prontuário: nenhuma anotação diagnóstica, nenhum campo clínico novo; observações internas seguem sendo texto livre para organização.
-- Estados vazios acolhedores em toda tela, inclusive “nenhum resultado para esta busca”.
+- **Acompanhados** — o fluxo de acompanhamento como é hoje.
+- **Autoguiados** — quem usa sozinho: pacote, progresso, última atividade. Sem plano, sem revisão, sem diário (nada é compartilhado por padrão).
+- **Pedidos de acompanhamento** — fila de quem pediu para ser acompanhado: aceitar (vira acompanhado, mantendo todo o histórico autoguiado), responder ou recusar com mensagem cuidadosa.
+
+Filtro de modo, contagens por modo no cabeçalho e o perfil do cliente indicando o modo e desde quando.
+
+## Pedir acompanhamento
+
+No painel autoguiado: “Quero acompanhamento da terapeuta” → mensagem curta com o motivo → a terapeuta vê na fila. Ao aceitar, a pessoa passa a acompanhada, ganha terapeuta responsável e recebe aviso no app e por e-mail/push. O histórico autoguiado (práticas, check-ins, sequência) continua lá; o diário privado segue privado.
+
+## Pagamento
+
+O acervo autoguiado é pago por pacote. Em duas fases, para não travar o resto:
+
+1. **Agora**: pacotes já existem no sistema; a liberação passa a ser dirigida por “pacote adquirido e pago”, com a terapeuta podendo registrar o pagamento manualmente (útil para PIX ou cobrança fora do app).
+2. **Depois**: ligar o checkout integrado do Lovable para a pessoa adquirir sozinha, com o mesmo registro de pacote alimentado pelo retorno do pagamento.
 
 ## Detalhes técnicos
 
 **Banco (uma migração)**
-- `convites_clientes`: `observacoes text not null default ''` e `enviado_em timestamptz` para a ficha prévia; o status ganha o valor `cadastro` (ficha criada, convite ainda não enviado).
-- `clientes_acesso`: `arquivado_em timestamptz`.
-- Sem novas tabelas e sem coluna clínica.
+- Enum `modo_uso` (`acompanhado`, `autoguiado`) e `clientes_acesso.modo` (default `acompanhado`), `modo_desde timestamptz`.
+- `handle_new_user` passa a criar `clientes_acesso` também para quem se cadastra sem convite, com `modo = 'autoguiado'` e `terapeuta_id = null`.
+- `trilhas.modos ARRAY` (quais modos aceitam aquela trilha) — default `{acompanhado}`, para nada mudar de comportamento no acervo atual.
+- `pacotes.trilhas_incluidas uuid[]` ao lado de `eixos_incluidos`.
+- `solicitacoes_acompanhamento` (cliente, mensagem, status, resposta, quem respondeu) com GRANTs, RLS e trigger de `updated_at`.
+- Nova função `trilha_liberada_autoguiada(_cliente, _trilha)`: pacote pago que inclui a trilha (ou o eixo dela) e trilha marcada como autoguiada. `conteudo_liberado` passa a aceitar esse caminho além do de atribuição, sem afrouxar nada do modo acompanhado.
+- RLS: cliente autoguiado lê só o que o pacote dele abre; a equipe segue vendo o que já vê; diário privado continua fora do alcance da equipe.
 
-**Servidor** — `src/lib/clientes.functions.ts` (novo), tudo com `requireSupabaseAuth` + `garantirPermissao`:
-- `adminClientesPainel` — uma busca agregada devolvendo DTOs já com trilha atual, progresso, última atividade, próxima revisão, apoio pendente e terapeuta responsável.
-- `adminCriarFicha`, `adminEnviarConvite` (também reenvio, gerando token novo), `adminMensagemCliente` (notificação + canais permitidos, reutilizando `src/lib/lembretes.ts`), `adminArquivarCliente` / `adminReativarCliente`.
-- `adminGetCliente` passa a trazer check-ins, solicitações de apoio, consentimentos e histórico de acesso, e a filtrar o diário por `visibilidade = 'compartilhado'` no próprio SELECT.
-- Auditoria em toda ação de acesso: `cliente_arquivado`, `cliente_reativado`, `cliente_pausado`, `acompanhamento_encerrado`, `convite_reenviado`, `mensagem_enviada`.
+**Servidor**
+- `src/lib/raiz.functions.ts`: `getMeuContexto` passa a devolver `modo` — é a chave que a interface usa para decidir a ênfase.
+- `src/lib/acompanhamento.functions.ts` (novo): `pedirAcompanhamento`, `adminListarPedidos`, `adminAceitarPedido`, `adminRecusarPedido` (com auditoria e aviso pelos canais permitidos, reaproveitando `src/lib/lembretes.ts`).
+- `src/lib/pacotes.functions.ts` (novo): vitrine de pacotes para quem é autoguiado, registro de aquisição e `adminRegistrarPagamento`.
+- Painel: `adminListarClientes` ganha `modo` e contagens por modo.
 
-**Cliente** — busca, filtros, ordenação e página em search params validados (`zodValidator` + `fallback`); derivações puras em `src/lib/clientes-painel.ts`; componentes em `src/components/painel/clientes/`; chave `adminClientes` registrada em `src/lib/cache-chaves.ts` com invalidação nas ações.
+**Cliente**
+- `src/lib/modo-uso.ts`: tipo, rótulos e as regras de “o que aparece em cada modo”, testadas isoladamente.
+- `app.index.tsx` compõe os blocos conforme o modo; `admin.clientes.tsx` ganha as três seções; nova rota `admin.acompanhamento-pedidos` ou aba dentro de Clientes; `auth.tsx` ganha as duas portas.
+- Chaves de cache novas em `src/lib/cache-chaves.ts`, com invalidação ao mudar de modo.
 
-**Testes** — regras de filtro/ordenação/paginação e derivações em `src/lib/clientes-painel.test.ts`; tela (estados vazio, carregando, erro, permissões, confirmação de arquivar, ausência do diário privado) em `src/routes/_authenticated/admin.clientes.test.tsx`; abas do perfil em `admin.cliente.perfil.test.tsx`.
+**Testes** — regras de modo e de liberação autoguiada em `src/lib/modo-uso.test.ts`; RLS do modo autoguiado (não ver trilha fora do pacote, não ver dados de outro cliente) somada à suíte de segurança; telas de cadastro, painel em cada modo e fila de pedidos.
+
+## Ordem sugerida
+
+1. Migração (modo, trilhas por modo, pedidos, função de liberação).
+2. Cadastro autoguiado com consentimento próprio e amostra.
+3. Painel do cliente sensível ao modo.
+4. Organização de Clientes por modo + fila de pedidos.
+5. Pacotes com registro manual de pagamento.
+6. Checkout integrado.
