@@ -53,7 +53,7 @@ function atribuicao(over: Partial<DadosInicio["atribuicoes"][number]> = {}) {
     terapeuta_id: TERA,
     trilha_id: "t1",
     objetivo: "Reduzir a autocrítica no trabalho",
-    status: "ativa",
+    status: "em_andamento",
     data_inicio: "2026-08-01",
     data_revisao: "2026-08-12",
     created_at: "2026-08-01T10:00:00Z",
@@ -96,7 +96,7 @@ describe("resumo", () => {
       atribuicoes: [
         atribuicao(),
         atribuicao({ id: "a2", data_inicio: "2026-08-20", data_revisao: null }),
-        atribuicao({ id: "a3", status: "pausada", data_revisao: "2026-08-09" }),
+        atribuicao({ id: "a3", status: "pausado", data_revisao: "2026-08-09" }),
       ],
       apoio: [
         { id: "s1", cliente_id: CLI_A, status: "aberta", origem: "etapa", created_at: "2026-08-09T12:00:00Z" },
@@ -133,7 +133,7 @@ describe("prioridades do dia", () => {
   const completo = dados({
     atribuicoes: [
       atribuicao({ id: "a-venc", data_revisao: "2026-08-05" }),
-      atribuicao({ id: "a-pausa", status: "pausada", data_revisao: null }),
+      atribuicao({ id: "a-pausa", status: "pausado", data_revisao: null }),
     ],
     apoio: [
       { id: "s1", cliente_id: CLI_A, status: "aberta", origem: "etapa", created_at: "2026-08-09T12:00:00Z" },
@@ -222,8 +222,8 @@ describe("linha do tempo", () => {
   const d = dados({
     atribuicoes: [
       atribuicao({ id: "a1", created_at: "2026-08-01T10:00:00Z" }),
-      atribuicao({ id: "a2", status: "pausada", updated_at: "2026-08-06T10:00:00Z" }),
-      atribuicao({ id: "a3", status: "concluida", updated_at: "2026-08-07T10:00:00Z" }),
+      atribuicao({ id: "a2", status: "pausado", updated_at: "2026-08-06T10:00:00Z" }),
+      atribuicao({ id: "a3", status: "concluido", updated_at: "2026-08-07T10:00:00Z" }),
     ],
     etapas: [{ atribuicao_id: "a1", concluida_em: "2026-08-09T10:00:00Z" }],
     compartilhados: [{ id: "d1", cliente_id: CLI_A, compartilhado_em: "2026-08-08T10:00:00Z" }],

@@ -121,6 +121,8 @@ export type ConviteInicio = {
   created_at: string;
 };
 
+const EM_CURSO: string[] = ["aguardando_inicio", "em_andamento", "aguardando_revisao"];
+
 export type EtapaInicio = { atribuicao_id: string; concluida_em: string | null };
 export type PraticaInicio = { cliente_id: string; concluido_em: string | null };
 export type CompartilhadoInicio = { id: string; cliente_id: string; compartilhado_em: string | null };
@@ -165,13 +167,13 @@ export function montarResumo(dados: DadosInicio, agora = new Date()): CartaoResu
   const limiteRecente = somarDias(hoje, -7);
 
   const emAndamento = dados.atribuicoes.filter(
-    (a) => a.status === "ativa" && a.data_inicio <= hoje,
+    (a) => EM_CURSO.includes(a.status) && a.data_inicio <= hoje,
   ).length;
   const revisoesSemana = dados.atribuicoes.filter(
     (a) => a.data_revisao && a.data_revisao >= inicio && a.data_revisao <= fim,
   ).length;
   const aguardandoInicio = dados.atribuicoes.filter(
-    (a) => a.status === "ativa" && a.data_inicio > hoje,
+    (a) => EM_CURSO.includes(a.status) && a.data_inicio > hoje,
   ).length;
   const recentes =
     dados.praticas.filter((p) => p.concluido_em && dataLocal(p.concluido_em) >= limiteRecente)
@@ -278,7 +280,7 @@ export function montarPrioridades(dados: DadosInicio, agora = new Date()): Prior
 
   for (const a of dados.atribuicoes) {
     if (!a.data_revisao) continue;
-    if (a.status !== "ativa") continue;
+    if (!EM_CURSO.includes(a.status)) continue;
     if (a.data_revisao > limiteRevisao) continue;
     const vencida = a.data_revisao < hoje;
     itens.push({
@@ -308,14 +310,14 @@ export function montarPrioridades(dados: DadosInicio, agora = new Date()): Prior
   }
 
   for (const a of dados.atribuicoes) {
-    const vencido = a.status === "ativa" && a.data_revisao !== null && a.data_revisao < hoje;
-    if (a.status !== "pausada" && !vencido) continue;
+    const vencido = EM_CURSO.includes(a.status) && a.data_revisao !== null && a.data_revisao < hoje;
+    if (a.status !== "pausado" && !vencido) continue;
     itens.push({
       id: `plano-${a.id}`,
       tipo: "plano",
       titulo: nomeDe(dados.perfis, a.cliente_id),
       detalhe:
-        a.status === "pausada"
+        a.status === "pausado"
           ? `Plano pausado · ${trilhaPorId.get(a.trilha_id) ?? "trilha"}`
           : `Plano com revisão vencida em ${dataCurta(a.data_revisao)}`,
       quando: quandoRelativo(a.updated_at, agora),
@@ -358,7 +360,7 @@ export function montarAgenda(dados: DadosInicio, agora = new Date(), limite = 8)
   const trilhaPorId = new Map(dados.trilhas.map((t) => [t.id, t.nome]));
 
   return dados.atribuicoes
-    .filter((a) => a.data_revisao && a.status !== "encerrada" && a.status !== "concluida")
+    .filter((a) => a.data_revisao && a.status !== "encerrado" && a.status !== "concluido" && a.status !== "rascunho")
     .sort((a, b) => String(a.data_revisao).localeCompare(String(b.data_revisao)))
     .slice(0, limite)
     .map((a) => ({
@@ -439,10 +441,10 @@ export function montarLinhaDoTempo(dados: DadosInicio, agora = new Date(), limit
   for (const a of dados.atribuicoes) {
     const trilha = trilhaPorId.get(a.trilha_id) ?? "trilha";
     push(`ini-${a.id}`, "trilha_iniciada", a.cliente_id, `Começou a trilha ${trilha}`, a.created_at);
-    if (a.status === "pausada") {
+    if (a.status === "pausado") {
       push(`pau-${a.id}`, "plano_pausado", a.cliente_id, `Plano de ${trilha} pausado`, a.updated_at);
     }
-    if (a.status === "concluida" || a.status === "encerrada") {
+    if (a.status === "concluido" || a.status === "encerrado") {
       push(
         `fim-${a.id}`,
         "plano_finalizado",
