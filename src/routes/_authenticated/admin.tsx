@@ -27,14 +27,10 @@ export const Route = createFileRoute("/_authenticated/admin")({
 function AdminLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const fetchContexto = useServerFn(getMeuContexto);
-  const { data: contexto } = useQuery({
-    queryKey: ["meu-contexto"],
-    queryFn: () => fetchContexto(),
-    // O vigia em tempo real (useVigiaPermissoes) já derruba o painel na hora em
-    // que o acesso muda, então não é preciso pesquisar a cada 15s nem revalidar
-    // em cada montagem — isso competia com cada troca de aba.
-    staleTime: 60_000,
+  // Mesma consulta do app do cliente (chave única): uma busca serve as duas
+  // telas. O vigia em tempo real (useVigiaPermissoes) derruba o painel na hora
+  // em que o acesso muda; a revalidação periódica é só uma rede de segurança.
+  const { data: contexto } = useMeuContexto({
     refetchInterval: 5 * 60_000,
     refetchOnWindowFocus: true,
   });
