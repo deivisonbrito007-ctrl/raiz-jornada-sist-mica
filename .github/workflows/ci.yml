@@ -254,6 +254,54 @@ jobs:
           path: e2e/screenshots/
           if-no-files-found: ignore
 
+  cache-permissoes-e2e:
+    name: E2E de cache em mudanças de permissão (tempo real)
+    needs: install
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      E2E_BASE_URL: http://localhost:8080
+      LOVABLE_BROWSER_SUPABASE_SESSION_JSON: ${{ secrets.E2E_SESSAO_ADMIN_JSON }}
+      LOVABLE_BROWSER_SUPABASE_STORAGE_KEY: ${{ secrets.E2E_SESSAO_STORAGE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore dependências
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock', 'bun.lockb', 'package.json') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+      - name: Install dependencies (fallback)
+        run: bun install --frozen-lockfile
+      - name: Instalar Playwright
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Subir app
+        run: |
+          bun run dev &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:8080/ && break; sleep 2; done
+      - name: Invalidação de cache em mudança de permissões
+        run: bun run test:e2e:cache-permissoes
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-cache-permissoes
+          path: e2e/screenshots/
+          if-no-files-found: ignore
+
   performance-abas-e2e:
     name: Performance de troca de abas (390x844)
     needs: install
@@ -311,7 +359,7 @@ jobs:
 
   ci:
     name: CI verde
-    needs: [lint, typecheck, test, seguranca, isolamento-e2e, performance-abas-e2e]
+    needs: [lint, typecheck, test, seguranca, isolamento-e2e, cache-permissoes-e2e, performance-abas-e2e]
     if: always()
     runs-on: ubuntu-latest
     steps:
