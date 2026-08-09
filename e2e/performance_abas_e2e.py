@@ -125,12 +125,12 @@ async def esperar_estavel(page, rota: str, tempo_limite: float = 15.0) -> None:
 
 async def abrir_menu_se_preciso(page, alvo) -> None:
     """No painel em celular a navegação fica num menu recolhido."""
-    if await alvo.is_visible():
+    if await alvo.count() and await alvo.is_visible():
         return
     gatilho = page.get_by_role("button", name="Abrir ou fechar o menu").first
     if await gatilho.count() and await gatilho.is_visible():
         await gatilho.click()
-        await alvo.wait_for(state="visible", timeout=5_000)
+        await alvo.wait_for(state="visible", timeout=8_000)
 
 
 async def medir_troca(page, rotulo: str, rota: str, erros: list[str]) -> float:
@@ -138,7 +138,6 @@ async def medir_troca(page, rotulo: str, rota: str, erros: list[str]) -> float:
         alvo = page.locator(f'a[href="{rotulo}"]').first
     else:
         alvo = page.get_by_role("link", name=rotulo, exact=False).first
-    await alvo.wait_for(timeout=10_000)
     await abrir_menu_se_preciso(page, alvo)
     await alvo.wait_for(state="visible", timeout=10_000)
     antes = len(erros)
