@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { podeAdministrarEmCache } from "@/lib/acesso-admin";
 import { getMeuContexto } from "@/lib/raiz.functions";
 import { useVigiaPermissoes } from "@/hooks/use-vigia-permissoes";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -16,10 +17,9 @@ import { GRUPOS_PAINEL } from "@/components/painel/navegacao";
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) throw redirect({ to: "/auth" });
-    const { data: podeAdministrar } = await supabase.rpc("pode_administrar");
-    if (podeAdministrar !== true) throw redirect({ to: "/app" });
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.user) throw redirect({ to: "/auth" });
+    if (!(await podeAdministrarEmCache())) throw redirect({ to: "/app" });
   },
   component: AdminLayout,
 });
@@ -31,9 +31,12 @@ function AdminLayout() {
   const { data: contexto } = useQuery({
     queryKey: ["meu-contexto"],
     queryFn: () => fetchContexto(),
-    refetchInterval: 15000,
+    // O vigia em tempo real (useVigiaPermissoes) já derruba o painel na hora em
+    // que o acesso muda, então não é preciso pesquisar a cada 15s nem revalidar
+    // em cada montagem — isso competia com cada troca de aba.
+    staleTime: 60_000,
+    refetchInterval: 5 * 60_000,
     refetchOnWindowFocus: true,
-    refetchOnMount: "always",
   });
   useVigiaPermissoes();
   const [termo, setTermo] = useState("");
