@@ -164,7 +164,6 @@ export const adminMonitoramentoPlano = createServerFn({ method: "GET" })
     await garantirPermissao(supabase, userId, "ver_clientes", "adminMonitoramentoPlano", {
       tabela: "atribuicoes",
       rota: ROTA,
-      alvoId: data.atribuicaoId,
     });
 
     const { data: plano, error } = await supabase
@@ -249,7 +248,6 @@ async function permitirAcao(
   await garantirPermissao(supabase, userId, "gerenciar_liberacoes", acao, {
     tabela: "atribuicoes",
     rota: ROTA,
-    alvoId,
   });
 }
 
