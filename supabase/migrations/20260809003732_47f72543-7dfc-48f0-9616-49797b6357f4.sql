@@ -1,0 +1,24 @@
+REVOKE ALL ON FUNCTION public.acompanha_cliente(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.minha_atribuicao(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.trilha_atribuida(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.conteudo_liberado(uuid, uuid, uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.pode(text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.pode_administrar() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.is_terapeuta() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.aceitar_convite_equipe(text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.has_role(uuid, public.app_role) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.tem_permissao(uuid, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.consumir_limite(uuid, text, integer, integer) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.update_updated_at_column() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.existe_terapeuta() FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION public.acompanha_cliente(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.minha_atribuicao(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.trilha_atribuida(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.conteudo_liberado(uuid, uuid, uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.pode(text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.pode_administrar() TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.is_terapeuta() TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.aceitar_convite_equipe(text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.existe_terapeuta() TO anon, authenticated, service_role;
