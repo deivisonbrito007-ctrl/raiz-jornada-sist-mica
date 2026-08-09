@@ -17,7 +17,7 @@ import {
   STATUS_PEDIDO_LABEL,
   type StatusPedido,
 } from "@/lib/modo-uso";
-import { NIVEL_LABEL } from "@/lib/raiz-format";
+import { NIVEL_LABEL } from "@/lib/etapas";
 
 function preco(centavos: number) {
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
