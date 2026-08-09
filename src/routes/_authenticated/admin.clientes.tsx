@@ -28,6 +28,9 @@ import {
   type StatusAtribuicao,
 } from "@/lib/etapas";
 import { formatarData } from "@/lib/raiz-format";
+import { PedidosAcompanhamento } from "@/components/painel/pedidos-acompanhamento";
+import { adminTornarAutoguiado } from "@/lib/acompanhamento.functions";
+import { MODO_LABEL, MODOS_USO, type ModoUso } from "@/lib/modo-uso";
 
 export const Route = createFileRoute("/_authenticated/admin/clientes")({
   head: () => ({
@@ -84,6 +87,19 @@ function AdminClientes() {
 
   const [convite, setConvite] = useState({ email: "", nome: "", telefone: "" });
   const [form, setForm] = useState<FormAtribuicao | null>(null);
+  const [modoFiltro, setModoFiltro] = useState<"todos" | ModoUso>("todos");
+  const tornarAutoguiado = useServerFn(adminTornarAutoguiado);
+
+  const mutTornarAutoguiado = useMutation({
+    mutationFn: tornarAutoguiado,
+    onSuccess: () => {
+      toast.success("Acompanhamento encerrado. A pessoa segue por conta própria.");
+      void invalidar();
+      void queryClient.invalidateQueries({ queryKey: ["admin-pedidos-acompanhamento"] });
+    },
+    onError: () => toast.error("Não foi possível alterar o modo de uso"),
+  });
+
 
   const mutConvidar = useMutation({
     mutationFn: convidar,
@@ -122,6 +138,10 @@ function AdminClientes() {
   });
 
   const trilhasPublicadas = (data?.trilhas ?? []).filter((t) => t.status === "publicado");
+  const todosClientes = data?.clientes ?? [];
+  const contagemModo = (modo: ModoUso) => todosClientes.filter((c) => c.modo === modo).length;
+  const clientesVisiveis =
+    modoFiltro === "todos" ? todosClientes : todosClientes.filter((c) => c.modo === modoFiltro);
 
   return (
     <section className="space-y-8">
@@ -209,24 +229,62 @@ function AdminClientes() {
         )}
       </div>
 
+      <PedidosAcompanhamento />
+
+      <div
+        role="group"
+        aria-label="Filtrar clientes por modo de uso"
+        className="flex flex-wrap gap-2"
+      >
+        {(["todos", ...MODOS_USO] as const).map((valor) => {
+          const ativo = modoFiltro === valor;
+          const rotulo =
+            valor === "todos"
+              ? `Todos (${todosClientes.length})`
+              : `${MODO_LABEL[valor]} (${contagemModo(valor)})`;
+          return (
+            <button
+              key={valor}
+              type="button"
+              aria-pressed={ativo}
+              onClick={() => setModoFiltro(valor)}
+              className={`min-h-11 rounded-full border px-4 text-sm transition-colors ${
+                ativo
+                  ? "border-floresta bg-floresta text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              {rotulo}
+            </button>
+          );
+        })}
+      </div>
+
       {isLoading && (
         <p role="status" className="text-sm text-muted-foreground">
           Carregando clientes...
         </p>
       )}
 
-      {!isLoading && (data?.clientes ?? []).length === 0 && (
+      {!isLoading && todosClientes.length === 0 && (
         <div className="rounded-3xl border border-dashed border-border p-8 text-sm text-muted-foreground">
           <p className="font-medium text-foreground">Nenhum cliente vinculado ainda</p>
           <p className="mt-1">
             Envie um convite acima. O vínculo é criado automaticamente quando a pessoa entra pela
-            primeira vez.
+            primeira vez. Quem se cadastra por conta própria aparece aqui como “
+            {MODO_LABEL.autoguiado}”.
           </p>
         </div>
       )}
 
+      {!isLoading && todosClientes.length > 0 && clientesVisiveis.length === 0 && (
+        <p className="rounded-2xl bg-secondary/50 p-6 text-sm text-muted-foreground">
+          Nenhuma pessoa neste modo de uso.
+        </p>
+      )}
+
       <ul className="space-y-4">
-        {(data?.clientes ?? []).map((cliente) => {
+        {clientesVisiveis.map((cliente) => {
           const atribuicoes = (data?.atribuicoes ?? []).filter((a) => a.cliente_id === cliente.id);
           return (
             <li
@@ -239,8 +297,19 @@ function AdminClientes() {
                     {cliente.nome || cliente.email}
                   </h2>
                   <p className="truncate text-sm text-muted-foreground">{cliente.email}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Acesso {cliente.status} · {atribuicoes.length} trilha(s) atribuída(s)
+                  <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span
+                      className={`rounded-full px-3 py-1 font-medium ${
+                        cliente.modo === "acompanhado"
+                          ? "bg-secondary text-floresta"
+                          : "bg-terracota/10 text-terracota"
+                      }`}
+                    >
+                      {MODO_LABEL[cliente.modo]}
+                    </span>
+                    <span>
+                      Acesso {cliente.status} · {atribuicoes.length} trilha(s) atribuída(s)
+                    </span>
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-wrap justify-end gap-2">
@@ -284,6 +353,25 @@ function AdminClientes() {
                     <Sprout className="h-4 w-4" />
                     Atribuir trilha
                   </Button>
+                  {cliente.modo === "acompanhado" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="min-h-11 rounded-full"
+                      disabled={mutTornarAutoguiado.isPending}
+                      onClick={() => {
+                        if (
+                          !window.confirm(
+                            `Encerrar o acompanhamento de ${cliente.nome || cliente.email}? A pessoa passa a usar por conta própria e mantém o histórico.`,
+                          )
+                        )
+                          return;
+                        mutTornarAutoguiado.mutate({ data: { clienteId: cliente.id, motivo: "" } });
+                      }}
+                    >
+                      Encerrar acompanhamento
+                    </Button>
+                  )}
                 </div>
               </div>
 

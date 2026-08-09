@@ -17,6 +17,10 @@ export const ACOES_AUDITORIA = [
   "atribuicao_atualizada",
   "cliente_convidado",
   "cliente_atualizado",
+  "acompanhamento_aceito",
+  "acompanhamento_recusado",
+  "modo_alterado",
+  "pacote_pagamento_registrado",
 ] as const;
 
 export type AcaoAuditoria = (typeof ACOES_AUDITORIA)[number];
@@ -38,6 +42,10 @@ export const ACAO_LABEL: Record<AcaoAuditoria, string> = {
   atribuicao_atualizada: "Atribuição atualizada",
   cliente_convidado: "Cliente convidado",
   cliente_atualizado: "Cadastro de cliente atualizado",
+  acompanhamento_aceito: "Pedido de acompanhamento aceito",
+  acompanhamento_recusado: "Pedido de acompanhamento recusado",
+  modo_alterado: "Modo de uso alterado",
+  pacote_pagamento_registrado: "Pagamento de pacote registrado",
 };
 
 
@@ -51,7 +59,15 @@ export const ACOES_SENSIVEIS: AcaoAuditoria[] = [
 
 export type RegistroAuditoria = {
   acao: AcaoAuditoria;
-  alvoTipo: "equipe" | "convite" | "liberacao" | "lembretes" | "trilha" | "atribuicao" | "cliente";
+  alvoTipo:
+    | "equipe"
+    | "convite"
+    | "liberacao"
+    | "lembretes"
+    | "trilha"
+    | "atribuicao"
+    | "cliente"
+    | "pacote";
   alvoId?: string | null;
   alvoEmail?: string | null;
   detalhes?: Record<string, unknown>;

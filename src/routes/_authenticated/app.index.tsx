@@ -19,6 +19,8 @@ import { LembreteRetorno } from "@/components/lembrete-retorno";
 import { ContinuarDeOndeParei } from "@/components/continuar-de-onde-parei";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 import { useValorAtrasado } from "@/hooks/use-valor-atrasado";
+import { VitrinePacotes } from "@/components/vitrine-pacotes";
+import { blocosDoModo, normalizarModo } from "@/lib/modo-uso";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Biblioteca,
@@ -75,6 +77,8 @@ function Biblioteca() {
 
   const mostrarPraticas = termo !== "" || tipoFiltro !== "todos" || statusFiltro !== "todos";
 
+  const blocos = blocosDoModo(normalizarModo(contexto?.modo));
+
   return (
     <div>
       <p className="text-sm text-salvia">Que bom te ver por aqui</p>
@@ -82,8 +86,12 @@ function Biblioteca() {
         {primeiroNome ? `Olá, ${primeiroNome}` : "Sua jornada"}
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        Escolha um eixo para continuar. Os eixos ainda fechados mostram o caminho que vem a seguir.
+        {blocos.vitrinePacotes
+          ? "Você usa o Raiz no seu ritmo. Escolha um pacote para abrir as trilhas autoguiadas e siga por elas quando fizer sentido."
+          : "Escolha um eixo para continuar. Os eixos ainda fechados mostram o caminho que vem a seguir."}
       </p>
+
+      {blocos.vitrinePacotes && <VitrinePacotes />}
 
       {!isLoading && data?.retomar && <ContinuarDeOndeParei pratica={data.retomar} />}
 
@@ -102,6 +110,7 @@ function Biblioteca() {
           }
         />
       )}
+
 
       <div className="mt-6 space-y-3">
         <div className="relative">

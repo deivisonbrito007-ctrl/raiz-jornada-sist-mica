@@ -6,12 +6,13 @@ import { auditarResultado, negarAcesso, registrarAcessoNegado } from "./auditori
 import { atorAuditoria, registrarAuditoria } from "./auditoria-equipe";
 import { garantirConteudoLiberado } from "./liberacao-guard";
 import { garantirPermissao, temPermissao } from "./permissao-guard";
+import { normalizarModo } from "./modo-uso";
 
 export const getMeuContexto = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [perfil, papeis, pacotes, permissoes] = await Promise.all([
+    const [perfil, papeis, pacotes, permissoes, acesso] = await Promise.all([
       supabase
         .from("profiles")
         .select("id, nome, email, created_at, meta_semanal")
@@ -24,6 +25,11 @@ export const getMeuContexto = createServerFn({ method: "GET" })
         .eq("cliente_id", userId)
         .order("created_at", { ascending: false }),
       supabase.from("equipe_permissoes").select("permissao").eq("user_id", userId),
+      supabase
+        .from("clientes_acesso")
+        .select("modo, modo_desde, terapeuta_id, status")
+        .eq("user_id", userId)
+        .maybeSingle(),
     ]);
 
     const roles = (papeis.data ?? []).map((r) => r.role);
@@ -35,8 +41,13 @@ export const getMeuContexto = createServerFn({ method: "GET" })
       permissoes: minhasPermissoes,
       podeAdministrar: ehTerapeuta || minhasPermissoes.length > 0,
       pacotes: pacotes.data ?? [],
+      modo: normalizarModo(acesso.data?.modo),
+      modoDesde: acesso.data?.modo_desde ?? null,
+      temTerapeuta: Boolean(acesso.data?.terapeuta_id),
+      acessoStatus: acesso.data?.status ?? null,
     };
   });
+
 
 
 export const getMinhaBiblioteca = createServerFn({ method: "GET" })

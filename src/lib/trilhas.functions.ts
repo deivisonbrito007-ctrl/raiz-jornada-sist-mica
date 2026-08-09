@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { erroSeguro } from "./erro-permissao";
 import { garantirPermissao } from "./permissao-guard";
 import { atorAuditoria, registrarAuditoria } from "./auditoria-equipe";
+import { normalizarModo } from "./modo-uso";
 
 /* ---------------------------------------------------------------- terapeuta */
 
@@ -311,7 +312,9 @@ export const adminListarClientes = createServerFn({ method: "GET" })
     });
 
     const [acessos, perfis, convites, atribuicoes, trilhas] = await Promise.all([
-      supabase.from("clientes_acesso").select("user_id, terapeuta_id, telefone, observacoes, status"),
+      supabase
+        .from("clientes_acesso")
+        .select("user_id, terapeuta_id, telefone, observacoes, status, modo, modo_desde"),
       supabase.from("profiles").select("id, nome, email, created_at").order("nome"),
       supabase
         .from("convites_clientes")
@@ -336,9 +339,13 @@ export const adminListarClientes = createServerFn({ method: "GET" })
         telefone: a.telefone,
         observacoes: a.observacoes,
         status: a.status,
+        modo: normalizarModo(a.modo),
+        modoDesde: a.modo_desde ?? null,
+        temTerapeuta: Boolean(a.terapeuta_id),
         desde: perfil?.created_at ?? null,
       };
     });
+
 
     return {
       clientes,
