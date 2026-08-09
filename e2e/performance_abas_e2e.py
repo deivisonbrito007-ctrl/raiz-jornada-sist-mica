@@ -144,7 +144,8 @@ async def medir_troca(
         alvo = page.get_by_role("link", name=rotulo, exact=False).first
     await abrir_menu_se_preciso(page, alvo)
     await alvo.wait_for(state="visible", timeout=10_000)
-    await alvo.scroll_into_view_if_needed()
+    if not gaveta:
+        await alvo.scroll_into_view_if_needed()
     antes = len(erros)
     inicio = time.perf_counter()
     if gaveta:
