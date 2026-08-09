@@ -39,6 +39,8 @@ import { Route as AuthenticatedAppJornadaRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppPerfilRouteImport } from './routes/_authenticated/app.perfil'
 import { Route as AuthenticatedAppProgressoRouteImport } from './routes/_authenticated/app.progresso'
 import { Route as AuthenticatedAdminClienteClienteIdRouteImport } from './routes/_authenticated/admin.cliente.$clienteId'
+import { Route as AuthenticatedAdminMonitoramentoIndexRouteImport } from './routes/_authenticated/admin.monitoramento.index'
+import { Route as AuthenticatedAdminMonitoramentoAtribuicaoIdRouteImport } from './routes/_authenticated/admin.monitoramento.$atribuicaoId'
 import { Route as AuthenticatedAppConteudoConteudoIdRouteImport } from './routes/_authenticated/app.conteudo.$conteudoId'
 import { Route as AuthenticatedAppEixoEixoIdRouteImport } from './routes/_authenticated/app.eixo.$eixoId'
 import { Route as AuthenticatedAppEtapaConteudoIdRouteImport } from './routes/_authenticated/app.etapa.$conteudoId'
@@ -209,6 +211,18 @@ const AuthenticatedAdminClienteClienteIdRoute =
     path: '/cliente/$clienteId',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminMonitoramentoIndexRoute =
+  AuthenticatedAdminMonitoramentoIndexRouteImport.update({
+    id: '/monitoramento/',
+    path: '/monitoramento/',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminMonitoramentoAtribuicaoIdRoute =
+  AuthenticatedAdminMonitoramentoAtribuicaoIdRouteImport.update({
+    id: '/monitoramento/$atribuicaoId',
+    path: '/monitoramento/$atribuicaoId',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAppConteudoConteudoIdRoute =
   AuthenticatedAppConteudoConteudoIdRouteImport.update({
     id: '/conteudo/$conteudoId',
@@ -263,10 +277,12 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
+  '/admin/monitoramento/$atribuicaoId': typeof AuthenticatedAdminMonitoramentoAtribuicaoIdRoute
   '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
   '/app/etapa/$conteudoId': typeof AuthenticatedAppEtapaConteudoIdRoute
   '/api/public/hooks/lembretes': typeof ApiPublicHooksLembretesRoute
+  '/admin/monitoramento/': typeof AuthenticatedAdminMonitoramentoIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -296,10 +312,12 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
+  '/admin/monitoramento/$atribuicaoId': typeof AuthenticatedAdminMonitoramentoAtribuicaoIdRoute
   '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
   '/app/etapa/$conteudoId': typeof AuthenticatedAppEtapaConteudoIdRoute
   '/api/public/hooks/lembretes': typeof ApiPublicHooksLembretesRoute
+  '/admin/monitoramento': typeof AuthenticatedAdminMonitoramentoIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -333,10 +351,12 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
+  '/_authenticated/admin/monitoramento/$atribuicaoId': typeof AuthenticatedAdminMonitoramentoAtribuicaoIdRoute
   '/_authenticated/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/_authenticated/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
   '/_authenticated/app/etapa/$conteudoId': typeof AuthenticatedAppEtapaConteudoIdRoute
   '/api/public/hooks/lembretes': typeof ApiPublicHooksLembretesRoute
+  '/_authenticated/admin/monitoramento/': typeof AuthenticatedAdminMonitoramentoIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -370,10 +390,12 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/admin/cliente/$clienteId'
+    | '/admin/monitoramento/$atribuicaoId'
     | '/app/conteudo/$conteudoId'
     | '/app/eixo/$eixoId'
     | '/app/etapa/$conteudoId'
     | '/api/public/hooks/lembretes'
+    | '/admin/monitoramento/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -403,10 +425,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/admin/cliente/$clienteId'
+    | '/admin/monitoramento/$atribuicaoId'
     | '/app/conteudo/$conteudoId'
     | '/app/eixo/$eixoId'
     | '/app/etapa/$conteudoId'
     | '/api/public/hooks/lembretes'
+    | '/admin/monitoramento'
   id:
     | '__root__'
     | '/'
@@ -439,10 +463,12 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
     | '/_authenticated/admin/cliente/$clienteId'
+    | '/_authenticated/admin/monitoramento/$atribuicaoId'
     | '/_authenticated/app/conteudo/$conteudoId'
     | '/_authenticated/app/eixo/$eixoId'
     | '/_authenticated/app/etapa/$conteudoId'
     | '/api/public/hooks/lembretes'
+    | '/_authenticated/admin/monitoramento/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -669,6 +695,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminClienteClienteIdRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/monitoramento/': {
+      id: '/_authenticated/admin/monitoramento/'
+      path: '/monitoramento'
+      fullPath: '/admin/monitoramento/'
+      preLoaderRoute: typeof AuthenticatedAdminMonitoramentoIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/monitoramento/$atribuicaoId': {
+      id: '/_authenticated/admin/monitoramento/$atribuicaoId'
+      path: '/monitoramento/$atribuicaoId'
+      fullPath: '/admin/monitoramento/$atribuicaoId'
+      preLoaderRoute: typeof AuthenticatedAdminMonitoramentoAtribuicaoIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/app/conteudo/$conteudoId': {
       id: '/_authenticated/app/conteudo/$conteudoId'
       path: '/conteudo/$conteudoId'
@@ -714,6 +754,8 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminTrilhasRoute: typeof AuthenticatedAdminTrilhasRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminClienteClienteIdRoute: typeof AuthenticatedAdminClienteClienteIdRoute
+  AuthenticatedAdminMonitoramentoAtribuicaoIdRoute: typeof AuthenticatedAdminMonitoramentoAtribuicaoIdRoute
+  AuthenticatedAdminMonitoramentoIndexRoute: typeof AuthenticatedAdminMonitoramentoIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
@@ -731,6 +773,10 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminClienteClienteIdRoute:
     AuthenticatedAdminClienteClienteIdRoute,
+  AuthenticatedAdminMonitoramentoAtribuicaoIdRoute:
+    AuthenticatedAdminMonitoramentoAtribuicaoIdRoute,
+  AuthenticatedAdminMonitoramentoIndexRoute:
+    AuthenticatedAdminMonitoramentoIndexRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =

@@ -21,6 +21,10 @@ export const ACOES_AUDITORIA = [
   "acompanhamento_recusado",
   "modo_alterado",
   "pacote_pagamento_registrado",
+  "orientacao_enviada",
+  "prazo_revisao_alterado",
+  "etapa_liberada",
+  "revisao_marcada",
 ] as const;
 
 export type AcaoAuditoria = (typeof ACOES_AUDITORIA)[number];
@@ -46,6 +50,10 @@ export const ACAO_LABEL: Record<AcaoAuditoria, string> = {
   acompanhamento_recusado: "Pedido de acompanhamento recusado",
   modo_alterado: "Modo de uso alterado",
   pacote_pagamento_registrado: "Pagamento de pacote registrado",
+  orientacao_enviada: "Orientação enviada ao cliente",
+  prazo_revisao_alterado: "Prazo de revisão alterado",
+  etapa_liberada: "Etapa liberada para o cliente",
+  revisao_marcada: "Revisão registrada",
 };
 
 
