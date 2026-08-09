@@ -1,0 +1,16 @@
+CREATE INDEX IF NOT EXISTS idx_atribuicoes_cliente ON public.atribuicoes (cliente_id, status);
+CREATE INDEX IF NOT EXISTS idx_atribuicoes_trilha ON public.atribuicoes (trilha_id);
+CREATE INDEX IF NOT EXISTS idx_atribuicao_etapas_atribuicao ON public.atribuicao_etapas (atribuicao_id, ordem);
+CREATE INDEX IF NOT EXISTS idx_checkins_cliente ON public.checkins (cliente_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_checkins_atribuicao ON public.checkins (atribuicao_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_revisoes_cliente ON public.revisoes (cliente_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_solicitacoes_apoio_status ON public.solicitacoes_apoio (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_diario_cliente ON public.diario (cliente_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_progresso_cliente ON public.progresso (cliente_id, conteudo_id);
+CREATE INDEX IF NOT EXISTS idx_liberacoes_cliente ON public.liberacoes (cliente_id, status);
+CREATE INDEX IF NOT EXISTS idx_conteudos_eixo_ordem ON public.conteudos (eixo_id, ordem);
+CREATE INDEX IF NOT EXISTS idx_conteudos_trilha ON public.conteudos (trilha_id);
+CREATE INDEX IF NOT EXISTS idx_clientes_acesso_terapeuta ON public.clientes_acesso (terapeuta_id);
+CREATE INDEX IF NOT EXISTS idx_notificacoes_cliente ON public.notificacoes (cliente_id, lida, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_auditoria_equipe_created ON public.auditoria_equipe (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_limites_uso_user_acao ON public.limites_uso (user_id, acao, created_at DESC);

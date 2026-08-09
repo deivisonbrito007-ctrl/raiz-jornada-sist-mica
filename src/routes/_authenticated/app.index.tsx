@@ -11,27 +11,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import * as icones from "lucide-react";
+import { IconeEixo as Icone } from "@/components/icone-eixo";
 import { getMeuContexto, getMinhaBiblioteca } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { calcularStreak, formatarData, formatarDuracao, TIPO_LABEL } from "@/lib/raiz-format";
 import { LembreteRetorno } from "@/components/lembrete-retorno";
 import { ContinuarDeOndeParei } from "@/components/continuar-de-onde-parei";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
+import { useValorAtrasado } from "@/hooks/use-valor-atrasado";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Biblioteca,
 });
 
-function Icone({ nome, className }: { nome: string; className?: string }) {
-  const chave = nome
-    .split("-")
-    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-    .join("");
-  const Componente =
-    (icones as unknown as Record<string, icones.LucideIcon>)[chave] ?? icones.Sprout;
-  return <Componente className={className} />;
-}
 
 function Biblioteca() {
   useSincronizarLiberacoes();
@@ -50,7 +42,7 @@ function Biblioteca() {
   const [tipoFiltro, setTipoFiltro] = useState("todos");
   const [statusFiltro, setStatusFiltro] = useState("todos");
 
-  const termo = busca.trim().toLowerCase();
+  const termo = useValorAtrasado(busca.trim().toLowerCase(), 300);
   const filtrando =
     termo !== "" || tipoFiltro !== "todos" || statusFiltro !== "todos" || eixoFiltro !== "todos";
 

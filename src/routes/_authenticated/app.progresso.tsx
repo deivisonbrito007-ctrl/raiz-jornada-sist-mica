@@ -11,7 +11,6 @@ import {
   listarDiario,
 } from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
-import { gerarRelatorioPdf } from "@/lib/raiz-relatorio";
 import { LembreteRetorno } from "@/components/lembrete-retorno";
 import { MapaCalor, NIVEIS_MAPA_CALOR } from "@/components/mapa-calor";
 import {
@@ -80,7 +79,11 @@ function Progresso() {
   const baixarRelatorio = async () => {
     setGerando(true);
     try {
-      const diario = await fetchDiario();
+      const [diario, { gerarRelatorioPdf }] = await Promise.all([
+        fetchDiario(),
+        // Carrega a biblioteca de PDF apenas quando o relatório é solicitado.
+        import("@/lib/raiz-relatorio"),
+      ]);
       gerarRelatorioPdf({
         nome: contexto?.perfil?.nome ?? "",
         email: contexto?.perfil?.email ?? "",

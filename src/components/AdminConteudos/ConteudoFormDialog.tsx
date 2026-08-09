@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TIPO_LABEL } from "@/lib/raiz-format";
-import { EditorTexto } from "./EditorTexto";
+// Editor de texto rico carregado sob demanda (mantém o pacote inicial leve).
+const EditorTexto = lazy(() =>
+  import("./EditorTexto").then((m) => ({ default: m.EditorTexto })),
+);
 import { UploadMidia } from "./UploadMidia";
 import type { ConteudoTipo, EixoAdmin, SalvarConteudoEntrada } from "@/hooks/useConteudos";
 
@@ -169,11 +172,21 @@ export function ConteudoFormDialog({ form, eixos, salvando, onFechar, onSalvar }
                 Corpo do texto / instruções
               </p>
               <div className="mt-1">
-                <EditorTexto
-                  rotuloId={`${idBase}-corpo`}
-                  valor={estado.corpoTexto}
-                  onChange={(html) => setEstado({ ...estado, corpoTexto: html })}
-                />
+                <Suspense
+                  fallback={
+                    <div
+                      className="h-40 animate-pulse rounded-2xl bg-secondary/60"
+                      aria-label="Carregando editor de texto"
+                      role="status"
+                    />
+                  }
+                >
+                  <EditorTexto
+                    rotuloId={`${idBase}-corpo`}
+                    valor={estado.corpoTexto}
+                    onChange={(html) => setEstado({ ...estado, corpoTexto: html })}
+                  />
+                </Suspense>
               </div>
             </div>
           )}
