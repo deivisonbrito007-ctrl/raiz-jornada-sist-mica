@@ -13,6 +13,7 @@ import { Flame } from "lucide-react";
 import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
 import { SecaoSemPermissao } from "@/components/permissao-ui";
 import { usePainelBusca } from "@/components/painel/busca-contexto";
+import { GestaoClientes } from "@/components/painel/clientes/gestao-clientes";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminClientes,
@@ -149,6 +150,8 @@ function AdminClientes() {
           </p>
         )}
       </div>
+
+      <GestaoClientes />
     </div>
   );
 }
