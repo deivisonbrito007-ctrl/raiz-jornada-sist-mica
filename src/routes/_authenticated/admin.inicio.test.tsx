@@ -123,7 +123,8 @@ describe("aba Início do painel", () => {
     expect(within(resumo).queryByText("0")).not.toBeInTheDocument();
     expect(within(resumo).getAllByRole("link")).toHaveLength(6);
     expect(await screen.findByText(/nada aguardando você agora/i)).toBeInTheDocument();
-    expect(screen.getByText(/nenhuma revisão marcada/i)).toBeInTheDocument();
+    const agenda = screen.getByRole("region", { name: /agenda de revisões/i });
+    expect(within(agenda).getByText(/nenhuma revisão marcada/i)).toBeInTheDocument();
   });
 
   it("mostra prioridades, agenda e atividade quando há dados", async () => {
