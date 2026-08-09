@@ -19,6 +19,8 @@ import { LembreteRetorno } from "@/components/lembrete-retorno";
 import { ContinuarDeOndeParei } from "@/components/continuar-de-onde-parei";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 import { useValorAtrasado } from "@/hooks/use-valor-atrasado";
+import { VitrinePacotes } from "@/components/vitrine-pacotes";
+import { blocosDoModo, normalizarModo } from "@/lib/modo-uso";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Biblioteca,
