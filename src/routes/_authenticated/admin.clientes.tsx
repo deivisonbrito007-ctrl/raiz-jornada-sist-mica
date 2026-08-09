@@ -87,6 +87,19 @@ function AdminClientes() {
 
   const [convite, setConvite] = useState({ email: "", nome: "", telefone: "" });
   const [form, setForm] = useState<FormAtribuicao | null>(null);
+  const [modoFiltro, setModoFiltro] = useState<"todos" | ModoUso>("todos");
+  const tornarAutoguiado = useServerFn(adminTornarAutoguiado);
+
+  const mutTornarAutoguiado = useMutation({
+    mutationFn: tornarAutoguiado,
+    onSuccess: () => {
+      toast.success("Acompanhamento encerrado. A pessoa segue por conta própria.");
+      void invalidar();
+      void queryClient.invalidateQueries({ queryKey: ["admin-pedidos-acompanhamento"] });
+    },
+    onError: () => toast.error("Não foi possível alterar o modo de uso"),
+  });
+
 
   const mutConvidar = useMutation({
     mutationFn: convidar,
