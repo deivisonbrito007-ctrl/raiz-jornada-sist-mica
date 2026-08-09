@@ -64,7 +64,7 @@ export const GRUPOS_PAINEL: GrupoPainel[] = [
         icone: ClipboardList,
       },
       {
-        to: "/admin/acompanhamento",
+        to: "/admin/monitoramento",
         label: "Monitoramento",
         titulo: "Monitoramento",
         permissao: "ver_clientes",
