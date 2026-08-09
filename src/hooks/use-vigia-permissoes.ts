@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { limparCacheAdmin } from "@/lib/acesso-admin";
 
 const CANAL_LOCAL = "raiz-permissoes";
 
@@ -23,6 +24,9 @@ export function useVigiaPermissoes(ativo = true) {
 
     async function revalidar() {
       if (cancelado) return;
+      // O guard do painel reaproveita a última resposta por 30s: ao mudar
+      // permissões precisamos descartar esse cache antes de revalidar.
+      limparCacheAdmin();
       const { data: podeAdministrar } = await supabase.rpc("pode_administrar");
       if (cancelado) return;
 
