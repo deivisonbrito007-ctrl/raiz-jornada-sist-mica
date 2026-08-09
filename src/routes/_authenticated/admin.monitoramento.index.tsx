@@ -20,7 +20,7 @@ import {
   type IndicadoresMonitoramento,
 } from "@/lib/monitoramento";
 
-export const Route = createFileRoute("/_authenticated/admin/monitoramento")({
+export const Route = createFileRoute("/_authenticated/admin/monitoramento/")({
   head: () => ({
     meta: [
       { title: "Monitoramento das trilhas liberadas — Raiz" },
