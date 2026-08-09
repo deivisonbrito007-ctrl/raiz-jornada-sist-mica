@@ -36,7 +36,9 @@ function AdminInicio() {
     { label: "Conclusão média", valor: `${resumo?.metricas.conclusaoMedia ?? 0}%` },
   ];
 
-  const apoioPendente = (acompanhamento?.apoio ?? []).filter((a) => a.status !== "respondido");
+  const apoioPendente = (acompanhamento?.apoio ?? []).filter(
+    (a) => a.status === "aberta" || a.status === "em_atendimento",
+  );
   const nomePorId = new Map(
     (acompanhamento?.perfis ?? []).map((p) => [p.id, p.nome ?? p.email ?? "Cliente"]),
   );
