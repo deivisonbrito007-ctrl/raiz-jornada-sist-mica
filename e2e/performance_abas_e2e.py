@@ -53,6 +53,9 @@ LIMITE_MEDIANA_MS = float(os.environ.get("E2E_PERF_MEDIANA_MS", 600))
 LIMITE_P95_MS = float(os.environ.get("E2E_PERF_P95_MS", 1200))
 TOLERANCIA_REGRESSAO = float(os.environ.get("E2E_PERF_TOLERANCIA", 0.35))  # +35%
 REPETICOES_PADRAO = int(os.environ.get("E2E_PERF_REPETICOES", 5))
+# margem absoluta: evita alarme falso em rotas rápidas, onde ruído de poucos
+# milissegundos já estoura um limite percentual
+MARGEM_ABSOLUTA_MS = float(os.environ.get("E2E_PERF_MARGEM_MS", 150))
 
 ABAS_CLIENTE = [
     ("cliente:inicio", "Início", "/app"),
@@ -203,7 +206,10 @@ def comparar(atual: dict, base: dict | None) -> list[str]:
             falhas.append(f"{chave}: p95 {m['p95']}ms > limite {LIMITE_P95_MS}ms")
         anterior = (base or {}).get(chave)
         if anterior:
-            teto = anterior["mediana"] * (1 + TOLERANCIA_REGRESSAO)
+            teto = max(
+                anterior["mediana"] * (1 + TOLERANCIA_REGRESSAO),
+                anterior["mediana"] + MARGEM_ABSOLUTA_MS,
+            )
             if m["mediana"] > teto:
                 falhas.append(
                     f"{chave}: regressão — mediana {m['mediana']}ms vs base "
