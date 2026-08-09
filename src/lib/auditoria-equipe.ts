@@ -42,6 +42,10 @@ export const ACAO_LABEL: Record<AcaoAuditoria, string> = {
   atribuicao_atualizada: "Atribuição atualizada",
   cliente_convidado: "Cliente convidado",
   cliente_atualizado: "Cadastro de cliente atualizado",
+  acompanhamento_aceito: "Pedido de acompanhamento aceito",
+  acompanhamento_recusado: "Pedido de acompanhamento recusado",
+  modo_alterado: "Modo de uso alterado",
+  pacote_pagamento_registrado: "Pagamento de pacote registrado",
 };
 
 
