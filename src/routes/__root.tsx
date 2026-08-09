@@ -137,19 +137,34 @@ function RootComponent() {
   }, [router]);
 
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event) => {
+    // Amarra o cache persistido à conta já na abertura da aba.
+    void supabase.auth.getSession().then(({ data }) => {
+      definirUsuarioCache(data.session?.user?.id ?? null);
+    });
+
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      if (event === "SIGNED_OUT") {
+        // Sem sessão, nada do que estava guardado pode sobreviver ao recarregamento.
+        limparCachePersistido();
+        definirUsuarioCache(null);
+        router.invalidate();
+        return;
+      }
+      // Troca de conta descarta o cache da anterior antes de revalidar.
+      definirUsuarioCache(session?.user?.id ?? null);
       router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      queryClient.invalidateQueries();
     });
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <ProvedorCache queryClient={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster position="top-center" />
-    </QueryClientProvider>
+    </ProvedorCache>
   );
 }
+
