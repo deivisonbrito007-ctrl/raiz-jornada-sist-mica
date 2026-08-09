@@ -15,6 +15,7 @@ import { marcarProgresso } from "@/lib/raiz.functions";
 import { EMOCOES, ETAPA_LABEL, LOCAIS_CORPO, type TipoEtapa } from "@/lib/etapas";
 import { formatarDuracao } from "@/lib/raiz-format";
 import { PedirApoio } from "@/components/pedir-apoio";
+import { usePreCarregarProximas } from "@/hooks/use-pre-carregar-proximas";
 
 export const Route = createFileRoute("/_authenticated/app/etapa/$conteudoId")({
   head: () => ({
@@ -64,6 +65,17 @@ function EtapaTrilha() {
     queryKey: ["minha-etapa", conteudoId],
     queryFn: () => carregar({ data: { conteudoId } }),
   });
+
+  // Enquanto a etapa atual é feita, adianta a seguinte (e a anterior, para voltar).
+  usePreCarregarProximas(
+    [data?.proximaId, data?.anteriorId]
+      .filter((id): id is string => Boolean(id))
+      .map((conteudoId) => ({
+        queryKey: ["minha-etapa", conteudoId],
+        carregar: () => carregar({ data: { conteudoId } }),
+      })),
+    Boolean(data?.etapa),
+  );
 
   const [fase, setFase] = useState<Fase>("checkin");
   const [inicial, setInicial] = useState({
