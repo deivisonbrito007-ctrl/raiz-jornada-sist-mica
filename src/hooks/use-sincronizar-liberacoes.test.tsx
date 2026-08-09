@@ -106,12 +106,15 @@ describe("sincronização de liberações na interface do cliente", () => {
     const { unmount } = montar();
     await waitFor(() => expect(handlers.length).toBe(3));
     unmount();
-    await waitFor(() =>
-      expect(canaisRemovidos).toEqual([
-        "raiz-liberacoes-cliente-1",
-        "raiz-conteudos-cliente-1",
-        "raiz-eixos-cliente-1",
-      ]),
-    );
+    // o tópico leva um sufixo único por instância do hook, evitando conflito
+    // com outra tela montada ao mesmo tempo
+    await waitFor(() => expect(canaisRemovidos).toHaveLength(3));
+    expect(
+      canaisRemovidos.map((nome) => nome.replace(/-[a-z0-9]+$/, "")),
+    ).toEqual([
+      "raiz-liberacoes-cliente-1",
+      "raiz-conteudos-cliente-1",
+      "raiz-eixos-cliente-1",
+    ]);
   });
 });
