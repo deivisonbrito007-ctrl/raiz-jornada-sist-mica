@@ -435,7 +435,12 @@ export const adminAtualizarCliente = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const adminAtribuirTrilha = createServerFn({ method: "POST" })
+/**
+ * Salva um plano de acompanhamento (antes chamado de "atribuição").
+ * A trilha é sempre escolhida pela terapeuta — o sistema nunca sugere
+ * trilha a partir de diagnóstico ou interpretação.
+ */
+export const adminSalvarPlano = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z
@@ -444,10 +449,17 @@ export const adminAtribuirTrilha = createServerFn({ method: "POST" })
         trilhaId: z.string().uuid(),
         clienteId: z.string().uuid(),
         objetivo: z.string().max(1000).default(""),
+        motivoIndicacao: z.string().max(1000).default(""),
         mensagem: z.string().max(2000).default(""),
+        audioPath: z.string().max(400).nullable().optional(),
         frequencia: z.string().max(120).default(""),
         dataInicio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-        dataRevisao: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+        dataRevisao: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .nullable()
+          .optional(),
+        lembretesAtivos: z.boolean().default(false),
         nivel: z.enum(["leve", "intermediario", "profundo"]),
         podeSozinho: z.boolean().default(true),
         exigeAcompanhamento: z.boolean().default(false),
@@ -455,27 +467,56 @@ export const adminAtribuirTrilha = createServerFn({ method: "POST" })
         permiteRepetir: z.boolean().default(true),
         orientacoesEspeciais: z.string().max(2000).default(""),
         observacoes: z.string().max(2000).default(""),
-        etapasObrigatorias: z.array(z.string().uuid()).max(200).default([]),
+        /** Ação final da etapa de revisão. */
+        acao: z.enum(["rascunho", "liberar", "agendar"]).default("rascunho"),
+        /** Data/hora da liberação quando a ação é "agendar". */
+        liberarEm: z.string().datetime({ offset: true }).nullable().optional(),
+        etapas: z
+          .array(
+            z.object({
+              conteudoId: z.string().uuid().nullable().default(null),
+              ordem: z.number().int().min(0),
+              obrigatoria: z.boolean().default(true),
+              visivel: z.boolean().default(true),
+              permiteRepetir: z.boolean().default(true),
+              prazoDias: z.number().int().min(0).max(365).nullable().default(null),
+              tituloPersonalizado: z.string().max(200).default(""),
+              descricaoPersonalizada: z.string().max(2000).default(""),
+            }),
+          )
+          .max(200)
+          .default([]),
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_liberacoes", "adminAtribuirTrilha", {
+    await garantirPermissao(supabase, userId, "gerenciar_liberacoes", "adminSalvarPlano", {
       clienteAlvo: data.clienteId,
       tabela: "atribuicoes",
       rota: "/admin/clientes",
     });
+
+    const agendado = data.acao === "agendar" && data.liberarEm ? data.liberarEm : null;
+    const status =
+      data.acao === "rascunho"
+        ? ("rascunho" as const)
+        : data.dataInicio > new Date().toISOString().slice(0, 10) || agendado
+          ? ("aguardando_inicio" as const)
+          : ("em_andamento" as const);
 
     const linha = {
       trilha_id: data.trilhaId,
       cliente_id: data.clienteId,
       terapeuta_id: userId,
       objetivo: data.objetivo,
+      motivo_indicacao: data.motivoIndicacao,
       mensagem: data.mensagem,
+      audio_path: data.audioPath ?? null,
       frequencia: data.frequencia,
       data_inicio: data.dataInicio,
       data_revisao: data.dataRevisao ?? null,
+      lembretes_ativos: data.lembretesAtivos,
       nivel: data.nivel,
       pode_sozinho: data.podeSozinho,
       exige_acompanhamento: data.exigeAcompanhamento,
@@ -483,6 +524,9 @@ export const adminAtribuirTrilha = createServerFn({ method: "POST" })
       permite_repetir: data.permiteRepetir,
       orientacoes_especiais: data.orientacoesEspeciais,
       observacoes: data.observacoes,
+      status,
+      liberar_em: agendado,
+      liberada_em: data.acao === "liberar" ? new Date().toISOString() : null,
     };
 
     let atribuicaoId = data.id ?? null;
@@ -499,26 +543,43 @@ export const adminAtribuirTrilha = createServerFn({ method: "POST" })
       atribuicaoId = criada.id;
     }
 
-    const { data: etapas } = await supabase
-      .from("conteudos")
-      .select("id, ordem, obrigatoria")
-      .eq("trilha_id", data.trilhaId)
-      .order("ordem");
-
-    if (etapas && etapas.length > 0) {
-      const { error } = await supabase.from("atribuicao_etapas").upsert(
-        etapas.map((e) => ({
+    // Etapas do plano: ordem, obrigatoriedade, visibilidade, prazo e atividades
+    // personalizadas ficam guardadas por plano, sem alterar a trilha original.
+    if (data.etapas.length > 0) {
+      await supabase.from("atribuicao_etapas").delete().eq("atribuicao_id", atribuicaoId as string);
+      const { error } = await supabase.from("atribuicao_etapas").insert(
+        data.etapas.map((e) => ({
           atribuicao_id: atribuicaoId as string,
-          conteudo_id: e.id,
+          conteudo_id: e.conteudoId,
           ordem: e.ordem,
-          obrigatoria:
-            data.etapasObrigatorias.length > 0
-              ? data.etapasObrigatorias.includes(e.id)
-              : e.obrigatoria,
+          obrigatoria: e.obrigatoria,
+          visivel: e.visivel,
+          permite_repetir: e.permiteRepetir,
+          prazo_dias: e.prazoDias,
+          titulo_personalizado: e.tituloPersonalizado,
+          descricao_personalizada: e.descricaoPersonalizada,
         })),
-        { onConflict: "atribuicao_id,conteudo_id" },
       );
       if (error) throw erroSeguro(error);
+    } else {
+      const { data: etapas } = await supabase
+        .from("conteudos")
+        .select("id, ordem, obrigatoria, permite_repetir")
+        .eq("trilha_id", data.trilhaId)
+        .order("ordem");
+      if (etapas && etapas.length > 0) {
+        const { error } = await supabase.from("atribuicao_etapas").upsert(
+          etapas.map((e) => ({
+            atribuicao_id: atribuicaoId as string,
+            conteudo_id: e.id,
+            ordem: e.ordem,
+            obrigatoria: e.obrigatoria,
+            permite_repetir: e.permite_repetir,
+          })),
+          { onConflict: "atribuicao_id,conteudo_id" },
+        );
+        if (error) throw erroSeguro(error);
+      }
     }
 
     const { data: trilha } = await supabase
@@ -527,20 +588,73 @@ export const adminAtribuirTrilha = createServerFn({ method: "POST" })
       .eq("id", data.trilhaId)
       .maybeSingle();
 
-    await supabase.from("notificacoes").insert({
-      cliente_id: data.clienteId,
-      titulo: "Nova trilha disponível",
-      mensagem: `A trilha “${trilha?.nome ?? "sua nova trilha"}” já está no seu espaço.`,
-    });
+    // Rascunho e liberação agendada não avisam o cliente ainda.
+    if (data.acao === "liberar") {
+      await supabase.from("notificacoes").insert({
+        cliente_id: data.clienteId,
+        titulo: "Novo plano de acompanhamento",
+        mensagem: `A trilha “${trilha?.nome ?? "sua nova trilha"}” já está no seu espaço.`,
+      });
+    }
 
     await registrarAuditoria(supabase, atorAuditoria(context), {
       acao: data.id ? "atribuicao_atualizada" : "trilha_atribuida",
       alvoTipo: "atribuicao",
       alvoId: data.clienteId,
-      detalhes: { trilha: trilha?.nome ?? "", nivel: data.nivel },
+      detalhes: { trilha: trilha?.nome ?? "", nivel: data.nivel, acao: data.acao },
     });
 
-    return { ok: true, id: atribuicaoId };
+    return { ok: true, id: atribuicaoId, status };
+  });
+
+/** Listagem completa dos planos de acompanhamento, já agregada para a tabela. */
+export const adminListarPlanos = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await garantirPermissao(supabase, userId, "ver_clientes", "adminListarPlanos", {
+      tabela: "atribuicoes",
+      rota: "/admin/clientes",
+    });
+
+    const { data: planos, error } = await supabase
+      .from("atribuicoes")
+      .select(
+        "id, cliente_id, trilha_id, terapeuta_id, objetivo, motivo_indicacao, mensagem, audio_path, frequencia, data_inicio, data_revisao, nivel, status, liberar_em, liberada_em, lembretes_ativos, pode_sozinho, exige_acompanhamento, somente_em_sessao, permite_repetir, orientacoes_especiais, observacoes, created_at, updated_at, trilhas(id, nome, resumo, nivel)",
+      )
+      .order("created_at", { ascending: false });
+    if (error) throw erroSeguro(error);
+
+    const ids = (planos ?? []).map((p) => p.id);
+    const pessoas = new Set<string>();
+    for (const p of planos ?? []) {
+      pessoas.add(p.cliente_id);
+      if (p.terapeuta_id) pessoas.add(p.terapeuta_id);
+    }
+
+    const [etapas, perfis] = await Promise.all([
+      ids.length
+        ? supabase
+            .from("atribuicao_etapas")
+            .select(
+              "id, atribuicao_id, conteudo_id, ordem, obrigatoria, visivel, permite_repetir, prazo_dias, titulo_personalizado, descricao_personalizada, concluida_em",
+            )
+            .in("atribuicao_id", ids)
+            .order("ordem")
+        : Promise.resolve({ data: [] as never[] }),
+      pessoas.size
+        ? supabase
+            .from("profiles")
+            .select("id, nome, email")
+            .in("id", Array.from(pessoas))
+        : Promise.resolve({ data: [] as never[] }),
+    ]);
+
+    return {
+      planos: planos ?? [],
+      etapas: etapas.data ?? [],
+      perfis: perfis.data ?? [],
+    };
   });
 
 export const adminDefinirStatusAtribuicao = createServerFn({ method: "POST" })
@@ -549,7 +663,15 @@ export const adminDefinirStatusAtribuicao = createServerFn({ method: "POST" })
     z
       .object({
         atribuicaoId: z.string().uuid(),
-        status: z.enum(["ativa", "pausada", "concluida", "encerrada"]),
+        status: z.enum([
+          "rascunho",
+          "aguardando_inicio",
+          "em_andamento",
+          "aguardando_revisao",
+          "pausado",
+          "concluido",
+          "encerrado",
+        ]),
       })
       .parse(input),
   )
@@ -562,13 +684,19 @@ export const adminDefinirStatusAtribuicao = createServerFn({ method: "POST" })
       "adminDefinirStatusAtribuicao",
       { tabela: "atribuicoes", rota: "/admin/clientes" },
     );
+    const liberando = data.status !== "rascunho";
     const { error } = await supabase
       .from("atribuicoes")
-      .update({ status: data.status })
+      .update(
+        liberando
+          ? { status: data.status, liberada_em: new Date().toISOString(), liberar_em: null }
+          : { status: data.status },
+      )
       .eq("id", data.atribuicaoId);
     if (error) throw erroSeguro(error);
     return { ok: true };
   });
+
 
 export const adminAcompanhamento = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
