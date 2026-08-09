@@ -37,14 +37,14 @@ function Progresso() {
     error: erroBiblioteca,
     refetch: recarregarBiblioteca,
   } = useQuery({
-    queryKey: ["biblioteca"],
+    queryKey: CHAVES.biblioteca,
     queryFn: () => fetchBiblioteca(),
   });
-  const { data: contexto } = useQuery({ queryKey: ["contexto"], queryFn: () => fetchContexto() });
+  const { data: contexto } = useMeuContexto();
 
   const mutarMeta = useMutation({
     mutationFn: (meta: number) => salvarMeta({ data: { meta } }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contexto"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: CHAVES.contexto }),
   });
 
   const eixos = (data?.eixos ?? []).filter((e) => e.liberado);
