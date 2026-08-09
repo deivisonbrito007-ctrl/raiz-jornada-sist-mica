@@ -144,7 +144,9 @@ async def medir_troca(page, rotulo: str, rota: str, erros: list[str]) -> float:
     await alvo.wait_for(state="visible", timeout=10_000)
     antes = len(erros)
     inicio = time.perf_counter()
-    await alvo.click()
+    # force=True evita o hit-test do Playwright (a gaveta do painel se
+    # sobrepõe durante a animação) sem alterar o que é medido: o clique real.
+    await alvo.click(force=True)
     await esperar_estavel(page, rota)
     decorrido = (time.perf_counter() - inicio) * 1000
     if len(erros) > antes:
