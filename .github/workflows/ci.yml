@@ -254,9 +254,64 @@ jobs:
           path: e2e/screenshots/
           if-no-files-found: ignore
 
+  performance-abas-e2e:
+    name: Performance de troca de abas (390x844)
+    needs: install
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      E2E_BASE_URL: http://localhost:8080
+      E2E_EMAIL_CLIENTE: ${{ secrets.E2E_EMAIL_CLIENTE }}
+      E2E_SENHA_CLIENTE: ${{ secrets.E2E_SENHA_CLIENTE }}
+      LOVABLE_BROWSER_SUPABASE_SESSION_JSON: ${{ secrets.LOVABLE_BROWSER_SUPABASE_SESSION_JSON }}
+      LOVABLE_BROWSER_SUPABASE_STORAGE_KEY: ${{ secrets.LOVABLE_BROWSER_SUPABASE_STORAGE_KEY }}
+      LOVABLE_BROWSER_SUPABASE_COOKIES_JSON: ${{ secrets.LOVABLE_BROWSER_SUPABASE_COOKIES_JSON }}
+      E2E_PERF_REPETICOES: "6"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore dependências
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock', 'bun.lockb', 'package.json') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+      - name: Install dependencies (fallback)
+        run: bun install --frozen-lockfile
+      - name: Instalar Playwright
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Subir app
+        run: |
+          bun run dev &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:8080/ && break; sleep 2; done
+      - name: Medir troca de abas e detectar regressões
+        if: ${{ env.LOVABLE_BROWSER_SUPABASE_SESSION_JSON != '' }}
+        run: bun run test:e2e:performance
+      - name: Upload evidências
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-performance-abas
+          path: |
+            e2e/screenshots/
+            e2e/baselines/
+          if-no-files-found: ignore
+
   ci:
     name: CI verde
-    needs: [lint, typecheck, test, seguranca, isolamento-e2e]
+    needs: [lint, typecheck, test, seguranca, isolamento-e2e, performance-abas-e2e]
     if: always()
     runs-on: ubuntu-latest
     steps:
