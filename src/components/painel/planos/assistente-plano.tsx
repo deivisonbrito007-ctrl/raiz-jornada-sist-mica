@@ -14,7 +14,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { UploadMidia } from "@/components/AdminConteudos/UploadMidia";
-import { FREQUENCIAS, NIVEIS, NIVEL_DESCRICAO, NIVEL_LABEL, type Nivel } from "@/lib/etapas";
+import {
+  FREQUENCIAS,
+  NIVEIS,
+  NIVEL_DESCRICAO,
+  NIVEL_LABEL,
+  type Nivel,
+  type StatusAtribuicao,
+} from "@/lib/etapas";
 import { NIVEL_MARCADORES, planoPrincipalEmCurso, statusLabel } from "@/lib/planos";
 import { formatarData, formatarDuracao } from "@/lib/raiz-format";
 import {
@@ -42,7 +49,7 @@ type PlanoExistente = {
   id: string;
   cliente_id: string;
   trilha_id: string;
-  status: EstadoPlano extends never ? never : string;
+  status: StatusAtribuicao;
   data_inicio: string;
   data_revisao: string | null;
   liberar_em: string | null;
@@ -106,12 +113,7 @@ export function AssistentePlano({
     return clientes.filter((c) => `${c.nome} ${c.email}`.toLowerCase().includes(termo));
   }, [busca, clientes]);
 
-  const emCurso = plano.clienteId
-    ? planoPrincipalEmCurso(
-        planos.map((p) => ({ ...p, status: p.status as never })),
-        plano.clienteId,
-      )
-    : undefined;
+  const emCurso = plano.clienteId ? planoPrincipalEmCurso(planos, plano.clienteId) : undefined;
 
   const etapasVisiveis = plano.etapas.filter((e) => e.visivel);
   const duracaoTotal = plano.etapas
