@@ -1,13 +1,13 @@
 import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { podeAdministrarEmCache } from "@/lib/acesso-admin";
-import { getMeuContexto } from "@/lib/raiz.functions";
+import { useMeuContexto } from "@/hooks/use-meu-contexto";
 import { useVigiaPermissoes } from "@/hooks/use-vigia-permissoes";
+
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { SidebarTerapeuta } from "@/components/painel/sidebar-terapeuta";
 import { CabecalhoPainel } from "@/components/painel/cabecalho-painel";
