@@ -6,6 +6,7 @@ import { auditarResultado, negarAcesso, registrarAcessoNegado } from "./auditori
 import { atorAuditoria, registrarAuditoria } from "./auditoria-equipe";
 import { garantirConteudoLiberado } from "./liberacao-guard";
 import { garantirPermissao, temPermissao } from "./permissao-guard";
+import { normalizarModo } from "./modo-uso";
 
 export const getMeuContexto = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
