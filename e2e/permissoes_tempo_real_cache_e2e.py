@@ -22,6 +22,7 @@ Uso: python3 e2e/permissoes_tempo_real_cache_e2e.py
 """
 
 import asyncio
+import base64
 import json
 import os
 from pathlib import Path
@@ -77,22 +78,40 @@ async def esperar(condicao, mensagem: str, tentativas: int = 40, intervalo: floa
     raise AssertionError(f"{mensagem} (último valor: {ultimo})")
 
 
+def descrever_server_fn(url: str) -> str:
+    """Nome legível da server function a partir do id base64 na URL."""
+    id_b64 = url.split("/_serverFn/", 1)[1].split("?", 1)[0]
+    try:
+        bruto = base64.urlsafe_b64decode(id_b64 + "=" * (-len(id_b64) % 4)).decode("utf-8")
+        return json.loads(bruto).get("export", bruto)
+    except Exception:
+        return id_b64
+
+
 class Contador:
     """Conta requisições reais ao backend por tipo, para provar recarga."""
 
     def __init__(self) -> None:
         self.pode_administrar = 0
         self.funcoes_painel = 0
+        self.nomes: list[str] = []
 
     def registrar(self, url: str) -> None:
         if "/rpc/pode_administrar" in url:
             self.pode_administrar += 1
-        elif "_serverFn" in url and ("admin" in url or "Contexto" in url):
-            self.funcoes_painel += 1
+            return
+        if "/_serverFn/" in url:
+            # o nome da função vai em base64 no caminho; decodifica para
+            # contar só as buscas do painel (contexto e listas admin).
+            nome = descrever_server_fn(url)
+            if "admin" in nome.lower() or "contexto" in nome.lower():
+                self.funcoes_painel += 1
+                self.nomes.append(nome)
 
     def zerar(self) -> None:
         self.pode_administrar = 0
         self.funcoes_painel = 0
+        self.nomes.clear()
 
 
 async def main() -> None:
@@ -167,7 +186,10 @@ async def main() -> None:
             lambda: asyncio.sleep(0, result=contador.funcoes_painel > 0),
             "as consultas do painel não recarregaram depois da mudança",
         )
-        print(f"2c. consultas do painel recarregadas ({contador.funcoes_painel} requisições) ✔")
+        print(
+            f"2c. consultas do painel recarregadas ({contador.funcoes_painel} requisições: "
+            f"{sorted(set(n.split('_createServerFn')[0] for n in contador.nomes))}) ✔"
+        )
 
         # o painel continua utilizável (a permissão ainda existe)
         assert "/admin" in page.url, f"painel perdido sem perda de permissão (url={page.url})"
