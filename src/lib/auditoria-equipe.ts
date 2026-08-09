@@ -17,6 +17,10 @@ export const ACOES_AUDITORIA = [
   "atribuicao_atualizada",
   "cliente_convidado",
   "cliente_atualizado",
+  "acompanhamento_aceito",
+  "acompanhamento_recusado",
+  "modo_alterado",
+  "pacote_pagamento_registrado",
 ] as const;
 
 export type AcaoAuditoria = (typeof ACOES_AUDITORIA)[number];
