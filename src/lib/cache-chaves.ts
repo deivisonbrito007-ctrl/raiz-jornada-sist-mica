@@ -82,6 +82,7 @@ export const GRUPOS = {
   ],
   aoMudarPermissoes: [
     CHAVES.contexto,
+    CHAVES.adminInicio,
     CHAVES.adminResumo,
     CHAVES.adminClientes,
     CHAVES.adminTrilhas,
@@ -91,6 +92,7 @@ export const GRUPOS = {
     CHAVES.equipeAuditoria,
   ],
   aoMudarDadosAdmin: [
+    CHAVES.adminInicio,
     CHAVES.adminResumo,
     CHAVES.adminClientes,
     CHAVES.adminTrilhas,
