@@ -9,7 +9,8 @@
  *      executáveis por `anon` nem por `authenticated`: só o banco os usa;
  *    - as RPCs do app (`pode`, `is_terapeuta`, `pode_administrar`,
  *      `conteudo_liberado`, `aceitar_convite_equipe`) exigem sessão;
- *    - `existe_terapeuta` é a única pública (usada na tela de cadastro).
+ *    - `existe_terapeuta` também é interna: a tela de cadastro consulta pelo
+ *      servidor, então nenhuma função de segurança sobra para `anon`.
  *
  * 2. O app falha FECHADO. Se a execução for negada (42501) ou a função sumir
  *    (42883), nenhum guard libera o acesso e nenhuma leitura sensível acontece.
@@ -35,10 +36,15 @@ const EXECUCAO: Record<string, Papel[]> = {
   pode_administrar: ["authenticated", "service_role"],
   conteudo_liberado: ["authenticated", "service_role"],
   aceitar_convite_equipe: ["authenticated", "service_role"],
-  existe_terapeuta: ["anon", "authenticated", "service_role"],
+  existe_terapeuta: ["service_role"],
 };
 
-const FUNCOES_INTERNAS = ["has_role", "tem_permissao", "handle_new_user"] as const;
+const FUNCOES_INTERNAS = [
+  "has_role",
+  "tem_permissao",
+  "handle_new_user",
+  "existe_terapeuta",
+] as const;
 const FUNCOES_DO_APP = [
   "pode",
   "is_terapeuta",
@@ -166,18 +172,18 @@ describe("execução das funções de segurança", () => {
     }
   });
 
-  it("existe_terapeuta continua pública, pois roda antes do login", async () => {
+  it("existe_terapeuta não é mais executável sem login (vai pelo servidor)", async () => {
     const supabase = clienteFalso({ papel: "anon" });
     const { data, error } = await supabase.rpc("existe_terapeuta");
-    expect(error).toBeNull();
-    expect(data).toBe(true);
+    expect(data).toBeNull();
+    expect(error?.code).toBe("42501");
   });
 
-  it("nenhuma função de segurança é executável por anon além de existe_terapeuta", () => {
+  it("nenhuma função de segurança é executável por anon", () => {
     const publicas = Object.entries(EXECUCAO)
       .filter(([, papeis]) => papeis.includes("anon"))
       .map(([fn]) => fn);
-    expect(publicas).toEqual(["existe_terapeuta"]);
+    expect(publicas).toEqual([]);
   });
 });
 
