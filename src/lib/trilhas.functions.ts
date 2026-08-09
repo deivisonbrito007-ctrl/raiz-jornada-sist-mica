@@ -632,7 +632,7 @@ export const adminListarPlanos = createServerFn({ method: "GET" })
       if (p.terapeuta_id) pessoas.add(p.terapeuta_id);
     }
 
-    const [etapas, perfis] = await Promise.all([
+    const [etapas, perfis, trilhas, conteudos] = await Promise.all([
       ids.length
         ? supabase
             .from("atribuicao_etapas")
@@ -648,14 +648,31 @@ export const adminListarPlanos = createServerFn({ method: "GET" })
             .select("id, nome, email")
             .in("id", Array.from(pessoas))
         : Promise.resolve({ data: [] as never[] }),
+      supabase
+        .from("trilhas")
+        .select(
+          "id, nome, resumo, objetivo, nivel, status, prerequisitos, alertas, orientacoes_pausa, modos, eixo_id, eixos(nome)",
+        )
+        .eq("status", "publicado")
+        .order("ordem"),
+      supabase
+        .from("conteudos")
+        .select(
+          "id, trilha_id, titulo, descricao, tipo, tipo_etapa, duracao_segundos, ordem, obrigatoria, permite_repetir",
+        )
+        .not("trilha_id", "is", null)
+        .order("ordem"),
     ]);
 
     return {
       planos: planos ?? [],
       etapas: etapas.data ?? [],
       perfis: perfis.data ?? [],
+      trilhas: trilhas.data ?? [],
+      conteudos: conteudos.data ?? [],
     };
   });
+
 
 export const adminDefinirStatusAtribuicao = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
