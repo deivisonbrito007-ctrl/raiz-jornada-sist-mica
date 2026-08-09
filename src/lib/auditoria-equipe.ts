@@ -59,7 +59,15 @@ export const ACOES_SENSIVEIS: AcaoAuditoria[] = [
 
 export type RegistroAuditoria = {
   acao: AcaoAuditoria;
-  alvoTipo: "equipe" | "convite" | "liberacao" | "lembretes" | "trilha" | "atribuicao" | "cliente";
+  alvoTipo:
+    | "equipe"
+    | "convite"
+    | "liberacao"
+    | "lembretes"
+    | "trilha"
+    | "atribuicao"
+    | "cliente"
+    | "pacote";
   alvoId?: string | null;
   alvoEmail?: string | null;
   detalhes?: Record<string, unknown>;
