@@ -40,6 +40,7 @@ import { Route as AuthenticatedAppPerfilRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppProgressoRouteImport } from './routes/_authenticated/app.progresso'
 import { Route as AuthenticatedAdminClienteClienteIdRouteImport } from './routes/_authenticated/admin.cliente.$clienteId'
 import { Route as AuthenticatedAdminMonitoramentoIndexRouteImport } from './routes/_authenticated/admin.monitoramento.index'
+import { Route as AuthenticatedAdminMonitoramentoAtribuicaoIdRouteImport } from './routes/_authenticated/admin.monitoramento.$atribuicaoId'
 import { Route as AuthenticatedAppConteudoConteudoIdRouteImport } from './routes/_authenticated/app.conteudo.$conteudoId'
 import { Route as AuthenticatedAppEixoEixoIdRouteImport } from './routes/_authenticated/app.eixo.$eixoId'
 import { Route as AuthenticatedAppEtapaConteudoIdRouteImport } from './routes/_authenticated/app.etapa.$conteudoId'
@@ -216,6 +217,12 @@ const AuthenticatedAdminMonitoramentoIndexRoute =
     path: '/monitoramento/',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminMonitoramentoAtribuicaoIdRoute =
+  AuthenticatedAdminMonitoramentoAtribuicaoIdRouteImport.update({
+    id: '/monitoramento/$atribuicaoId',
+    path: '/monitoramento/$atribuicaoId',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAppConteudoConteudoIdRoute =
   AuthenticatedAppConteudoConteudoIdRouteImport.update({
     id: '/conteudo/$conteudoId',
@@ -270,6 +277,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
+  '/admin/monitoramento/$atribuicaoId': typeof AuthenticatedAdminMonitoramentoAtribuicaoIdRoute
   '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
   '/app/etapa/$conteudoId': typeof AuthenticatedAppEtapaConteudoIdRoute
@@ -304,6 +312,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
+  '/admin/monitoramento/$atribuicaoId': typeof AuthenticatedAdminMonitoramentoAtribuicaoIdRoute
   '/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
   '/app/etapa/$conteudoId': typeof AuthenticatedAppEtapaConteudoIdRoute
@@ -342,6 +351,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/admin/cliente/$clienteId': typeof AuthenticatedAdminClienteClienteIdRoute
+  '/_authenticated/admin/monitoramento/$atribuicaoId': typeof AuthenticatedAdminMonitoramentoAtribuicaoIdRoute
   '/_authenticated/app/conteudo/$conteudoId': typeof AuthenticatedAppConteudoConteudoIdRoute
   '/_authenticated/app/eixo/$eixoId': typeof AuthenticatedAppEixoEixoIdRoute
   '/_authenticated/app/etapa/$conteudoId': typeof AuthenticatedAppEtapaConteudoIdRoute
@@ -380,6 +390,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/admin/cliente/$clienteId'
+    | '/admin/monitoramento/$atribuicaoId'
     | '/app/conteudo/$conteudoId'
     | '/app/eixo/$eixoId'
     | '/app/etapa/$conteudoId'
@@ -414,6 +425,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/admin/cliente/$clienteId'
+    | '/admin/monitoramento/$atribuicaoId'
     | '/app/conteudo/$conteudoId'
     | '/app/eixo/$eixoId'
     | '/app/etapa/$conteudoId'
@@ -451,6 +463,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
     | '/_authenticated/admin/cliente/$clienteId'
+    | '/_authenticated/admin/monitoramento/$atribuicaoId'
     | '/_authenticated/app/conteudo/$conteudoId'
     | '/_authenticated/app/eixo/$eixoId'
     | '/_authenticated/app/etapa/$conteudoId'
@@ -689,6 +702,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMonitoramentoIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/monitoramento/$atribuicaoId': {
+      id: '/_authenticated/admin/monitoramento/$atribuicaoId'
+      path: '/monitoramento/$atribuicaoId'
+      fullPath: '/admin/monitoramento/$atribuicaoId'
+      preLoaderRoute: typeof AuthenticatedAdminMonitoramentoAtribuicaoIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/app/conteudo/$conteudoId': {
       id: '/_authenticated/app/conteudo/$conteudoId'
       path: '/conteudo/$conteudoId'
@@ -734,6 +754,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminTrilhasRoute: typeof AuthenticatedAdminTrilhasRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminClienteClienteIdRoute: typeof AuthenticatedAdminClienteClienteIdRoute
+  AuthenticatedAdminMonitoramentoAtribuicaoIdRoute: typeof AuthenticatedAdminMonitoramentoAtribuicaoIdRoute
   AuthenticatedAdminMonitoramentoIndexRoute: typeof AuthenticatedAdminMonitoramentoIndexRoute
 }
 
@@ -752,6 +773,8 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminClienteClienteIdRoute:
     AuthenticatedAdminClienteClienteIdRoute,
+  AuthenticatedAdminMonitoramentoAtribuicaoIdRoute:
+    AuthenticatedAdminMonitoramentoAtribuicaoIdRoute,
   AuthenticatedAdminMonitoramentoIndexRoute:
     AuthenticatedAdminMonitoramentoIndexRoute,
 }
@@ -817,3 +840,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
