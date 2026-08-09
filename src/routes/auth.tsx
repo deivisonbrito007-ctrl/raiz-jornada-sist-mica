@@ -35,7 +35,11 @@ function AuthPage() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [caminho, setCaminho] = useState<"convite" | "propria">(
+    destinoSeguro?.startsWith("/convite") ? "convite" : "propria",
+  );
   const [souTerapeuta, setSouTerapeuta] = useState(false);
+
   const [carregando, setCarregando] = useState(false);
   const [confirmeEmail, setConfirmeEmail] = useState(false);
   const [existeTerapeuta, setExisteTerapeuta] = useState(true);
