@@ -1,9 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
 import { adminResumo } from "@/lib/raiz.functions";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   formatarData,
@@ -14,6 +12,7 @@ import {
 import { Flame } from "lucide-react";
 import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
 import { SecaoSemPermissao } from "@/components/permissao-ui";
+import { usePainelBusca } from "@/components/painel/busca-contexto";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminClientes,
@@ -29,7 +28,7 @@ function AdminClientes() {
     // sem permissão a chamada só voltaria erro — não vale disparar
     enabled: podeVer,
   });
-  const [busca, setBusca] = useState("");
+  const { termo: busca } = usePainelBusca();
 
   const clientes = (data?.clientes ?? []).filter((c) =>
     `${c.nome ?? ""} ${c.email ?? ""}`.toLowerCase().includes(busca.toLowerCase()),
@@ -66,12 +65,6 @@ function AdminClientes() {
         ))}
       </div>
 
-      <Input
-        value={busca}
-        onChange={(e) => setBusca(e.target.value)}
-        placeholder="Buscar por nome ou e-mail"
-        className="mt-8 max-w-sm rounded-full border-border bg-card"
-      />
 
       {isLoading && <Skeleton className="mt-6 h-48 rounded-3xl" />}
 

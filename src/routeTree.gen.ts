@@ -22,11 +22,14 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAcompanhamentoRouteImport } from './routes/_authenticated/admin.acompanhamento'
+import { Route as AuthenticatedAdminAjudaRouteImport } from './routes/_authenticated/admin.ajuda'
 import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin.auditoria'
 import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
 import { Route as AuthenticatedAdminConteudosRouteImport } from './routes/_authenticated/admin.conteudos'
 import { Route as AuthenticatedAdminEquipeRouteImport } from './routes/_authenticated/admin.equipe'
+import { Route as AuthenticatedAdminInicioRouteImport } from './routes/_authenticated/admin.inicio'
 import { Route as AuthenticatedAdminPacotesRouteImport } from './routes/_authenticated/admin.pacotes'
+import { Route as AuthenticatedAdminPerfilRouteImport } from './routes/_authenticated/admin.perfil'
 import { Route as AuthenticatedAdminTrilhasRouteImport } from './routes/_authenticated/admin.trilhas'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppDiarioRouteImport } from './routes/_authenticated/app.diario'
@@ -108,6 +111,11 @@ const AuthenticatedAdminAcompanhamentoRoute =
     path: '/acompanhamento',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAjudaRoute = AuthenticatedAdminAjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminAuditoriaRoute =
   AuthenticatedAdminAuditoriaRouteImport.update({
     id: '/auditoria',
@@ -132,10 +140,22 @@ const AuthenticatedAdminEquipeRoute =
     path: '/equipe',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminInicioRoute =
+  AuthenticatedAdminInicioRouteImport.update({
+    id: '/inicio',
+    path: '/inicio',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminPacotesRoute =
   AuthenticatedAdminPacotesRouteImport.update({
     id: '/pacotes',
     path: '/pacotes',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminPerfilRoute =
+  AuthenticatedAdminPerfilRouteImport.update({
+    id: '/perfil',
+    path: '/perfil',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminTrilhasRoute =
@@ -218,11 +238,14 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/acompanhamento': typeof AuthenticatedAdminAcompanhamentoRoute
+  '/admin/ajuda': typeof AuthenticatedAdminAjudaRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
   '/admin/equipe': typeof AuthenticatedAdminEquipeRoute
+  '/admin/inicio': typeof AuthenticatedAdminInicioRoute
   '/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
+  '/admin/perfil': typeof AuthenticatedAdminPerfilRoute
   '/admin/trilhas': typeof AuthenticatedAdminTrilhasRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
@@ -247,11 +270,14 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/acompanhamento': typeof AuthenticatedAdminAcompanhamentoRoute
+  '/admin/ajuda': typeof AuthenticatedAdminAjudaRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
   '/admin/equipe': typeof AuthenticatedAdminEquipeRoute
+  '/admin/inicio': typeof AuthenticatedAdminInicioRoute
   '/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
+  '/admin/perfil': typeof AuthenticatedAdminPerfilRoute
   '/admin/trilhas': typeof AuthenticatedAdminTrilhasRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
@@ -280,11 +306,14 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/acompanhamento': typeof AuthenticatedAdminAcompanhamentoRoute
+  '/_authenticated/admin/ajuda': typeof AuthenticatedAdminAjudaRoute
   '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/_authenticated/admin/conteudos': typeof AuthenticatedAdminConteudosRoute
   '/_authenticated/admin/equipe': typeof AuthenticatedAdminEquipeRoute
+  '/_authenticated/admin/inicio': typeof AuthenticatedAdminInicioRoute
   '/_authenticated/admin/pacotes': typeof AuthenticatedAdminPacotesRoute
+  '/_authenticated/admin/perfil': typeof AuthenticatedAdminPerfilRoute
   '/_authenticated/admin/trilhas': typeof AuthenticatedAdminTrilhasRoute
   '/_authenticated/app/diario': typeof AuthenticatedAppDiarioRoute
   '/_authenticated/app/historico': typeof AuthenticatedAppHistoricoRoute
@@ -313,11 +342,14 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/acompanhamento'
+    | '/admin/ajuda'
     | '/admin/auditoria'
     | '/admin/clientes'
     | '/admin/conteudos'
     | '/admin/equipe'
+    | '/admin/inicio'
     | '/admin/pacotes'
+    | '/admin/perfil'
     | '/admin/trilhas'
     | '/app/diario'
     | '/app/historico'
@@ -342,11 +374,14 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/acompanhamento'
+    | '/admin/ajuda'
     | '/admin/auditoria'
     | '/admin/clientes'
     | '/admin/conteudos'
     | '/admin/equipe'
+    | '/admin/inicio'
     | '/admin/pacotes'
+    | '/admin/perfil'
     | '/admin/trilhas'
     | '/app/diario'
     | '/app/historico'
@@ -374,11 +409,14 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/acompanhamento'
+    | '/_authenticated/admin/ajuda'
     | '/_authenticated/admin/auditoria'
     | '/_authenticated/admin/clientes'
     | '/_authenticated/admin/conteudos'
     | '/_authenticated/admin/equipe'
+    | '/_authenticated/admin/inicio'
     | '/_authenticated/admin/pacotes'
+    | '/_authenticated/admin/perfil'
     | '/_authenticated/admin/trilhas'
     | '/_authenticated/app/diario'
     | '/_authenticated/app/historico'
@@ -499,6 +537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAcompanhamentoRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/ajuda': {
+      id: '/_authenticated/admin/ajuda'
+      path: '/ajuda'
+      fullPath: '/admin/ajuda'
+      preLoaderRoute: typeof AuthenticatedAdminAjudaRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/auditoria': {
       id: '/_authenticated/admin/auditoria'
       path: '/auditoria'
@@ -527,11 +572,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminEquipeRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/inicio': {
+      id: '/_authenticated/admin/inicio'
+      path: '/inicio'
+      fullPath: '/admin/inicio'
+      preLoaderRoute: typeof AuthenticatedAdminInicioRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/pacotes': {
       id: '/_authenticated/admin/pacotes'
       path: '/pacotes'
       fullPath: '/admin/pacotes'
       preLoaderRoute: typeof AuthenticatedAdminPacotesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/perfil': {
+      id: '/_authenticated/admin/perfil'
+      path: '/perfil'
+      fullPath: '/admin/perfil'
+      preLoaderRoute: typeof AuthenticatedAdminPerfilRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/trilhas': {
@@ -623,11 +682,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAcompanhamentoRoute: typeof AuthenticatedAdminAcompanhamentoRoute
+  AuthenticatedAdminAjudaRoute: typeof AuthenticatedAdminAjudaRoute
   AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
   AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
   AuthenticatedAdminConteudosRoute: typeof AuthenticatedAdminConteudosRoute
   AuthenticatedAdminEquipeRoute: typeof AuthenticatedAdminEquipeRoute
+  AuthenticatedAdminInicioRoute: typeof AuthenticatedAdminInicioRoute
   AuthenticatedAdminPacotesRoute: typeof AuthenticatedAdminPacotesRoute
+  AuthenticatedAdminPerfilRoute: typeof AuthenticatedAdminPerfilRoute
   AuthenticatedAdminTrilhasRoute: typeof AuthenticatedAdminTrilhasRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminClienteClienteIdRoute: typeof AuthenticatedAdminClienteClienteIdRoute
@@ -635,11 +697,14 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAcompanhamentoRoute: AuthenticatedAdminAcompanhamentoRoute,
+  AuthenticatedAdminAjudaRoute: AuthenticatedAdminAjudaRoute,
   AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
   AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
   AuthenticatedAdminConteudosRoute: AuthenticatedAdminConteudosRoute,
   AuthenticatedAdminEquipeRoute: AuthenticatedAdminEquipeRoute,
+  AuthenticatedAdminInicioRoute: AuthenticatedAdminInicioRoute,
   AuthenticatedAdminPacotesRoute: AuthenticatedAdminPacotesRoute,
+  AuthenticatedAdminPerfilRoute: AuthenticatedAdminPerfilRoute,
   AuthenticatedAdminTrilhasRoute: AuthenticatedAdminTrilhasRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminClienteClienteIdRoute:
