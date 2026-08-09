@@ -19,8 +19,8 @@ import { formatarData } from "@/lib/raiz-format";
 import { cabecalhoDoCaminho, iniciaisDe } from "./navegacao";
 
 type Props = {
-  nome?: string | null;
-  email?: string | null;
+  nome?: string | null | undefined;
+  email?: string | null | undefined;
   termoBusca: string;
   onBusca: (valor: string) => void;
 };
