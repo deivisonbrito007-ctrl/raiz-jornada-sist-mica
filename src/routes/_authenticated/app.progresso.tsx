@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Flame, Sprout, Target, Check, Minus, Plus, FileDown, Loader2, History } from "lucide-react";
 import { toast } from "sonner";
+import { CHAVES } from "@/lib/cache-chaves";
+import { useMeuContexto } from "@/hooks/use-meu-contexto";
 import {
   getMinhaBiblioteca,
   getMeuContexto,
