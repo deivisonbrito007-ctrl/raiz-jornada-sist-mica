@@ -61,6 +61,7 @@ export async function avisarCliente(aviso: AvisoCliente): Promise<ResultadoAviso
         titulo: aviso.titulo,
         mensagem: aviso.mensagem,
         destino,
+        tipo: "aviso",
       });
       push = resultado.enviados;
       if (resultado.removidos.length > 0) {
