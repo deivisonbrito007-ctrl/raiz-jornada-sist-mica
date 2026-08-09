@@ -525,6 +525,7 @@ function Player() {
                   ref={mediaRef as React.RefObject<HTMLVideoElement>}
                   src={data.url}
                   className="w-full rounded-2xl bg-black"
+                  preload="metadata"
                   playsInline
                   onPlay={() => setTocando(true)}
                   onPause={() => {
@@ -548,6 +549,7 @@ function Player() {
                   <audio
                     ref={mediaRef as React.RefObject<HTMLAudioElement>}
                     src={data.url}
+                    preload="metadata"
                     onPlay={() => setTocando(true)}
                     onPause={() => {
                       setTocando(false);
