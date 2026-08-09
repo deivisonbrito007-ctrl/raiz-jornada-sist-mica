@@ -229,24 +229,62 @@ function AdminClientes() {
         )}
       </div>
 
+      <PedidosAcompanhamento />
+
+      <div
+        role="group"
+        aria-label="Filtrar clientes por modo de uso"
+        className="flex flex-wrap gap-2"
+      >
+        {(["todos", ...MODOS_USO] as const).map((valor) => {
+          const ativo = modoFiltro === valor;
+          const rotulo =
+            valor === "todos"
+              ? `Todos (${todosClientes.length})`
+              : `${MODO_LABEL[valor]} (${contagemModo(valor)})`;
+          return (
+            <button
+              key={valor}
+              type="button"
+              aria-pressed={ativo}
+              onClick={() => setModoFiltro(valor)}
+              className={`min-h-11 rounded-full border px-4 text-sm transition-colors ${
+                ativo
+                  ? "border-floresta bg-floresta text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              {rotulo}
+            </button>
+          );
+        })}
+      </div>
+
       {isLoading && (
         <p role="status" className="text-sm text-muted-foreground">
           Carregando clientes...
         </p>
       )}
 
-      {!isLoading && (data?.clientes ?? []).length === 0 && (
+      {!isLoading && todosClientes.length === 0 && (
         <div className="rounded-3xl border border-dashed border-border p-8 text-sm text-muted-foreground">
           <p className="font-medium text-foreground">Nenhum cliente vinculado ainda</p>
           <p className="mt-1">
             Envie um convite acima. O vínculo é criado automaticamente quando a pessoa entra pela
-            primeira vez.
+            primeira vez. Quem se cadastra por conta própria aparece aqui como “
+            {MODO_LABEL.autoguiado}”.
           </p>
         </div>
       )}
 
+      {!isLoading && todosClientes.length > 0 && clientesVisiveis.length === 0 && (
+        <p className="rounded-2xl bg-secondary/50 p-6 text-sm text-muted-foreground">
+          Nenhuma pessoa neste modo de uso.
+        </p>
+      )}
+
       <ul className="space-y-4">
-        {(data?.clientes ?? []).map((cliente) => {
+        {clientesVisiveis.map((cliente) => {
           const atribuicoes = (data?.atribuicoes ?? []).filter((a) => a.cliente_id === cliente.id);
           return (
             <li
