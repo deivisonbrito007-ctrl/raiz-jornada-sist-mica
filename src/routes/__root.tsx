@@ -12,6 +12,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { iniciarDiagnostico, medirNavegacao } from "@/lib/diagnostico";
 
 function NotFoundComponent() {
   return (
@@ -114,6 +115,23 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+
+  useEffect(() => {
+    // diagnóstico interno: mede tempo por rota e conta requisições (só agregados)
+    iniciarDiagnostico();
+    let fechar: (() => void) | null = null;
+    const aoIniciar = router.subscribe("onBeforeLoad", ({ toLocation }) => {
+      fechar = medirNavegacao(toLocation.pathname);
+    });
+    const aoTerminar = router.subscribe("onResolved", () => {
+      fechar?.();
+      fechar = null;
+    });
+    return () => {
+      aoIniciar();
+      aoTerminar();
+    };
+  }, [router]);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
