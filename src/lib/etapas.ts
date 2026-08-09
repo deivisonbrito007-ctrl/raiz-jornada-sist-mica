@@ -74,15 +74,27 @@ export const STATUS_TRILHA_LABEL: Record<StatusTrilha, string> = {
   arquivado: "Arquivado",
 };
 
-export const STATUS_ATRIBUICAO = ["ativa", "pausada", "concluida", "encerrada"] as const;
+export const STATUS_ATRIBUICAO = [
+  "rascunho",
+  "aguardando_inicio",
+  "em_andamento",
+  "aguardando_revisao",
+  "pausado",
+  "concluido",
+  "encerrado",
+] as const;
 export type StatusAtribuicao = (typeof STATUS_ATRIBUICAO)[number];
 
 export const STATUS_ATRIBUICAO_LABEL: Record<StatusAtribuicao, string> = {
-  ativa: "Ativa",
-  pausada: "Pausada",
-  concluida: "Concluída",
-  encerrada: "Encerrada",
+  rascunho: "Rascunho",
+  aguardando_inicio: "Aguardando início",
+  em_andamento: "Em andamento",
+  aguardando_revisao: "Aguardando revisão",
+  pausado: "Pausado",
+  concluido: "Concluído",
+  encerrado: "Encerrado",
 };
+
 
 export const FREQUENCIAS = [
   "Livre, no seu ritmo",
