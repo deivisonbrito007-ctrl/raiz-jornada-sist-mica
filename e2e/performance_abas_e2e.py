@@ -135,7 +135,9 @@ async def abrir_menu_se_preciso(page, alvo) -> None:
         await page.wait_for_timeout(600)
 
 
-async def medir_troca(page, rotulo: str, rota: str, erros: list[str]) -> float:
+async def medir_troca(
+    page, rotulo: str, rota: str, erros: list[str], gaveta: bool = False
+) -> float:
     if rotulo.startswith("/"):
         alvo = page.locator(f'a[href="{rotulo}"]').first
     else:
@@ -145,9 +147,12 @@ async def medir_troca(page, rotulo: str, rota: str, erros: list[str]) -> float:
     await alvo.scroll_into_view_if_needed()
     antes = len(erros)
     inicio = time.perf_counter()
-    # force=True evita o hit-test do Playwright (a gaveta do painel se
-    # sobrepõe durante a animação) sem alterar o que é medido: o clique real.
-    await alvo.click(force=True)
+    if gaveta:
+        # na gaveta animada do painel o hit-test por coordenadas é instável;
+        # dispara-se o mesmo evento de clique que o React/Router escuta.
+        await alvo.dispatch_event("click")
+    else:
+        await alvo.click()
     await esperar_estavel(page, rota)
     decorrido = (time.perf_counter() - inicio) * 1000
     if len(erros) > antes:
@@ -168,7 +173,9 @@ def resumo(amostras: list[float]) -> dict:
     }
 
 
-async def medir_grupo(page, abas, repeticoes: int, erros: list[str]) -> dict:
+async def medir_grupo(
+    page, abas, repeticoes: int, erros: list[str], gaveta: bool = False
+) -> dict:
     coleta: dict[str, list[float]] = {chave: [] for chave, _, _ in abas}
     # volta inicial para a primeira aba do grupo (não conta na medição)
     primeira = abas[0]
@@ -178,7 +185,9 @@ async def medir_grupo(page, abas, repeticoes: int, erros: list[str]) -> dict:
         for chave, rotulo, rota in abas:
             if page.url.endswith(rota):
                 continue
-            coleta[chave].append(await medir_troca(page, rotulo, rota, erros))
+            coleta[chave].append(
+                await medir_troca(page, rotulo, rota, erros, gaveta=gaveta)
+            )
     return {chave: resumo(v) for chave, v in coleta.items() if v}
 
 
@@ -236,7 +245,9 @@ async def main() -> None:
         if "/admin" in page.url:
             try:
                 medidas.update(
-                    await medir_grupo(page, ABAS_PAINEL, args.repeticoes, erros)
+                    await medir_grupo(
+                        page, ABAS_PAINEL, args.repeticoes, erros, gaveta=True
+                    )
                 )
             except Exception as exc:  # painel indisponível para esta conta
                 print(f"  (painel ignorado: {exc})")
