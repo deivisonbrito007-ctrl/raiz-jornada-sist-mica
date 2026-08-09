@@ -122,8 +122,20 @@ async def esperar_estavel(page, rota: str, tempo_limite: float = 15.0) -> None:
 
 
 
+async def abrir_menu_se_preciso(page, alvo) -> None:
+    """No painel em celular a navegação fica num menu recolhido."""
+    if await alvo.is_visible():
+        return
+    gatilho = page.get_by_role("button", name="Abrir ou fechar o menu").first
+    if await gatilho.count() and await gatilho.is_visible():
+        await gatilho.click()
+        await alvo.wait_for(state="visible", timeout=5_000)
+
+
 async def medir_troca(page, rotulo: str, rota: str, erros: list[str]) -> float:
     alvo = page.get_by_role("link", name=rotulo, exact=False).first
+    await alvo.wait_for(timeout=10_000)
+    await abrir_menu_se_preciso(page, alvo)
     await alvo.wait_for(state="visible", timeout=10_000)
     antes = len(erros)
     inicio = time.perf_counter()
@@ -133,6 +145,7 @@ async def medir_troca(page, rotulo: str, rota: str, erros: list[str]) -> float:
     if len(erros) > antes:
         raise AssertionError(f"erro de console ao abrir {rotulo}: {erros[antes]}")
     return decorrido
+
 
 
 def resumo(amostras: list[float]) -> dict:
