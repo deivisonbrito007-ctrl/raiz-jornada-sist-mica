@@ -353,6 +353,25 @@ function AdminClientes() {
                     <Sprout className="h-4 w-4" />
                     Atribuir trilha
                   </Button>
+                  {cliente.modo === "acompanhado" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="min-h-11 rounded-full"
+                      disabled={mutTornarAutoguiado.isPending}
+                      onClick={() => {
+                        if (
+                          !window.confirm(
+                            `Encerrar o acompanhamento de ${cliente.nome || cliente.email}? A pessoa passa a usar por conta própria e mantém o histórico.`,
+                          )
+                        )
+                          return;
+                        mutTornarAutoguiado.mutate({ data: { clienteId: cliente.id, motivo: "" } });
+                      }}
+                    >
+                      Encerrar acompanhamento
+                    </Button>
+                  )}
                 </div>
               </div>
 
