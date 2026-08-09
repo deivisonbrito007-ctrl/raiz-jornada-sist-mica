@@ -28,6 +28,9 @@ import {
   type StatusAtribuicao,
 } from "@/lib/etapas";
 import { formatarData } from "@/lib/raiz-format";
+import { PedidosAcompanhamento } from "@/components/painel/pedidos-acompanhamento";
+import { adminTornarAutoguiado } from "@/lib/acompanhamento.functions";
+import { MODO_LABEL, MODOS_USO, type ModoUso } from "@/lib/modo-uso";
 
 export const Route = createFileRoute("/_authenticated/admin/clientes")({
   head: () => ({
