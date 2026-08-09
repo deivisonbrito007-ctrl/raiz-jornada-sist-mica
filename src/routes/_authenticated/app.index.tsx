@@ -42,7 +42,7 @@ function Biblioteca() {
   const [tipoFiltro, setTipoFiltro] = useState("todos");
   const [statusFiltro, setStatusFiltro] = useState("todos");
 
-  const termo = busca.trim().toLowerCase();
+  const termo = useValorAtrasado(busca.trim().toLowerCase(), 300);
   const filtrando =
     termo !== "" || tipoFiltro !== "todos" || statusFiltro !== "todos" || eixoFiltro !== "todos";
 
