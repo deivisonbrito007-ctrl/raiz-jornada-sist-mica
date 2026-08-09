@@ -1,6 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { getMeuContexto } from "@/lib/raiz.functions";
+import { useMeuContexto } from "@/hooks/use-meu-contexto";
 import { ehPermissao, type Permissao } from "@/lib/permissoes";
 
 /**
@@ -11,12 +9,7 @@ import { ehPermissao, type Permissao } from "@/lib/permissoes";
  * fonte de verdade — isto é só navegação e clareza.
  */
 export function useMinhasPermissoes() {
-  const fetchContexto = useServerFn(getMeuContexto);
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["meu-contexto"],
-    queryFn: () => fetchContexto(),
-    staleTime: 10_000,
-  });
+  const { data, isLoading, isError } = useMeuContexto();
 
   const ehTerapeuta = data?.papel === "terapeuta";
   const permissoes = (data?.permissoes ?? []).filter((p): p is Permissao => ehPermissao(p));

@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getMeuContexto } from "@/lib/raiz.functions";
+import { limparCachePersistido } from "@/lib/cache-persistente";
+import { useMeuContexto } from "@/hooks/use-meu-contexto";
 import { Button } from "@/components/ui/button";
 import { PERMISSAO_LABEL, ehPermissao } from "@/lib/permissoes";
 import { iniciaisDe } from "@/components/painel/navegacao";
@@ -16,8 +16,7 @@ export const Route = createFileRoute("/_authenticated/admin/perfil")({
 function AdminPerfil() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const fetchContexto = useServerFn(getMeuContexto);
-  const { data } = useQuery({ queryKey: ["meu-contexto"], queryFn: () => fetchContexto() });
+  const { data } = useMeuContexto();
 
   const perfil = data?.perfil;
   const ehTerapeuta = data?.papel === "terapeuta";
@@ -26,6 +25,7 @@ function AdminPerfil() {
   async function sair() {
     await queryClient.cancelQueries();
     queryClient.clear();
+    limparCachePersistido();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }

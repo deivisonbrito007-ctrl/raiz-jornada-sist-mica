@@ -8,6 +8,7 @@ import { getConteudo, listarDiario, salvarDiario } from "@/lib/raiz.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatarData } from "@/lib/raiz-format";
+import { CHAVES, invalidarPorEvento } from "@/lib/cache-chaves";
 
 export const Route = createFileRoute("/_authenticated/app/diario")({
   validateSearch: z.object({ conteudoId: z.string().uuid().optional() }),
@@ -32,7 +33,7 @@ function Diario() {
   const [enviando, setEnviando] = useState(false);
   const [anuncio, setAnuncio] = useState("");
 
-  const { data: entradas } = useQuery({ queryKey: ["diario"], queryFn: () => fetchDiario() });
+  const { data: entradas } = useQuery({ queryKey: CHAVES.diario, queryFn: () => fetchDiario() });
   const { data: conteudo } = useQuery({
     queryKey: ["conteudo", conteudoId],
     queryFn: () => fetchConteudo({ data: { conteudoId: conteudoId! } }),
@@ -50,8 +51,7 @@ function Diario() {
     try {
       await salvar({ data: { texto, conteudoId: conteudoId ?? null } });
       setTexto("");
-      queryClient.invalidateQueries({ queryKey: ["diario"] });
-      queryClient.invalidateQueries({ queryKey: ["historico"] });
+      await invalidarPorEvento(queryClient, "aoEscreverDiario");
       toast.success("Reflexão guardada.");
       setAnuncio("Reflexão guardada.");
     } catch (erro) {

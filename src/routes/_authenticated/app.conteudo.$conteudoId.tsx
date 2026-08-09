@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { CHAVES, chaveDe, invalidarPorEvento } from "@/lib/cache-chaves";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -326,8 +327,7 @@ function Player() {
       toast.error("Não foi possível renovar o acesso à mídia.");
     } finally {
       setRenovando(false);
-      queryClient.invalidateQueries({ queryKey: ["biblioteca"] });
-      queryClient.invalidateQueries({ queryKey: ["trilha"] });
+      void invalidarPorEvento(queryClient, "aoRenovarAcesso");
     }
   }
 
@@ -394,9 +394,8 @@ function Player() {
   async function registrar(status: "em_andamento" | "concluido") {
     if (bloqueio) return;
     await salvarProgresso({ data: { conteudoId, status } });
-    queryClient.invalidateQueries({ queryKey: ["biblioteca"] });
-    queryClient.invalidateQueries({ queryKey: ["conteudo", conteudoId] });
-    queryClient.invalidateQueries({ queryKey: ["trilha"] });
+    queryClient.invalidateQueries({ queryKey: chaveDe(CHAVES.conteudo, conteudoId) });
+    await invalidarPorEvento(queryClient, "aoConcluirPratica");
   }
 
   function alternar() {

@@ -1,13 +1,14 @@
 import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { podeAdministrarEmCache } from "@/lib/acesso-admin";
-import { getMeuContexto } from "@/lib/raiz.functions";
+import { limparCachePersistido } from "@/lib/cache-persistente";
+import { useMeuContexto } from "@/hooks/use-meu-contexto";
 import { useVigiaPermissoes } from "@/hooks/use-vigia-permissoes";
+
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { SidebarTerapeuta } from "@/components/painel/sidebar-terapeuta";
 import { CabecalhoPainel } from "@/components/painel/cabecalho-painel";
@@ -27,14 +28,10 @@ export const Route = createFileRoute("/_authenticated/admin")({
 function AdminLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const fetchContexto = useServerFn(getMeuContexto);
-  const { data: contexto } = useQuery({
-    queryKey: ["meu-contexto"],
-    queryFn: () => fetchContexto(),
-    // O vigia em tempo real (useVigiaPermissoes) já derruba o painel na hora em
-    // que o acesso muda, então não é preciso pesquisar a cada 15s nem revalidar
-    // em cada montagem — isso competia com cada troca de aba.
-    staleTime: 60_000,
+  // Mesma consulta do app do cliente (chave única): uma busca serve as duas
+  // telas. O vigia em tempo real (useVigiaPermissoes) derruba o painel na hora
+  // em que o acesso muda; a revalidação periódica é só uma rede de segurança.
+  const { data: contexto } = useMeuContexto({
     refetchInterval: 5 * 60_000,
     refetchOnWindowFocus: true,
   });
@@ -53,6 +50,7 @@ function AdminLayout() {
     if (!contexto) return;
     if (contexto.podeAdministrar) return;
     queryClient.clear();
+    limparCachePersistido();
     toast.error("Seu acesso administrativo foi removido.");
     navigate({ to: "/app", replace: true });
   }, [contexto, navigate, queryClient]);

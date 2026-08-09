@@ -1,17 +1,18 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { CHAVES, GRUPOS, chaveDe } from "@/lib/cache-chaves";
 
 export const CANAL_LIBERACOES = "raiz-liberacoes";
 export const CANAL_CONTEUDOS = "raiz-conteudos";
 export const CANAL_EIXOS = "raiz-eixos";
 
 /** chaves de cache que dependem de liberações e do acervo de práticas */
-const CHAVES_DEPENDENTES = ["biblioteca", "trilha", "conteudo", "contexto", "progresso", "historico"];
+export const CHAVES_DEPENDENTES = GRUPOS.aoMudarLiberacoes.map((c) => c[0]);
 
 function invalidarTudo(queryClient: QueryClient) {
-  for (const chave of CHAVES_DEPENDENTES) {
-    queryClient.invalidateQueries({ queryKey: [chave] });
+  for (const chave of GRUPOS.aoMudarLiberacoes) {
+    queryClient.invalidateQueries({ queryKey: chave });
   }
 }
 
@@ -22,8 +23,8 @@ function invalidarTudo(queryClient: QueryClient) {
  * volta (cache do TanStack Query) ou tentar retomar a posição salva localmente.
  */
 export function removerPraticaDoCache(queryClient: QueryClient, conteudoId: string) {
-  queryClient.removeQueries({ queryKey: ["conteudo", conteudoId] });
-  queryClient.removeQueries({ queryKey: ["progresso", conteudoId] });
+  queryClient.removeQueries({ queryKey: chaveDe(CHAVES.conteudo, conteudoId) });
+  queryClient.removeQueries({ queryKey: chaveDe(CHAVES.progresso, conteudoId) });
   invalidarTudo(queryClient);
 
   if (typeof window === "undefined") return;
@@ -45,7 +46,7 @@ export function removerPraticaDoCache(queryClient: QueryClient, conteudoId: stri
  * Apaga do cache qualquer resquício de uma sequência (eixo) removida.
  */
 export function removerSequenciaDoCache(queryClient: QueryClient, eixoId: string) {
-  queryClient.removeQueries({ queryKey: ["trilha", eixoId] });
+  queryClient.removeQueries({ queryKey: chaveDe(CHAVES.trilha, eixoId) });
   invalidarTudo(queryClient);
 }
 

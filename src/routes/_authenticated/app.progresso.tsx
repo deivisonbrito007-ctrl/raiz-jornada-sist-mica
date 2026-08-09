@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Flame, Sprout, Target, Check, Minus, Plus, FileDown, Loader2, History } from "lucide-react";
 import { toast } from "sonner";
+import { CHAVES } from "@/lib/cache-chaves";
+import { useMeuContexto } from "@/hooks/use-meu-contexto";
 import {
   getMinhaBiblioteca,
   getMeuContexto,
@@ -37,14 +39,14 @@ function Progresso() {
     error: erroBiblioteca,
     refetch: recarregarBiblioteca,
   } = useQuery({
-    queryKey: ["biblioteca"],
+    queryKey: CHAVES.biblioteca,
     queryFn: () => fetchBiblioteca(),
   });
-  const { data: contexto } = useQuery({ queryKey: ["contexto"], queryFn: () => fetchContexto() });
+  const { data: contexto } = useMeuContexto();
 
   const mutarMeta = useMutation({
     mutationFn: (meta: number) => salvarMeta({ data: { meta } }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contexto"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: CHAVES.contexto }),
   });
 
   const eixos = (data?.eixos ?? []).filter((e) => e.liberado);
