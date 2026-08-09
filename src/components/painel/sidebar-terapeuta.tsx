@@ -15,6 +15,7 @@ import {
 import { RaizLogo } from "@/components/raiz-logo";
 import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
 import { GRUPOS_PAINEL, itemAtual } from "./navegacao";
+import { usePreAquecerPainel } from "./use-pre-aquecer-painel";
 
 export function SidebarTerapeuta() {
   const { state, isMobile, setOpenMobile } = useSidebar();
@@ -22,6 +23,7 @@ export function SidebarTerapeuta() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { pode, ehTerapeuta, carregando } = useMinhasPermissoes();
   const atual = itemAtual(pathname);
+  const preAquecer = usePreAquecerPainel();
 
   const grupos = GRUPOS_PAINEL.map((grupo) => ({
     ...grupo,
@@ -72,6 +74,8 @@ export function SidebarTerapeuta() {
                         <Link
                           to={item.to}
                           onClick={() => setOpenMobile(false)}
+                          onPointerEnter={() => preAquecer(item.to)}
+                          onFocus={() => preAquecer(item.to)}
                           {...(ativo ? { "aria-current": "page" as const } : {})}
                         >
                           <item.icone aria-hidden="true" />
