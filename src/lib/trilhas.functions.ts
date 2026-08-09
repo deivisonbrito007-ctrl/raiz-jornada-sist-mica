@@ -338,9 +338,13 @@ export const adminListarClientes = createServerFn({ method: "GET" })
         telefone: a.telefone,
         observacoes: a.observacoes,
         status: a.status,
+        modo: normalizarModo(a.modo),
+        modoDesde: a.modo_desde ?? null,
+        temTerapeuta: Boolean(a.terapeuta_id),
         desde: perfil?.created_at ?? null,
       };
     });
+
 
     return {
       clientes,
