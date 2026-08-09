@@ -62,10 +62,11 @@ ABAS_CLIENTE = [
 ]
 
 ABAS_PAINEL = [
-    ("painel:inicio", "Início", "/admin/inicio"),
-    ("painel:clientes", "Clientes", "/admin/clientes"),
-    ("painel:trilhas", "Trilhas", "/admin/trilhas"),
-    ("painel:acompanhamento", "Acompanhamento", "/admin/acompanhamento"),
+    ("painel:inicio", "/admin/inicio", "/admin/inicio"),
+    ("painel:planos", "/admin/clientes", "/admin/clientes"),
+    ("painel:trilhas", "/admin/trilhas", "/admin/trilhas"),
+    ("painel:conteudos", "/admin/conteudos", "/admin/conteudos"),
+    ("painel:acompanhamento", "/admin/acompanhamento", "/admin/acompanhamento"),
 ]
 
 
@@ -133,7 +134,10 @@ async def abrir_menu_se_preciso(page, alvo) -> None:
 
 
 async def medir_troca(page, rotulo: str, rota: str, erros: list[str]) -> float:
-    alvo = page.get_by_role("link", name=rotulo, exact=False).first
+    if rotulo.startswith("/"):
+        alvo = page.locator(f'a[href="{rotulo}"]').first
+    else:
+        alvo = page.get_by_role("link", name=rotulo, exact=False).first
     await alvo.wait_for(timeout=10_000)
     await abrir_menu_se_preciso(page, alvo)
     await alvo.wait_for(state="visible", timeout=10_000)
