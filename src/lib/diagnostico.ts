@@ -25,7 +25,7 @@ export type Agregado = {
   erros: number;
   media: number;
   p50: number;
-  p95: number
+  p95: number;
   max: number;
   ultimaEm: number;
 };
@@ -39,8 +39,10 @@ const ouvintes = new Set<() => void>();
 
 let inicioSessao = Date.now();
 let instrumentado = false;
+let cache: Diagnostico | null = null;
 
 function avisar() {
+  cache = null;
   for (const ouvinte of ouvintes) ouvinte();
 }
 
@@ -131,8 +133,6 @@ export type Diagnostico = {
   desdeEm: number;
 };
 
-let cache: Diagnostico | null = null;
-
 export function lerDiagnostico(): Diagnostico {
   if (cache) return cache;
   const listaRequisicoes = agregar(requisicoes);
@@ -157,11 +157,6 @@ export function limparDiagnostico() {
   inicioSessao = Date.now();
   avisar();
 }
-
-// invalida o cache derivado sempre que algo novo é registrado
-ouvintes.add(() => {
-  cache = null;
-});
 
 /**
  * Liga a coleta: mede o carregamento inicial e envolve o `fetch` para contar
