@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
+import { CarregandoRota } from "./components/carregando-rota";
 
 export const getRouter = () => {
   const queryClient = new QueryClient({
@@ -23,6 +24,14 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
+    // Baixa o código (e roda os guards) já ao passar o mouse/foco no link,
+    // então o clique troca de aba praticamente na hora.
+    defaultPreload: "intent",
+    defaultPreloadDelay: 60,
+    // Resposta visual imediata enquanto a próxima tela chega.
+    defaultPendingMs: 150,
+    defaultPendingMinMs: 200,
+    defaultPendingComponent: CarregandoRota,
   });
 
   return router;
