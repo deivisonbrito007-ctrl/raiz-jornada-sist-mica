@@ -84,6 +84,7 @@ async def restaurar_sessao(context, page, session, storage_key, cookies_json) ->
 async def esperar_estavel(page, rota: str, tempo_limite: float = 15.0) -> None:
     """Espera a URL bater, o conteúdo aparecer e não haver skeleton/pendente."""
     inicio = time.monotonic()
+    estado: dict = {}
     while time.monotonic() - inicio < tempo_limite:
         estado = await page.evaluate(
             """(rota) => {
