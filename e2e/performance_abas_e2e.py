@@ -142,6 +142,7 @@ async def medir_troca(page, rotulo: str, rota: str, erros: list[str]) -> float:
         alvo = page.get_by_role("link", name=rotulo, exact=False).first
     await abrir_menu_se_preciso(page, alvo)
     await alvo.wait_for(state="visible", timeout=10_000)
+    await alvo.scroll_into_view_if_needed()
     antes = len(erros)
     inicio = time.perf_counter()
     # force=True evita o hit-test do Playwright (a gaveta do painel se
