@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -76,6 +76,14 @@ export type MudancaSincronia =
 
 export function useSincronizarLiberacoes(onMudanca?: (mudanca?: MudancaSincronia) => void) {
   const queryClient = useQueryClient();
+  // Sufixo único por instância: duas telas montadas ao mesmo tempo (ou uma
+  // remontagem antes do canal antigo fechar) não podem disputar o mesmo tópico,
+  // senão o Realtime recusa os callbacks ("after subscribe()").
+  const instanciaRef = useRef<string>("");
+  if (!instanciaRef.current) {
+    instanciaRef.current = Math.random().toString(36).slice(2, 10);
+  }
+  const instancia = instanciaRef.current;
 
   useEffect(() => {
     let ativo = true;
@@ -105,7 +113,7 @@ export function useSincronizarLiberacoes(onMudanca?: (mudanca?: MudancaSincronia
 
       canais.push(
         supabase
-          .channel(`${CANAL_LIBERACOES}-${uid}`)
+          .channel(`${CANAL_LIBERACOES}-${uid}-${instancia}`)
           .on(
             "postgres_changes",
             {
@@ -134,7 +142,7 @@ export function useSincronizarLiberacoes(onMudanca?: (mudanca?: MudancaSincronia
 
       canais.push(
         supabase
-          .channel(`${CANAL_CONTEUDOS}-${uid}`)
+          .channel(`${CANAL_CONTEUDOS}-${uid}-${instancia}`)
           .on(
             "postgres_changes",
             { event: "*", schema: "public", table: "conteudos" },
@@ -154,7 +162,7 @@ export function useSincronizarLiberacoes(onMudanca?: (mudanca?: MudancaSincronia
 
       canais.push(
         supabase
-          .channel(`${CANAL_EIXOS}-${uid}`)
+          .channel(`${CANAL_EIXOS}-${uid}-${instancia}`)
           .on(
             "postgres_changes",
             { event: "*", schema: "public", table: "eixos" },
@@ -194,5 +202,5 @@ export function useSincronizarLiberacoes(onMudanca?: (mudanca?: MudancaSincronia
       for (const canal of canais) void supabase.removeChannel(canal);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryClient]);
+  }, [queryClient, instancia]);
 }
