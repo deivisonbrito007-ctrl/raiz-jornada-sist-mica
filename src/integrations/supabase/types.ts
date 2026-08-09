@@ -286,6 +286,8 @@ export type Database = {
       clientes_acesso: {
         Row: {
           created_at: string
+          modo: Database["public"]["Enums"]["modo_uso"]
+          modo_desde: string
           observacoes: string
           status: Database["public"]["Enums"]["acesso_status"]
           telefone: string
@@ -295,6 +297,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          modo?: Database["public"]["Enums"]["modo_uso"]
+          modo_desde?: string
           observacoes?: string
           status?: Database["public"]["Enums"]["acesso_status"]
           telefone?: string
@@ -304,6 +308,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          modo?: Database["public"]["Enums"]["modo_uso"]
+          modo_desde?: string
           observacoes?: string
           status?: Database["public"]["Enums"]["acesso_status"]
           telefone?: string
@@ -837,6 +843,7 @@ export type Database = {
           nome: string
           preco_centavos: number
           tipo_cobranca: Database["public"]["Enums"]["tipo_cobranca"]
+          trilhas_incluidas: string[]
         }
         Insert: {
           created_at?: string
@@ -846,6 +853,7 @@ export type Database = {
           nome: string
           preco_centavos?: number
           tipo_cobranca?: Database["public"]["Enums"]["tipo_cobranca"]
+          trilhas_incluidas?: string[]
         }
         Update: {
           created_at?: string
@@ -855,6 +863,7 @@ export type Database = {
           nome?: string
           preco_centavos?: number
           tipo_cobranca?: Database["public"]["Enums"]["tipo_cobranca"]
+          trilhas_incluidas?: string[]
         }
         Relationships: []
       }
@@ -1018,6 +1027,42 @@ export type Database = {
           },
         ]
       }
+      solicitacoes_acompanhamento: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          id: string
+          mensagem: string
+          respondido_em: string | null
+          respondido_por: string | null
+          resposta: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          id?: string
+          mensagem?: string
+          respondido_em?: string | null
+          respondido_por?: string | null
+          resposta?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          id?: string
+          mensagem?: string
+          respondido_em?: string | null
+          respondido_por?: string | null
+          resposta?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       solicitacoes_apoio: {
         Row: {
           atribuicao_id: string | null
@@ -1075,6 +1120,7 @@ export type Database = {
           created_at: string
           eixo_id: string
           id: string
+          modos: Database["public"]["Enums"]["modo_uso"][]
           nivel: Database["public"]["Enums"]["nivel_profundidade"]
           nome: string
           objetivo: string
@@ -1093,6 +1139,7 @@ export type Database = {
           created_at?: string
           eixo_id: string
           id?: string
+          modos?: Database["public"]["Enums"]["modo_uso"][]
           nivel?: Database["public"]["Enums"]["nivel_profundidade"]
           nome: string
           objetivo?: string
@@ -1111,6 +1158,7 @@ export type Database = {
           created_at?: string
           eixo_id?: string
           id?: string
+          modos?: Database["public"]["Enums"]["modo_uso"][]
           nivel?: Database["public"]["Enums"]["nivel_profundidade"]
           nome?: string
           objetivo?: string
@@ -1188,6 +1236,10 @@ export type Database = {
         Returns: boolean
       }
       trilha_atribuida: { Args: { _trilha: string }; Returns: boolean }
+      trilha_liberada_autoguiada: {
+        Args: { _cliente_id: string; _trilha: string }
+        Returns: boolean
+      }
     }
     Enums: {
       acesso_status: "ativo" | "pausado" | "encerrado"
@@ -1208,6 +1260,7 @@ export type Database = {
         | "acao"
         | "checkout"
       liberacao_status: "bloqueado" | "liberado"
+      modo_uso: "acompanhado" | "autoguiado"
       momento_checkin: "inicial" | "final"
       nivel_profundidade: "leve" | "intermediario" | "profundo"
       pagamento_status: "pendente" | "pago" | "cancelado"
@@ -1360,6 +1413,7 @@ export const Constants = {
         "checkout",
       ],
       liberacao_status: ["bloqueado", "liberado"],
+      modo_uso: ["acompanhado", "autoguiado"],
       momento_checkin: ["inicial", "final"],
       nivel_profundidade: ["leve", "intermediario", "profundo"],
       pagamento_status: ["pendente", "pago", "cancelado"],
