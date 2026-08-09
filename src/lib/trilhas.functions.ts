@@ -821,9 +821,10 @@ export const getMinhaJornada = createServerFn({ method: "GET" })
       supabase
         .from("atribuicoes")
         .select(
-          "id, trilha_id, objetivo, mensagem, frequencia, data_inicio, data_revisao, nivel, status, pode_sozinho, exige_acompanhamento, somente_em_sessao, orientacoes_especiais, trilhas(id, nome, resumo, objetivo, nivel, alertas, orientacoes_pausa, eixo_id, eixos(nome))",
+          "id, trilha_id, objetivo, motivo_indicacao, mensagem, frequencia, data_inicio, data_revisao, nivel, status, liberar_em, pode_sozinho, exige_acompanhamento, somente_em_sessao, orientacoes_especiais, trilhas(id, nome, resumo, objetivo, nivel, alertas, orientacoes_pausa, eixo_id, eixos(nome))",
         )
         .eq("cliente_id", userId)
+        .neq("status", "rascunho")
         .order("created_at", { ascending: false }),
       supabase
         .from("progresso")
@@ -849,45 +850,100 @@ export const getMinhaJornada = createServerFn({ method: "GET" })
       supabase.from("consentimentos").select("tipo, versao").eq("user_id", userId),
     ]);
 
-    const trilhaIds = (atribuicoes.data ?? [])
+    // Planos com liberação agendada só aparecem quando a data/hora chega.
+    const liberados = (atribuicoes.data ?? []).filter(
+      (a) => !a.liberar_em || Date.parse(a.liberar_em) <= Date.now(),
+    );
+
+    const trilhaIds = liberados
       .map((a) => a.trilha_id)
       .filter((id): id is string => Boolean(id));
 
-    const etapas = trilhaIds.length
-      ? await supabase
-          .from("conteudos")
-          .select(
-            "id, trilha_id, tipo, tipo_etapa, titulo, descricao, duracao_segundos, ordem, obrigatoria, materiais, local_recomendado, sensibilidades, criterios_interrupcao, permite_repetir, storage_path",
-          )
-          .in("trilha_id", trilhaIds)
-          .order("ordem")
-      : { data: [] as never[] };
+    const [etapas, personalizacao] = await Promise.all([
+      trilhaIds.length
+        ? supabase
+            .from("conteudos")
+            .select(
+              "id, trilha_id, tipo, tipo_etapa, titulo, descricao, duracao_segundos, ordem, obrigatoria, materiais, local_recomendado, sensibilidades, criterios_interrupcao, permite_repetir, storage_path",
+            )
+            .in("trilha_id", trilhaIds)
+            .order("ordem")
+        : Promise.resolve({ data: [] as never[] }),
+      liberados.length
+        ? supabase
+            .from("atribuicao_etapas")
+            .select(
+              "atribuicao_id, conteudo_id, ordem, obrigatoria, visivel, permite_repetir, prazo_dias, titulo_personalizado, descricao_personalizada",
+            )
+            .in(
+              "atribuicao_id",
+              liberados.map((a) => a.id),
+            )
+            .order("ordem")
+        : Promise.resolve({ data: [] as never[] }),
+    ]);
 
     const statusPorConteudo = new Map(
       (progresso.data ?? []).map((p) => [p.conteudo_id, p.status as string]),
     );
 
-    const trilhas = (atribuicoes.data ?? []).map((a) => {
-      const minhasEtapas = (etapas.data ?? [])
+    const trilhas = liberados.map((a) => {
+      const ajustes = (personalizacao.data ?? []).filter((p) => p.atribuicao_id === a.id);
+      const ajustePor = new Map(ajustes.filter((p) => p.conteudo_id).map((p) => [p.conteudo_id, p]));
+
+      const daTrilha = (etapas.data ?? [])
         .filter((e) => e.trilha_id === a.trilha_id)
-        .map((e) => ({
-          id: e.id,
-          tipo: e.tipo,
-          tipoEtapa: e.tipo_etapa,
-          titulo: e.titulo,
-          descricao: e.descricao,
-          duracaoSegundos: e.duracao_segundos,
-          ordem: e.ordem,
-          obrigatoria: e.obrigatoria,
-          temMidia: Boolean(e.storage_path),
-          status: statusPorConteudo.get(e.id) ?? "nao_iniciado",
+        .map((e) => {
+          const ajuste = ajustePor.get(e.id);
+          return {
+            id: e.id,
+            tipo: e.tipo,
+            tipoEtapa: e.tipo_etapa,
+            titulo: e.titulo,
+            descricao: e.descricao,
+            duracaoSegundos: e.duracao_segundos,
+            ordem: ajuste?.ordem ?? e.ordem,
+            obrigatoria: ajuste?.obrigatoria ?? e.obrigatoria,
+            visivel: ajuste?.visivel ?? true,
+            permiteRepetir: ajuste?.permite_repetir ?? e.permite_repetir,
+            prazoDias: ajuste?.prazo_dias ?? null,
+            personalizada: false,
+            temMidia: Boolean(e.storage_path),
+            status: statusPorConteudo.get(e.id) ?? "nao_iniciado",
+          };
+        });
+
+      // Atividades escritas pela terapeuta só para este plano.
+      const personalizadas = ajustes
+        .filter((p) => !p.conteudo_id)
+        .map((p) => ({
+          id: `${a.id}-${p.ordem}`,
+          tipo: "tarefa" as const,
+          tipoEtapa: null,
+          titulo: p.titulo_personalizado || "Atividade combinada",
+          descricao: p.descricao_personalizada,
+          duracaoSegundos: 0,
+          ordem: p.ordem,
+          obrigatoria: p.obrigatoria,
+          visivel: p.visivel,
+          permiteRepetir: p.permite_repetir,
+          prazoDias: p.prazo_dias,
+          personalizada: true,
+          temMidia: false,
+          status: "nao_iniciado",
         }));
+
+      const minhasEtapas = [...daTrilha, ...personalizadas]
+        .filter((e) => e.visivel)
+        .sort((x, y) => x.ordem - y.ordem);
+
       const concluidas = minhasEtapas.filter((e) => e.status === "concluido").length;
-      const proxima = minhasEtapas.find((e) => e.status !== "concluido") ?? null;
+      const proxima = minhasEtapas.find((e) => e.status !== "concluido" && !e.personalizada) ?? null;
       return {
         atribuicaoId: a.id,
         status: a.status,
         objetivo: a.objetivo,
+        motivoIndicacao: a.motivo_indicacao,
         mensagem: a.mensagem,
         frequencia: a.frequencia,
         dataInicio: a.data_inicio,
@@ -907,6 +963,7 @@ export const getMinhaJornada = createServerFn({ method: "GET" })
         proximaEtapaId: proxima?.id ?? null,
       };
     });
+
 
     return {
       trilhas,
