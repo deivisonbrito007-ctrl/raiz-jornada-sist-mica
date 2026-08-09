@@ -122,15 +122,15 @@ describe("aba Início do painel", () => {
     const resumo = await screen.findByRole("region", { name: /resumo/i });
     expect(within(resumo).queryByText("0")).not.toBeInTheDocument();
     expect(within(resumo).getAllByRole("link")).toHaveLength(6);
-    expect(await screen.findByText(/nenhuma pendência para hoje/i)).toBeInTheDocument();
-    expect(screen.getByText(/nenhuma revisão programada/i)).toBeInTheDocument();
+    expect(await screen.findByText(/nada aguardando você agora/i)).toBeInTheDocument();
+    expect(screen.getByText(/nenhuma revisão marcada/i)).toBeInTheDocument();
   });
 
   it("mostra prioridades, agenda e atividade quando há dados", async () => {
     fetchInicio.mockResolvedValue(COM_DADOS);
     montar();
     const prioridades = await screen.findByRole("region", { name: /prioridades do dia/i });
-    expect(within(prioridades).getByText(/solicitou contato/i)).toBeInTheDocument();
+    expect(within(prioridades).getByText(/solicitou contato e aguarda resposta/i)).toBeInTheDocument();
 
     const agenda = screen.getByRole("region", { name: /agenda de revisões/i });
     expect(within(agenda).getAllByText("Ana Souza").length).toBeGreaterThan(0);
