@@ -137,6 +137,60 @@ function AuthPage() {
                 <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
               </div>
             )}
+            {cadastro && !souTerapeuta && (
+              <fieldset className="space-y-2">
+                <legend className="text-sm font-medium text-foreground">
+                  Como você vai usar o Raiz?
+                </legend>
+                <div className="grid gap-2">
+                  {(
+                    [
+                      {
+                        valor: "convite" as const,
+                        titulo: "Fui convidada pela terapeuta",
+                        texto: "Seu plano e as trilhas chegam pela terapeuta que te acompanha.",
+                      },
+                      {
+                        valor: "propria" as const,
+                        titulo: "Quero usar por conta própria",
+                        texto:
+                          "Você escolhe um pacote e percorre as trilhas autoguiadas no seu ritmo. Pode pedir acompanhamento depois.",
+                      },
+                    ] as const
+                  ).map((opcao) => (
+                    <label
+                      key={opcao.valor}
+                      className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm transition-colors ${
+                        caminho === opcao.valor
+                          ? "border-terracota bg-secondary"
+                          : "border-border bg-card hover:bg-secondary/60"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="caminho"
+                        value={opcao.valor}
+                        checked={caminho === opcao.valor}
+                        onChange={() => setCaminho(opcao.valor)}
+                        className="mt-1 accent-[hsl(var(--terracota))]"
+                      />
+                      <span>
+                        <span className="font-medium text-foreground">{opcao.titulo}</span>
+                        <span className="mt-1 block text-xs text-muted-foreground">
+                          {opcao.texto}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                {caminho === "convite" && (
+                  <p className="text-xs text-muted-foreground">
+                    Use o mesmo e-mail que recebeu o convite — assim seu acesso já entra vinculado à
+                    terapeuta.
+                  </p>
+                )}
+              </fieldset>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input
