@@ -8,7 +8,7 @@ import { LembreteRetorno } from "@/components/lembrete-retorno";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 import { VitrinePacotes } from "@/components/vitrine-pacotes";
 import { blocosDoModo, normalizarModo } from "@/lib/modo-uso";
-import { conviteDeHoje, praticasNaSemana } from "@/lib/inicio-cliente";
+import { cicloAtual, conviteDeHoje, eixoPreferido, praticasNaSemana } from "@/lib/inicio-cliente";
 import { SaudacaoInicio } from "@/components/app-inicio/saudacao-inicio";
 import { PraticaDeHoje } from "@/components/app-inicio/pratica-de-hoje";
 import { PalavraDaTerapeuta } from "@/components/app-inicio/palavra-da-terapeuta";
@@ -57,6 +57,12 @@ function Inicio() {
   const convite = conviteDeHoje({ praticas, retomar: data?.retomar ?? null });
   const feitasNaSemana = praticasNaSemana(datasConclusao);
   const metaSemanal = contexto?.perfil?.meta_semanal ?? 3;
+  const preferido = eixoPreferido(eixos);
+  const ciclo = cicloAtual({
+    inicioEm: contexto?.modoDesde ?? contexto?.perfil?.created_at ?? null,
+    concluidos: data?.resumo.totalConcluidos ?? 0,
+    total: data?.resumo.totalItens ?? 0,
+  });
 
   const conviteId = convite.estado === "nada" || convite.estado === "ciclo_fechado" ? null : convite.pratica.id;
   const curta =
@@ -90,16 +96,18 @@ function Inicio() {
         streakSemanas={streak}
         feitasNaSemana={feitasNaSemana}
         metaSemanal={metaSemanal}
+        ciclo={ciclo}
+        eixoFoco={preferido?.nome ?? null}
       />
 
-      <PraticaDeHoje convite={convite} />
+      <PraticaDeHoje convite={convite} primeiroNome={primeiroNome} />
 
       <LembreteRetorno datas={datasConclusao} streakSemanas={streak} />
 
       {blocos.planoDaTerapeuta && <PalavraDaTerapeuta />}
       {blocos.vitrinePacotes && <VitrinePacotes />}
 
-      <CarrosselEixos eixos={eixos} />
+      <CarrosselEixos eixos={eixos} preferidoId={preferido?.id ?? null} />
 
       <MomentosRapidos curta={curta} />
 
