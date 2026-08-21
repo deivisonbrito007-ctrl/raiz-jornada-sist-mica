@@ -36,7 +36,23 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 
+const middlewareStub = () => {
+  const chain: any = {
+    server: () => chain,
+    client: () => chain,
+    middleware: () => chain,
+    inputValidator: () => chain,
+    validator: () => chain,
+    handler: () => chain,
+  };
+  return chain;
+};
+
 vi.mock("@tanstack/react-start", () => ({
+  createMiddleware: middlewareStub,
+  createServerFn: middlewareStub,
+  createStart: () => ({}),
+  createCsrfMiddleware: middlewareStub,
   useServerFn: (fn: unknown) =>
     fn === getMinhaBibliotecaMock
       ? fetchBiblioteca
