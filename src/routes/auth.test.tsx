@@ -68,7 +68,7 @@ describe("fluxo de login /auth", () => {
 
     expect(screen.getByRole("heading", { name: "Bem-vindo de volta" })).toBeInTheDocument();
     await preencher(user);
-    await user.click(screen.getByRole("button", { name: "Entrar", pressed: undefined }));
+    await user.click(screen.getByRole("button", { name: "Entrar"}));
 
     await waitFor(() =>
       expect(auth.signInWithPassword).toHaveBeenCalledWith({
@@ -85,7 +85,7 @@ describe("fluxo de login /auth", () => {
     render(<AuthPage />);
 
     await preencher(user);
-    await user.click(screen.getByRole("button", { name: "Entrar", pressed: undefined }));
+    await user.click(screen.getByRole("button", { name: "Entrar"}));
 
     await waitFor(() =>
       expect(toastError).toHaveBeenCalledWith("E-mail ou senha não conferem. Confira e tente de novo."),
@@ -126,7 +126,7 @@ describe("fluxo de login /auth", () => {
     await user.type(screen.getByLabelText("Como podemos te chamar?"), "Maria");
     await preencher(user);
     await user.click(screen.getByRole("button", { name: "Continuar" }));
-    await user.click(screen.getByRole("button", { name: "Criar conta", pressed: undefined }));
+    await user.click(screen.getByRole("button", { name: "Criar conta"}));
 
     await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
     expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({
@@ -148,7 +148,7 @@ describe("fluxo de login /auth", () => {
     await preencher(user);
     await user.click(screen.getByRole("button", { name: "Continuar" }));
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Criar conta", pressed: undefined }));
+    await user.click(screen.getByRole("button", { name: "Criar conta"}));
 
     await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
     expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({
