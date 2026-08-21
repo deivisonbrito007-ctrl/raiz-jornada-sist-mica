@@ -221,7 +221,7 @@ describe("sincronização de liberações sob latência e eventos fora de ordem"
     fila[2]!.resolver(bibliotecaComEixoLiberado(false));
     await waitFor(() =>
       expect(
-        screen.getByText("Este eixo será liberado quando for o momento do seu processo."),
+        screen.getByText("Será liberado quando for o momento do seu processo."),
       ).toBeInTheDocument(),
     );
 
@@ -230,7 +230,7 @@ describe("sincronização de liberações sob latência e eventos fora de ordem"
     await tick();
     await tick();
     expect(
-      screen.getByText("Este eixo será liberado quando for o momento do seu processo."),
+      screen.getByText("Será liberado quando for o momento do seu processo."),
     ).toBeInTheDocument();
   });
 
@@ -280,7 +280,7 @@ describe("sincronização de liberações sob latência e eventos fora de ordem"
     fila[2]!.resolver(bibliotecaComEixoLiberado(false));
     await waitFor(() =>
       expect(
-        screen.getByText("Este eixo será liberado quando for o momento do seu processo."),
+        screen.getByText("Será liberado quando for o momento do seu processo."),
       ).toBeInTheDocument(),
     );
   });
@@ -308,7 +308,7 @@ describe("sincronização de liberações sob latência e eventos fora de ordem"
 
     expect(screen.getByText("0/1 concluídos")).toBeInTheDocument();
     expect(
-      screen.queryByText("Este eixo será liberado quando for o momento do seu processo."),
+      screen.queryByText("Será liberado quando for o momento do seu processo."),
     ).not.toBeInTheDocument();
   });
 });

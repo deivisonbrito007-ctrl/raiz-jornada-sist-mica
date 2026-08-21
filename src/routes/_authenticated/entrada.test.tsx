@@ -24,7 +24,7 @@ describe("triagem de papel em /entrada", () => {
 
   it("mostra estado de carregamento enquanto o papel não chega", () => {
     render(<Entrada />);
-    expect(screen.getByText("Preparando o seu espaço...")).toBeInTheDocument();
+    expect(screen.getByText("Preparando o seu espaço…")).toBeInTheDocument();
     expect(navigate).not.toHaveBeenCalled();
   });
 
