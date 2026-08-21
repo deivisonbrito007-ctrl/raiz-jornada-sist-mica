@@ -19,8 +19,9 @@ self.addEventListener("push", (event) => {
     body: dados.mensagem || "",
     tag: dados.tipo || "lembrete",
     renotify: false,
-    icon: "/favicon.ico",
-    badge: "/favicon.ico",
+    icon: "/icon-192.png",
+    badge: "/favicon.png",
+
     data: { destino: dados.destino || "/app" },
   };
 
