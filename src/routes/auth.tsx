@@ -16,6 +16,11 @@ import { EstadoConfirmeEmail } from "@/components/auth/estado-confirme-email";
 import { BotaoGoogle } from "@/components/auth/botao-google";
 import { CampoEmail } from "@/components/auth/campo-email";
 import { Button } from "@/components/ui/button";
+import {
+  destinoSeguro as validarDestino,
+  gravarIntencaoLogin,
+  limparIntencaoLogin,
+} from "@/lib/intencao-login";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: z.object({
@@ -48,7 +53,9 @@ const SELOS = ["Privado", "No seu ritmo", "Com acompanhamento"];
 
 function AuthPage() {
   const { modo, caminho: caminhoUrl, next } = Route.useSearch();
-  const destinoSeguro = next && /^\/[^/\\]/.test(next) ? next : null;
+  // Mesma validação usada ao guardar a intenção do Google: nada de destino
+  // externo, nem volta para /auth (que geraria laço de redirecionamento).
+  const destinoSeguro = validarDestino(next);
   const navigate = useNavigate();
 
   // A aba vem da URL: voltar no navegador restaura o estado da tela.
@@ -96,6 +103,20 @@ function AuthPage() {
     if (caminhoUrl === "autoguiado") setCaminho("propria");
   }, [caminhoUrl]);
 
+  // A intenção guardada acompanha o que está na tela: se a pessoa trocar de
+  // escolha (ou de papel) antes de ir ao Google, é a última que vale.
+  useEffect(() => {
+    if (!cadastro) {
+      gravarIntencaoLogin({ destino: destinoSeguro, caminho: null, papel: "cliente" });
+      return;
+    }
+    gravarIntencaoLogin({
+      destino: destinoSeguro,
+      caminho: souTerapeuta ? null : caminho === "convite" ? "acompanhado" : "autoguiado",
+      papel: souTerapeuta ? "terapeuta" : "cliente",
+    });
+  }, [cadastro, caminho, souTerapeuta, destinoSeguro]);
+
   // Trocar de caminho invalida a conferência de convite anterior.
   useEffect(() => {
     setConvite({ estado: "inicial" });
@@ -110,6 +131,8 @@ function AuthPage() {
   }, []);
 
   function seguir() {
+    // Entrou por e-mail/senha: a intenção do Google não deve sobrar guardada.
+    limparIntencaoLogin();
     if (destinoSeguro) {
       navigate({ to: destinoSeguro, replace: true });
       return;
@@ -396,6 +419,7 @@ function AuthPage() {
                   <BotaoGoogle
                     destino={destinoSeguro}
                     caminho={caminho === "convite" ? "acompanhado" : "autoguiado"}
+                    papel={souTerapeuta ? "terapeuta" : "cliente"}
                   />
                 </>
               )}

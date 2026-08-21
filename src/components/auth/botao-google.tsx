@@ -2,7 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { lovable } from "@/integrations/lovable";
 import { mensagemErroAuth } from "@/lib/erro-auth";
-import { CHAVE_CAMINHO, CHAVE_DESTINO } from "@/lib/intencao-login";
+import { gravarIntencaoLogin, limparIntencaoLogin } from "@/lib/intencao-login";
 
 
 /**
@@ -14,22 +14,27 @@ import { CHAVE_CAMINHO, CHAVE_DESTINO } from "@/lib/intencao-login";
 export function BotaoGoogle({
   destino,
   caminho,
+  papel = "cliente",
 }: {
   destino?: string | null;
   caminho?: "acompanhado" | "autoguiado";
+  papel?: "cliente" | "terapeuta";
 }) {
   const [carregando, setCarregando] = useState(false);
 
   async function entrar() {
     setCarregando(true);
     try {
-      if (destino) sessionStorage.setItem(CHAVE_DESTINO, destino);
-      if (caminho) sessionStorage.setItem(CHAVE_CAMINHO, caminho);
+      // Reescreve a intenção do zero: nada de sobra de uma tentativa anterior.
+      limparIntencaoLogin();
+      gravarIntencaoLogin({ destino, caminho: papel === "terapeuta" ? null : caminho, papel });
       const resultado = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
       if (resultado && "error" in resultado && resultado.error) throw resultado.error;
     } catch (erro) {
+      // Se o Google nem abriu, a intenção guardada não deve sobreviver.
+      limparIntencaoLogin();
       toast.error(mensagemErroAuth(erro));
     } finally {
       setCarregando(false);
