@@ -1,36 +1,38 @@
-# Tela de carregamento em alta qualidade (mobile + web)
+# Aba "Início" do cliente — acolhimento, ritmo e interação
 
-## O que está errado hoje
+## O que está ruim hoje
+A tela abre com um título, um parágrafo e cai direto numa barra de busca com três selects e uma grade de cartões de eixo. Ou seja: parece um catálogo administrativo, não um espaço de cuidado. Problemas concretos:
 
-- A tela "Preparando o seu espaço..." (`src/routes/_authenticated/entrada.tsx`) usa a logo PNG em `h-20` com `animate-pulse`. O arquivo original tem 720x864 px e **muita área vazia na direita e embaixo**: o desenho ocupa só parte do quadro. Ao reduzir para 80 px de altura, o símbolo fica pequeno, desalinhado do centro e com bordas suavizadas — daí a impressão de imagem "borrada e feia".
-- A logo é bitmap único (sem versão vetorial e sem `srcset`), então em telas Retina/2x-3x o navegador amplia pixels em vez de renderizar nítido.
-- Ao abrir o app instalado (PWA), o iOS não tem imagem de abertura definida (nenhum `apple-touch-startup-image`), então mostra uma tela branca/ícone esticado antes do app aparecer.
-- O carregamento entre rotas usa blocos cinza genéricos (`carregando-rota.tsx`), sem identidade da marca.
+- Os filtros (busca, eixo, tipo, status) ocupam o topo da tela mesmo quando a pessoa só quer saber "o que eu faço hoje".
+- Não há prática do dia: a sugestão só aparece dentro do lembrete de retorno, e só quando o lembrete está ativo.
+- Não há sinal de ritmo visível (sequência, semana, meta) — isso só existe na aba Progresso.
+- Diário, apoio e revisão da terapeuta não têm nenhuma porta aqui.
+- Visualmente é plano: fundo bege, cartões brancos iguais, nenhuma respiração, nenhuma textura, nada da linguagem de floresta/aura que a tela de entrada e a home pública já têm.
 
-## O que vou fazer
+## Nova estrutura (ordem da rolagem, mobile primeiro)
 
-1. **Logo nítida e centralizada**
-   - Gerar uma versão vetorial (SVG) do símbolo Raiz, recortada exatamente no desenho (sem margem vazia), para uso em qualquer tamanho sem perda.
-   - Passar `RaizLogo` a usar o SVG por padrão, mantendo o PNG como reserva. Assim a logo fica perfeitamente centrada e nítida no cabeçalho, na entrada, na landing e no painel.
+1. **Saudação viva** — faixa em gradiente floresta com halo suave e a marca em filigrana. "Bom dia, Ana" conforme a hora, uma frase curta de acolhimento e a data. Dentro dela, dois indicadores discretos: sequência em semanas e práticas nesta semana (com o anel de meta semanal que já existe).
+2. **Prática de hoje** — um único cartão grande, em destaque, com o próximo conteúdo (ou o de retomar): eixo, tipo, duração, e um botão largo "Começar agora" / "Continuar de onde parei". É o coração da tela. Quando tudo estiver concluído, vira um cartão de pausa: "Você fechou o ciclo desta semana."
+3. **Lembrete de retorno** — mantido, mas só quando ativo, logo abaixo da prática (sem duplicar a sugestão de conteúdo já mostrada acima).
+4. **Palavra da terapeuta** (modo acompanhado) — mensagem/objetivo do plano atual, próxima revisão e atalho "Preciso de apoio". No modo autoguiado, esse espaço vira a vitrine de pacotes já existente.
+5. **Seus eixos** — carrossel horizontal com snap no mobile e grade no desktop, cada eixo com ícone, anel de progresso e estado bloqueado explicando quando abre. Botão "Ver todos os eixos" leva à Jornada.
+6. **Momentos rápidos** — três atalhos aconchegantes: "Respirar 2 minutos" (prática curta), "Escrever no diário", "Ver meu caminho" (progresso).
+7. **Busca e filtros** — deixam de morar no topo: passam a ficar em um bloco recolhível ("Buscar uma prática") no fim da tela, mantendo exatamente o comportamento atual quando aberto.
 
-2. **Splash de carregamento profissional**
-   - Criar um componente único de abertura (`splash-raiz`) com: fundo em degradê "floresta" da marca, aura suave, símbolo centralizado com respiro correto, animação calma de respiração (não `pulse` piscando), wordmark "Raiz" e a frase de espera.
-   - Respeitar `prefers-reduced-motion`, manter `role="status"` + `aria-live` e altura estável (sem salto de layout) no mobile (390 px) e no desktop.
-   - Usar esse splash em `entrada.tsx` e como estado de espera inicial do app.
+## Linguagem visual
+- Reaproveita os tokens que já existem: `floresta`, `salvia`, `terracota`, `ocre`, `--gradiente-aura`, `--halo-entrada`, `--shadow-organico`, tipografia Fraunces nos títulos.
+- Uma textura abstrata de raízes/luz, muito discreta, apenas atrás da saudação.
+- Movimento suave: entrada em fade/subida das seções e respiração leve no halo, tudo respeitando `prefers-reduced-motion`.
+- Nada de emoji nem de imagem genérica de espiritualidade.
 
-3. **Carregamento entre rotas com identidade**
-   - Ajustar `carregando-rota.tsx` para skeletons com as cores/raios da marca e um selo discreto da logo, em vez de blocos cinza neutros.
+## Cuidados
+- Alvos de toque ≥ 44px, botões em largura cheia no mobile, sem quebra feia em 360px.
+- Contraste AA em todas as combinações (ocre-forte sobre claro).
+- Nenhuma mudança de regra de negócio: os mesmos dados de `getMinhaBiblioteca` e `getMeuContexto` já carregados, sem consulta nova.
+- Estados de carregamento com os skeletons da marca, não blocos cinza.
 
-4. **Abertura do app instalado (iOS/Android)**
-   - Gerar imagens `apple-touch-startup-image` nos tamanhos dos iPhones/iPads atuais (retrato e paisagem) com o mesmo visual do splash e registrá-las em `__root.tsx` com as media queries corretas.
-   - Conferir `background_color`/`theme_color` do manifest para o splash do Android combinar com o do app.
-
-5. **Verificação**
-   - Estender `scripts/verificar-icones.mjs` para validar também as imagens de abertura (dimensões e presença), mantendo a checagem no CI.
-   - Conferir no navegador (mobile 390 px e desktop 1280 px) com capturas, e rodar os testes existentes.
-
-## Detalhes técnicos
-
-- Arquivos tocados: `src/components/raiz-logo.tsx`, novo `src/components/splash-raiz.tsx`, `src/components/carregando-rota.tsx`, `src/routes/_authenticated/entrada.tsx`, `src/routes/__root.tsx`, `public/` (novas imagens de abertura), `scripts/verificar-icones.mjs`, `public/manifest.webmanifest`.
-- Sem mudanças de banco, autenticação ou regras de negócio: é trabalho de interface e assets.
-- Cores vindas dos tokens já existentes em `src/styles.css` (floresta, terracota, creme) — nada de cor fixa em componente.
+## Notas técnicas
+- Extrair a tela em componentes sob `src/components/app-inicio/`: `saudacao-inicio.tsx`, `pratica-de-hoje.tsx`, `palavra-da-terapeuta.tsx`, `carrossel-eixos.tsx`, `momentos-rapidos.tsx`, `buscar-praticas.tsx`. `src/routes/_authenticated/app.index.tsx` fica só com composição e estado de filtro.
+- Escolha da prática de hoje e da saudação por hora entram como funções puras em `src/lib/raiz-format.ts` (ou um `inicio-cliente.ts`), com testes unitários.
+- Reusar `LembreteRetorno`, `ContinuarDeOndeParei`, `VitrinePacotes` e o anel de meta semanal existentes; sem duplicar lógica.
+- Adicionar testes de render/a11y para a nova tela e conferir em 390px e 1280px com capturas do navegador antes de encerrar.
