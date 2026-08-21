@@ -335,7 +335,7 @@ function AuthPage() {
               {cadastro && caminhoUrl && (
                 <p className="mt-4 rounded-2xl bg-secondary px-4 py-3 text-sm leading-relaxed text-foreground">
                   {caminhoUrl === "acompanhado"
-                    ? "Você escolheu seguir com acompanhamento de uma terapeuta. Dá para trocar no próximo passo."
+                    ? "Você escolheu seguir com acompanhamento de uma terapeuta. Pode trocar essa escolha aqui embaixo."
                     : "Você escolheu começar por conta própria. Dá para pedir acompanhamento depois, sem perder nada."}
                 </p>
               )}
