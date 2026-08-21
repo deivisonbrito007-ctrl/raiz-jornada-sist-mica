@@ -15,6 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { iniciarDiagnostico, medirNavegacao } from "@/lib/diagnostico";
 import { ProvedorCache } from "@/components/provedor-cache";
 import { definirUsuarioCache, limparCachePersistido } from "@/lib/cache-persistente";
+import { AplicarIntencaoLogin } from "@/components/auth/aplicar-intencao-login";
+
 
 
 function NotFoundComponent() {
@@ -163,8 +165,10 @@ function RootComponent() {
     <ProvedorCache queryClient={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <AplicarIntencaoLogin />
       <Toaster position="top-center" />
     </ProvedorCache>
+
   );
 }
 

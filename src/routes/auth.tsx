@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/auth")({
   validateSearch: z.object({
     modo: z.enum(["entrar", "cadastro"]).optional(),
+    caminho: z.enum(["acompanhado", "autoguiado"]).optional(),
     next: z.string().optional(),
   }),
   head: () => ({
@@ -35,17 +36,23 @@ type Aba = "entrar" | "cadastro";
 const SELOS = ["Privado", "No seu ritmo", "Com acompanhamento"];
 
 function AuthPage() {
-  const { modo, next } = Route.useSearch();
+  const { modo, caminho: caminhoUrl, next } = Route.useSearch();
   const destinoSeguro = next && /^\/[^/\\]/.test(next) ? next : null;
   const navigate = useNavigate();
 
-  const [aba, setAba] = useState<Aba>(modo === "cadastro" ? "cadastro" : "entrar");
+  // A aba vem da URL: voltar no navegador restaura o estado da tela.
+  const aba: Aba = modo === "cadastro" ? "cadastro" : "entrar";
+  const trocarAba = (proxima: Aba) => {
+    setEtapaCadastro(1);
+    navigate({ to: "/auth", search: (anterior) => ({ ...anterior, modo: proxima }), replace: true });
+  };
+
   const [etapaCadastro, setEtapaCadastro] = useState<1 | 2>(1);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [caminho, setCaminho] = useState<CaminhoEntrada>(
-    destinoSeguro?.startsWith("/convite") ? "convite" : "propria",
+    caminhoUrl === "acompanhado" || destinoSeguro?.startsWith("/convite") ? "convite" : "propria",
   );
   const [souTerapeuta, setSouTerapeuta] = useState(false);
 
@@ -63,24 +70,28 @@ function AuthPage() {
       .catch(() => setExisteTerapeuta(true));
   }, []);
 
+  // A escolha feita na página inicial vale mesmo se a pessoa recarregar a tela.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) return;
-      if (destinoSeguro) {
-        window.location.replace(destinoSeguro);
-        return;
-      }
-      navigate({ to: "/entrada", replace: true });
+    if (caminhoUrl === "acompanhado") setCaminho("convite");
+    if (caminhoUrl === "autoguiado") setCaminho("propria");
+  }, [caminhoUrl]);
+
+  useEffect(() => {
+    // getUser revalida com o servidor: sessão vencida não redireciona por engano.
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) seguir();
     });
-  }, [navigate, destinoSeguro]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function seguir() {
     if (destinoSeguro) {
-      window.location.replace(destinoSeguro);
+      navigate({ to: destinoSeguro, replace: true });
       return;
     }
     navigate({ to: "/entrada", replace: true });
   }
+
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
@@ -235,10 +246,8 @@ function AuthPage() {
                     type="button"
                     role="tab"
                     aria-selected={aba === item.valor}
-                    onClick={() => {
-                      setAba(item.valor);
-                      setEtapaCadastro(1);
-                    }}
+                    onClick={() => trocarAba(item.valor)}
+
                     className={`h-11 flex-1 rounded-full text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota ${
                       aba === item.valor
                         ? "bg-card text-floresta shadow-organico"
@@ -258,6 +267,16 @@ function AuthPage() {
                   ? "Dois passos rápidos e seu espaço está pronto."
                   : "Um espaço para continuar o que começou na sessão."}
               </p>
+
+              {cadastro && caminhoUrl && (
+                <p className="mt-4 rounded-2xl bg-secondary px-4 py-3 text-sm leading-relaxed text-foreground">
+                  {caminhoUrl === "acompanhado"
+                    ? "Você escolheu seguir com acompanhamento de uma terapeuta. Dá para trocar no próximo passo."
+                    : "Você escolheu começar por conta própria. Dá para pedir acompanhamento depois, sem perder nada."}
+                </p>
+              )}
+
+
 
               <div className="mt-6">
                 {cadastro ? (
@@ -300,7 +319,24 @@ function AuthPage() {
                 ou
                 <span className="h-px flex-1 bg-border" />
               </div>
-              <BotaoGoogle destino={destinoSeguro} />
+              <BotaoGoogle
+                destino={destinoSeguro}
+                caminho={caminho === "convite" ? "acompanhado" : "autoguiado"}
+              />
+
+              {!cadastro && (
+                <p className="mt-6 text-center text-sm text-muted-foreground">
+                  Ainda não tem conta?{" "}
+                  <Link
+                    to="/auth"
+                    search={{ modo: "cadastro" }}
+                    className="font-semibold text-floresta underline underline-offset-4"
+                  >
+                    Escolha seu jeito de caminhar
+                  </Link>
+                </p>
+              )}
+
 
               <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
                 {SELOS.map((selo) => (

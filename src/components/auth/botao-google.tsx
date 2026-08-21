@@ -2,19 +2,29 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { lovable } from "@/integrations/lovable";
 import { mensagemErroAuth } from "@/lib/erro-auth";
+import { CHAVE_CAMINHO, CHAVE_DESTINO } from "@/lib/intencao-login";
+
 
 /**
  * Entrada com Google pelo intermediador da Lovable (funciona também dentro do
- * preview). O destino pretendido é guardado em sessionStorage e aplicado
- * depois que a sessão existe — nunca vai direto para rota protegida.
+ * preview). O destino pretendido e o jeito de caminhar escolhido ficam
+ * guardados em sessionStorage e são aplicados depois que a sessão existe —
+ * nunca vamos direto para rota protegida.
  */
-export function BotaoGoogle({ destino }: { destino?: string | null }) {
+export function BotaoGoogle({
+  destino,
+  caminho,
+}: {
+  destino?: string | null;
+  caminho?: "acompanhado" | "autoguiado";
+}) {
   const [carregando, setCarregando] = useState(false);
 
   async function entrar() {
     setCarregando(true);
     try {
-      if (destino) sessionStorage.setItem("raiz:destino-pos-login", destino);
+      if (destino) sessionStorage.setItem(CHAVE_DESTINO, destino);
+      if (caminho) sessionStorage.setItem(CHAVE_CAMINHO, caminho);
       const resultado = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
@@ -25,6 +35,7 @@ export function BotaoGoogle({ destino }: { destino?: string | null }) {
       setCarregando(false);
     }
   }
+
 
   return (
     <button
