@@ -41,10 +41,16 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth, rpc } }));
 vi.mock("@/integrations/lovable", () => ({
   lovable: { auth: { signInWithOAuth: vi.fn(async () => ({ redirected: true })) } },
 }));
-const convite = { existe: false, terapeuta: null as string | null, limitado: false };
+const convitePendenteMock = vi.fn<
+  (args: { data: { email: string } }) => Promise<{
+    existe: boolean;
+    terapeuta: string | null;
+    limitado: boolean;
+  }>
+>();
 vi.mock("@/lib/cadastro.functions", () => ({
   existeTerapeuta: async () => ({ existe: estado.existeTerapeuta }),
-  convitePendente: async () => convite,
+  convitePendente: (args: { data: { email: string } }) => convitePendenteMock(args),
 }));
 vi.mock("sonner", () => ({ toast: { error: toastError, success: vi.fn() } }));
 
