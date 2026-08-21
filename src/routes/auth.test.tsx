@@ -181,7 +181,7 @@ describe("fluxo de login /auth", () => {
 
   it("confere convite antes de criar conta com acompanhamento", async () => {
     search.modo = "cadastro";
-    convite.existe = false;
+    convitePendenteMock.mockResolvedValue({ existe: false, terapeuta: null, limitado: false });
     const user = userEvent.setup();
     render(<AuthPage />);
 
