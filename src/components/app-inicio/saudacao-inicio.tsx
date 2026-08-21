@@ -12,18 +12,23 @@ export function SaudacaoInicio({
   streakSemanas,
   feitasNaSemana,
   metaSemanal,
+  ciclo,
+  eixoFoco,
   agora = new Date(),
 }: {
   primeiroNome: string;
   streakSemanas: number;
   feitasNaSemana: number;
   metaSemanal: number;
+  ciclo?: { rotulo: string; frase: string } | null;
+  eixoFoco?: string | null;
   agora?: Date;
 }) {
   const { titulo, frase } = saudacaoDoDia(agora, primeiroNome);
   const meta = Math.max(1, metaSemanal);
   const proporcao = Math.min(1, feitasNaSemana / meta);
   const perimetro = 2 * Math.PI * 20;
+
 
   return (
     <section className="relative isolate overflow-hidden rounded-[2rem] bg-floresta px-6 py-8 text-floresta-foreground shadow-organico">
@@ -50,6 +55,27 @@ export function SaudacaoInicio({
       </p>
       <h1 className="mt-3 font-display text-3xl leading-tight">{titulo}</h1>
       <p className="mt-3 max-w-sm text-sm leading-relaxed text-floresta-foreground/85">{frase}</p>
+
+      {(ciclo || eixoFoco) && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {ciclo && (
+            <span className="rounded-full border border-ocre/40 px-3 py-1 text-xs font-medium text-ocre">
+              {ciclo.rotulo}
+            </span>
+          )}
+          {eixoFoco && (
+            <span className="rounded-full bg-floresta-foreground/10 px-3 py-1 text-xs text-floresta-foreground/85 backdrop-blur">
+              Seu foco: {eixoFoco}
+            </span>
+          )}
+        </div>
+      )}
+      {ciclo && (
+        <p className="mt-3 max-w-sm text-sm leading-relaxed text-floresta-foreground/70">
+          {ciclo.frase}
+        </p>
+      )}
+
 
       <dl className="mt-7 flex flex-wrap items-center gap-3">
         <div className="flex min-h-11 items-center gap-3 rounded-2xl bg-floresta-foreground/10 px-4 py-2.5 backdrop-blur">

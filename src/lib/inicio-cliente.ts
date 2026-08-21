@@ -91,3 +91,84 @@ export function praticasNaSemana(datas: readonly string[], agora: Date = new Dat
     return Number.isFinite(t) && t >= inicioDoDia.getTime();
   }).length;
 }
+
+export type EixoAfinidade = {
+  id: string;
+  nome: string;
+  liberado: boolean;
+  concluidos: number;
+  total: number;
+  datasConclusao?: readonly string[];
+};
+
+export type Ciclo = {
+  /** semana do processo, começando em 1 */
+  semana: number;
+  rotulo: string;
+  frase: string;
+};
+
+/**
+ * Em que ponto do processo a pessoa está: semana desde o início do
+ * acompanhamento e uma frase que muda conforme o quanto já caminhou.
+ */
+export function cicloAtual({
+  inicioEm,
+  concluidos = 0,
+  total = 0,
+  agora = new Date(),
+}: {
+  inicioEm?: string | null;
+  concluidos?: number;
+  total?: number;
+  agora?: Date;
+}): Ciclo {
+  const inicio = inicioEm ? new Date(inicioEm).getTime() : NaN;
+  const dias = Number.isFinite(inicio)
+    ? Math.max(0, Math.floor((agora.getTime() - inicio) / 86_400_000))
+    : 0;
+  const semana = Math.floor(dias / 7) + 1;
+  const proporcao = total > 0 ? concluidos / total : 0;
+  const frase =
+    total === 0
+      ? "Seu ciclo está sendo preparado."
+      : proporcao === 0
+        ? "Começo de ciclo: o primeiro passo é o mais importante."
+        : proporcao < 0.5
+          ? "Você está no meio do caminho deste ciclo."
+          : proporcao < 1
+            ? "Reta final deste ciclo — siga no seu tempo."
+            : "Ciclo completo. Descanse no que foi movido.";
+  return { semana, rotulo: `Semana ${semana} do seu ciclo`, frase };
+}
+
+/**
+ * Preferência de eixos: aquele em que a pessoa mais concluiu práticas
+ * (empate desfeito pela conclusão mais recente). Serve para dar destaque
+ * ao tema que ela vem sustentando.
+ */
+export function eixoPreferido(eixos: readonly EixoAfinidade[]): EixoAfinidade | null {
+  const candidatos = eixos.filter((e) => e.liberado && e.concluidos > 0);
+  if (candidatos.length === 0) return null;
+  const recencia = (e: EixoAfinidade) =>
+    (e.datasConclusao ?? []).reduce((maior, d) => {
+      const t = new Date(d).getTime();
+      return Number.isFinite(t) && t > maior ? t : maior;
+    }, 0);
+  return [...candidatos].sort(
+    (a, b) => b.concluidos - a.concluidos || recencia(b) - recencia(a),
+  )[0]!;
+}
+
+/** Ordena os eixos pela afinidade: preferido primeiro, fechados no fim. */
+export function ordenarPorAfinidade<T extends EixoAfinidade>(eixos: readonly T[]): T[] {
+  const preferido = eixoPreferido(eixos);
+  return [...eixos].sort((a, b) => {
+    if (a.liberado !== b.liberado) return a.liberado ? -1 : 1;
+    if (preferido) {
+      if (a.id === preferido.id) return -1;
+      if (b.id === preferido.id) return 1;
+    }
+    return 0;
+  });
+}

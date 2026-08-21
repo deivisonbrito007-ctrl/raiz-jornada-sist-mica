@@ -25,13 +25,20 @@ function Selo({ texto }: { texto: string }) {
  * ficou no meio ou começar a próxima prática. Quando não há nada pendente,
  * o cartão vira um convite ao descanso.
  */
-export function PraticaDeHoje({ convite }: { convite: ConviteDeHoje }) {
+export function PraticaDeHoje({
+  convite,
+  primeiroNome = "",
+}: {
+  convite: ConviteDeHoje;
+  primeiroNome?: string;
+}) {
+  const nome = primeiroNome.trim();
   if (convite.estado === "retomar") {
     const p = convite.pratica;
     const restante = Math.max(0, p.duracaoSegundos - p.posicaoSegundos);
     return (
       <Moldura>
-        <Selo texto="Você parou no meio" />
+        <Selo texto={nome ? `${nome}, você parou no meio` : "Você parou no meio"} />
         <h2 id="titulo-pratica-hoje" className="mt-2 font-display text-2xl leading-snug text-floresta">
           {p.titulo}
         </h2>
@@ -56,7 +63,7 @@ export function PraticaDeHoje({ convite }: { convite: ConviteDeHoje }) {
     const p = convite.pratica;
     return (
       <Moldura>
-        <Selo texto="Sua prática de hoje" />
+        <Selo texto={nome ? `A prática de hoje para ${nome}` : "Sua prática de hoje"} />
         <h2 id="titulo-pratica-hoje" className="mt-2 font-display text-2xl leading-snug text-floresta">
           {p.titulo}
         </h2>
@@ -87,7 +94,7 @@ export function PraticaDeHoje({ convite }: { convite: ConviteDeHoje }) {
           Você fechou este ciclo
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          Todas as práticas liberadas foram concluídas. Descansar também é parte do processo — se
+          {nome ? `${nome}, todas as práticas liberadas foram concluídas.` : "Todas as práticas liberadas foram concluídas."}{" "} Descansar também é parte do processo — se
           quiser, escreva no diário o que se moveu.
         </p>
         <Link
