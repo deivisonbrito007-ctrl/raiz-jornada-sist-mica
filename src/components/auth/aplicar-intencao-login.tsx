@@ -4,7 +4,11 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { supabase } from "@/integrations/supabase/client";
 import { aplicarCaminhoEntrada } from "@/lib/cadastro.functions";
-import { lerIntencaoLogin, limparIntencaoLogin } from "@/lib/intencao-login";
+import {
+  destinoSeguro as validarDestino,
+  lerIntencaoLogin,
+  limparIntencaoLogin,
+} from "@/lib/intencao-login";
 
 /**
  * Fecha o ciclo da entrada com Google: quando a sessão aparece, aplica o jeito
@@ -19,7 +23,7 @@ export function AplicarIntencaoLogin() {
   useEffect(() => {
     async function tratar() {
       if (jaTratou.current) return;
-      const { destino, caminho } = lerIntencaoLogin();
+      const { destino, caminho, papel } = lerIntencaoLogin();
       if (!destino && !caminho) return;
 
       const { data } = await supabase.auth.getUser();
@@ -28,14 +32,16 @@ export function AplicarIntencaoLogin() {
       jaTratou.current = true;
       limparIntencaoLogin();
 
-      if (caminho) {
+      // Terapeuta nunca gera pedido de acompanhamento.
+      if (caminho && papel !== "terapeuta") {
         try {
           await aplicar({ data: { caminho } });
         } catch {
           // Não bloqueia a entrada: a pessoa pode pedir acompanhamento no painel.
         }
       }
-      navigate({ to: destino ?? "/entrada", replace: true });
+      // Revalida o destino na hora de navegar: nunca confiamos só no que estava guardado.
+      navigate({ to: validarDestino(destino) ?? "/entrada", replace: true });
     }
 
     void tratar();
