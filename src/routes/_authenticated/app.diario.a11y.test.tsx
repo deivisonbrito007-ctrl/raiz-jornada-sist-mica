@@ -73,6 +73,11 @@ function renderizar() {
   );
 }
 
+/** O convite do dia muda conforme o dia da semana: buscamos o campo pelo papel. */
+function campoReflexao() {
+  return screen.findByRole("textbox", { name: /.+/ });
+}
+
 const entradas = [
   {
     id: "d-1",
@@ -122,7 +127,7 @@ describe("Diário de reflexão — acessibilidade", () => {
     let liberar: (v: unknown) => void = () => {};
     salvarFn.mockImplementation(() => new Promise((r) => (liberar = r)));
     const { container } = renderizar();
-    const campo = await screen.findByLabelText(/o que/i);
+    const campo = await campoReflexao();
     await userEvent.type(campo, "uma reflexão");
     await userEvent.click(screen.getByRole("button", { name: "Salvar reflexão" }));
     const botao = await screen.findByRole("button", { name: "Guardando..." });
@@ -133,7 +138,7 @@ describe("Diário de reflexão — acessibilidade", () => {
 
   it("associa o campo de escrita a um rótulo e a uma dica", async () => {
     renderizar();
-    const campo = await screen.findByLabelText(/o que/i);
+    const campo = await campoReflexao();
     expect(campo).toHaveAttribute("aria-describedby", "dica-reflexao");
   });
 
@@ -147,7 +152,7 @@ describe("Diário de reflexão — acessibilidade", () => {
 
   it("permite escrever e salvar somente com o teclado", async () => {
     renderizar();
-    const campo = await screen.findByLabelText(/o que/i);
+    const campo = await campoReflexao();
     campo.focus();
     await userEvent.keyboard("reflexão via teclado");
     await userEvent.tab();
@@ -158,7 +163,7 @@ describe("Diário de reflexão — acessibilidade", () => {
 
   it("anuncia sucesso na live region após salvar", async () => {
     renderizar();
-    const campo = await screen.findByLabelText(/o que/i);
+    const campo = await campoReflexao();
     await userEvent.type(campo, "guardar isto");
     await userEvent.click(screen.getByRole("button", { name: "Salvar reflexão" }));
     const status = await screen.findByRole("status");
@@ -168,7 +173,7 @@ describe("Diário de reflexão — acessibilidade", () => {
   it("anuncia o erro na live region quando o salvamento falha", async () => {
     salvarFn.mockRejectedValue(new Error("Sem conexão"));
     renderizar();
-    const campo = await screen.findByLabelText(/o que/i);
+    const campo = await campoReflexao();
     await userEvent.type(campo, "tentativa");
     await userEvent.click(screen.getByRole("button", { name: "Salvar reflexão" }));
     const status = await screen.findByRole("status");
@@ -177,7 +182,7 @@ describe("Diário de reflexão — acessibilidade", () => {
 
   it("mantém o botão desabilitado com o campo vazio", async () => {
     renderizar();
-    await screen.findByLabelText(/o que/i);
+    await campoReflexao();
     expect(screen.getByRole("button", { name: "Salvar reflexão" })).toBeDisabled();
   });
 });
