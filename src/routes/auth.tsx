@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { existeTerapeuta as consultarExisteTerapeuta } from "@/lib/cadastro.functions";
 import { mensagemErroAuth } from "@/lib/erro-auth";
-import { PainelMarca } from "@/components/auth/painel-marca";
+import { MolduraEntrada } from "@/components/auth/moldura-entrada";
 import { FormularioEntrar } from "@/components/auth/formulario-entrar";
 import { FormularioCadastro, type CaminhoEntrada } from "@/components/auth/formulario-cadastro";
 import { EstadoConfirmeEmail } from "@/components/auth/estado-confirme-email";
