@@ -60,6 +60,9 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Run lint
         run: bun run lint
+      - name: Verificar ícones de instalação
+        run: bun run icones:verificar
+
 
   typecheck:
     name: Typecheck
