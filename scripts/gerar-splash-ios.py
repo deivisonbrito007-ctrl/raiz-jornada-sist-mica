@@ -49,7 +49,7 @@ def main():
         tela = aura(largura, altura, centro_y)
         # halo creme suave atras do simbolo, para o desenho escuro respirar
         disco_r = round(min(largura, altura) * 0.26)
-        lado = round(disco_r * 3.2)
+        lado = round(disco_r * 4.4)
         disco = Image.new("L", (lado, lado), 0)
         dd = ImageDraw.Draw(disco)
         centro = lado / 2
