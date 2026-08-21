@@ -16,6 +16,7 @@ import { iniciarDiagnostico, medirNavegacao } from "@/lib/diagnostico";
 import { ProvedorCache } from "@/components/provedor-cache";
 import { definirUsuarioCache, limparCachePersistido } from "@/lib/cache-persistente";
 import { AplicarIntencaoLogin } from "@/components/auth/aplicar-intencao-login";
+import { AvisoReinstalarApp } from "@/components/aviso-reinstalar-app";
 
 
 
@@ -175,6 +176,7 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <AplicarIntencaoLogin />
+      <AvisoReinstalarApp />
       <Toaster position="top-center" />
     </ProvedorCache>
 

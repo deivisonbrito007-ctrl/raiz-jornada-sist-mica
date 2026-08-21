@@ -2,6 +2,7 @@
 // Valida o conjunto de ícones de instalação (manifest + head) sem depender de libs externas.
 // Falha (exit 1) se algo puder quebrar a instalação no Android, iOS ou nas abas do navegador.
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { inflateSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -195,6 +196,62 @@ export function verificarIcones() {
     }
   }
 
+  problemas.push(...verificarAssinatura());
+  return problemas;
+}
+
+const ARQUIVOS_ASSINATURA = [
+  "public/manifest.webmanifest",
+  "public/favicon.png",
+  "public/apple-touch-icon.png",
+  "public/icon-192.png",
+  "public/icon-512.png",
+  "public/icon-maskable-192.png",
+  "public/icon-maskable-512.png",
+];
+
+/** Hash do conjunto manifest+ícones, usado para cobrar o bump de VERSAO_ICONES. */
+export function hashIcones() {
+  const hash = createHash("sha256");
+  for (const relativo of ARQUIVOS_ASSINATURA) {
+    hash.update(relativo);
+    hash.update(readFileSync(path.join(raiz, relativo)));
+  }
+  return hash.digest("hex");
+}
+
+/**
+ * Se manifest ou ícones mudaram sem incrementar VERSAO_ICONES, quem já instalou
+ * o app na tela inicial nunca receberia o aviso de reinstalação.
+ */
+export function verificarAssinatura() {
+  const problemas = [];
+  const fonte = readFileSync(path.join(raiz, "src/lib/versao-app.ts"), "utf8");
+  const versao = Number(fonte.match(/VERSAO_ICONES = (\d+)/)?.[1]);
+  if (!Number.isFinite(versao)) {
+    problemas.push("src/lib/versao-app.ts sem VERSAO_ICONES numérico");
+    return problemas;
+  }
+
+  let referencia;
+  try {
+    referencia = JSON.parse(readFileSync(path.join(raiz, "scripts/icones-assinatura.json"), "utf8"));
+  } catch {
+    problemas.push("scripts/icones-assinatura.json ausente ou inválido");
+    return problemas;
+  }
+
+  const atual = hashIcones();
+  if (referencia.hash !== atual) {
+    problemas.push(
+      `ícones/manifest mudaram: incremente VERSAO_ICONES (atual ${versao}) e atualize scripts/icones-assinatura.json com hash ${atual}`,
+    );
+  }
+  if (referencia.versaoIcones !== versao) {
+    problemas.push(
+      `VERSAO_ICONES (${versao}) diverge de scripts/icones-assinatura.json (${referencia.versaoIcones})`,
+    );
+  }
   return problemas;
 }
 
