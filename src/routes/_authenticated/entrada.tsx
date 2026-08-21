@@ -20,9 +20,5 @@ function Entrada() {
   }, [data, navigate]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
-      <RaizLogo className="h-20 animate-pulse" />
-      <p className="text-sm text-muted-foreground">Preparando o seu espaço...</p>
-    </div>
-  );
+  return <SplashRaiz />;
 }
