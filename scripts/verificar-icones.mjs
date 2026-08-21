@@ -118,13 +118,11 @@ export function medirMarca(png) {
 
 export function verificarIcones() {
   const problemas = [];
-  const manifest = JSON.parse(
-    readFileSync(path.join(raiz, "public/manifest.webmanifest"), "utf8"),
-  );
+  const manifest = JSON.parse(readFileSync(path.join(raiz, "public/manifest.webmanifest"), "utf8"));
   const head = readFileSync(path.join(raiz, "src/routes/__root.tsx"), "utf8");
 
   const corHead = head.match(/name: "theme-color", content: "(#[0-9a-fA-F]{3,8})"/)?.[1];
-  if (!corHead) problemas.push('head sem meta theme-color');
+  if (!corHead) problemas.push("head sem meta theme-color");
   else if (corHead.toLowerCase() !== String(manifest.theme_color).toLowerCase()) {
     problemas.push(`theme-color divergente: head ${corHead} vs manifest ${manifest.theme_color}`);
   }
