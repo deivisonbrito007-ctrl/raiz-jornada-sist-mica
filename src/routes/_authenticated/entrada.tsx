@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { getMeuContexto } from "@/lib/raiz.functions";
-import { RaizLogo } from "@/components/raiz-logo";
+import { SplashRaiz } from "@/components/splash-raiz";
 
 export const Route = createFileRoute("/_authenticated/entrada")({
   component: Entrada,
