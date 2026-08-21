@@ -41,7 +41,7 @@ export function HeroRaiz() {
         style={{ backgroundImage: "var(--halo-entrada)" }}
       />
 
-      <div className="mx-auto max-w-5xl px-6 pb-28 pt-14 md:pb-36 md:pt-24">
+      <div className="mx-auto max-w-5xl px-6 pb-28 pt-24 md:pb-36 md:pt-32">
         <div className="flex flex-col items-center text-center md:items-start md:text-left">
           <RaizLogo className="h-20 w-auto md:h-24" />
 
