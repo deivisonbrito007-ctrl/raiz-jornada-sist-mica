@@ -3,7 +3,11 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { existeTerapeuta as consultarExisteTerapeuta } from "@/lib/cadastro.functions";
+import {
+  existeTerapeuta as consultarExisteTerapeuta,
+  convitePendente as consultarConvite,
+} from "@/lib/cadastro.functions";
+
 import { mensagemErroAuth } from "@/lib/erro-auth";
 import { MolduraEntrada } from "@/components/auth/moldura-entrada";
 import { FormularioEntrar } from "@/components/auth/formulario-entrar";
@@ -33,7 +37,14 @@ export const Route = createFileRoute("/auth")({
 
 type Aba = "entrar" | "cadastro";
 
+type EstadoConvite =
+  | { estado: "inicial" }
+  | { estado: "conferindo" }
+  | { estado: "encontrado"; terapeuta: string | null }
+  | { estado: "ausente" };
+
 const SELOS = ["Privado", "No seu ritmo", "Com acompanhamento"];
+
 
 function AuthPage() {
   const { modo, caminho: caminhoUrl, next } = Route.useSearch();
@@ -42,27 +53,36 @@ function AuthPage() {
 
   // A aba vem da URL: voltar no navegador restaura o estado da tela.
   const aba: Aba = modo === "cadastro" ? "cadastro" : "entrar";
-  const trocarAba = (proxima: Aba) => {
-    setEtapaCadastro(1);
-    navigate({ to: "/auth", search: (anterior) => ({ ...anterior, modo: proxima }), replace: true });
-  };
 
-  const [etapaCadastro, setEtapaCadastro] = useState<1 | 2>(1);
+  const caminhoInicial: CaminhoEntrada =
+    caminhoUrl === "acompanhado" || destinoSeguro?.startsWith("/convite")
+      ? "convite"
+      : caminhoUrl === "autoguiado"
+        ? "propria"
+        : "propria";
+  // Quem já escolheu na página inicial entra direto nos dados, com o resumo à vista.
+  const escolhaVeioDeFora = Boolean(caminhoUrl) || Boolean(destinoSeguro?.startsWith("/convite"));
+
+  const [etapaCadastro, setEtapaCadastro] = useState<1 | 2>(escolhaVeioDeFora ? 2 : 1);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [caminho, setCaminho] = useState<CaminhoEntrada>(
-    caminhoUrl === "acompanhado" || destinoSeguro?.startsWith("/convite") ? "convite" : "propria",
-  );
-  const [souTerapeuta, setSouTerapeuta] = useState(false);
+  const [caminho, setCaminho] = useState<CaminhoEntrada>(caminhoInicial);
 
   const [carregando, setCarregando] = useState(false);
   const [confirmeEmail, setConfirmeEmail] = useState(false);
   const [recuperar, setRecuperar] = useState(false);
   const [linkEnviado, setLinkEnviado] = useState(false);
   const [existeTerapeuta, setExisteTerapeuta] = useState(true);
+  const [convite, setConvite] = useState<EstadoConvite>({ estado: "inicial" });
 
+  const souTerapeuta = caminho === "terapeuta";
   const cadastro = aba === "cadastro";
+
+  const trocarAba = (proxima: Aba) => {
+    setEtapaCadastro(escolhaVeioDeFora ? 2 : 1);
+    navigate({ to: "/auth", search: (anterior) => ({ ...anterior, modo: proxima }), replace: true });
+  };
 
   useEffect(() => {
     consultarExisteTerapeuta()
@@ -75,6 +95,11 @@ function AuthPage() {
     if (caminhoUrl === "acompanhado") setCaminho("convite");
     if (caminhoUrl === "autoguiado") setCaminho("propria");
   }, [caminhoUrl]);
+
+  // Trocar de caminho invalida a conferência de convite anterior.
+  useEffect(() => {
+    setConvite({ estado: "inicial" });
+  }, [caminho]);
 
   useEffect(() => {
     // getUser revalida com o servidor: sessão vencida não redireciona por engano.
@@ -93,6 +118,7 @@ function AuthPage() {
   }
 
 
+
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
     setCarregando(true);
@@ -109,7 +135,25 @@ function AuthPage() {
 
   async function criarConta(e: React.FormEvent) {
     e.preventDefault();
+
+    // Quem diz ser cliente de uma terapeuta ganha uma conferência antes de
+    // criar a conta: sem convite, explicamos o que vai acontecer em vez de
+    // criar silenciosamente uma conta autoguiada.
+    if (caminho === "convite" && convite.estado === "inicial") {
+      setConvite({ estado: "conferindo" });
+      try {
+        const r = await consultarConvite({ data: { email } });
+        if (r.existe) setConvite({ estado: "encontrado", terapeuta: r.terapeuta });
+        else setConvite({ estado: "ausente" });
+      } catch {
+        // Se a conferência falhar, seguimos o cadastro normalmente.
+        setConvite({ estado: "ausente" });
+      }
+      return;
+    }
+
     setCarregando(true);
+
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -178,6 +222,26 @@ function AuthPage() {
   const frase = cadastro
     ? "Comece um espaço só seu para continuar o que se moveu na sessão."
     : "Respire. Você chegou ao seu espaço de cuidado.";
+
+  const avisoConvite =
+    caminho !== "convite" ? null : convite.estado === "conferindo" ? (
+      <p role="status" className="rounded-2xl bg-secondary px-4 py-3 text-sm text-muted-foreground">
+        Conferindo se existe convite para este e-mail...
+      </p>
+    ) : convite.estado === "encontrado" ? (
+      <p role="status" className="rounded-2xl bg-secondary px-4 py-3 text-sm leading-relaxed text-foreground">
+        Encontramos um convite para este e-mail
+        {convite.terapeuta ? ` de ${convite.terapeuta}` : ""}. Ao criar a conta você já entra com
+        acompanhamento.
+      </p>
+    ) : convite.estado === "ausente" ? (
+      <p role="status" className="rounded-2xl border border-terracota/30 bg-terracota/5 px-4 py-3 text-sm leading-relaxed text-foreground">
+        Não encontramos convite para este e-mail. Você pode criar a conta agora: ela começa
+        autoguiada e enviamos seu pedido de acompanhamento para a terapeuta responder. Se você
+        recebeu o convite em outro endereço, corrija o e-mail acima.
+      </p>
+    ) : null;
+
 
   return (
     <MolduraEntrada frase={frase}>
@@ -271,7 +335,7 @@ function AuthPage() {
               {cadastro && caminhoUrl && (
                 <p className="mt-4 rounded-2xl bg-secondary px-4 py-3 text-sm leading-relaxed text-foreground">
                   {caminhoUrl === "acompanhado"
-                    ? "Você escolheu seguir com acompanhamento de uma terapeuta. Dá para trocar no próximo passo."
+                    ? "Você escolheu seguir com acompanhamento de uma terapeuta. Pode trocar essa escolha aqui embaixo."
                     : "Você escolheu começar por conta própria. Dá para pedir acompanhamento depois, sem perder nada."}
                 </p>
               )}
@@ -286,13 +350,12 @@ function AuthPage() {
                     email={email}
                     senha={senha}
                     caminho={caminho}
-                    souTerapeuta={souTerapeuta}
                     mostrarOpcaoTerapeuta={!existeTerapeuta}
+                    escolhaVeioDeFora={escolhaVeioDeFora}
                     onNome={setNome}
                     onEmail={setEmail}
                     onSenha={setSenha}
                     onCaminho={setCaminho}
-                    onSouTerapeuta={setSouTerapeuta}
                     onAvancar={(e) => {
                       e.preventDefault();
                       setEtapaCadastro(2);
@@ -300,7 +363,14 @@ function AuthPage() {
                     onVoltar={() => setEtapaCadastro(1)}
                     onEnviar={criarConta}
                     carregando={carregando}
+                    avisoConvite={avisoConvite}
+                    rotuloEnviar={
+                      caminho === "convite" && convite.estado === "inicial"
+                        ? "Conferir convite e continuar"
+                        : undefined
+                    }
                   />
+
                 ) : (
                   <FormularioEntrar
                     email={email}
@@ -314,15 +384,22 @@ function AuthPage() {
                 )}
               </div>
 
-              <div className="my-6 flex items-center gap-4 text-xs uppercase tracking-wider text-muted-foreground">
-                <span className="h-px flex-1 bg-border" />
-                ou
-                <span className="h-px flex-1 bg-border" />
-              </div>
-              <BotaoGoogle
-                destino={destinoSeguro}
-                caminho={caminho === "convite" ? "acompanhado" : "autoguiado"}
-              />
+              {/* No cadastro o Google só aparece depois da escolha, para a
+                  intenção viajar junto com o login. */}
+              {(!cadastro || etapaCadastro === 2) && (
+                <>
+                  <div className="my-6 flex items-center gap-4 text-xs uppercase tracking-wider text-muted-foreground">
+                    <span className="h-px flex-1 bg-border" />
+                    ou
+                    <span className="h-px flex-1 bg-border" />
+                  </div>
+                  <BotaoGoogle
+                    destino={destinoSeguro}
+                    caminho={caminho === "convite" ? "acompanhado" : "autoguiado"}
+                  />
+                </>
+              )}
+
 
               {!cadastro && (
                 <p className="mt-6 text-center text-sm text-muted-foreground">

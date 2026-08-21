@@ -41,8 +41,10 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth, rpc } }));
 vi.mock("@/integrations/lovable", () => ({
   lovable: { auth: { signInWithOAuth: vi.fn(async () => ({ redirected: true })) } },
 }));
+const convite = { existe: false, terapeuta: null as string | null, limitado: false };
 vi.mock("@/lib/cadastro.functions", () => ({
   existeTerapeuta: async () => ({ existe: estado.existeTerapeuta }),
+  convitePendente: async () => convite,
 }));
 vi.mock("sonner", () => ({ toast: { error: toastError, success: vi.fn() } }));
 
@@ -125,15 +127,19 @@ describe("fluxo de login /auth", () => {
     expect(await screen.findByText(/link de redefinição já está a caminho/i)).toBeInTheDocument();
   });
 
-  it("cadastra cliente em dois passos e pede confirmação de e-mail", async () => {
+  it("escolhe o caminho antes dos dados e pede confirmação de e-mail", async () => {
     search.modo = "cadastro";
     const user = userEvent.setup();
     render(<AuthPage />);
 
+    // Passo 1: a escolha do jeito de caminhar vem primeiro.
+    expect(screen.getByText("Como você vai usar o Raiz?")).toBeInTheDocument();
+    await user.click(screen.getByText("Quero começar por conta própria"));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+
     await user.type(screen.getByLabelText("Como podemos te chamar?"), "Maria");
     await preencher(user);
-    await user.click(screen.getByRole("button", { name: "Continuar" }));
-    await user.click(screen.getByRole("button", { name: "Criar conta"}));
+    await user.click(screen.getByRole("button", { name: "Criar conta" }));
 
     await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
     expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({
@@ -145,17 +151,18 @@ describe("fluxo de login /auth", () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it("cadastra terapeuta quando a opção de terapeuta é marcada", async () => {
+  it("cadastra terapeuta quando o cartão de terapeuta é escolhido", async () => {
     search.modo = "cadastro";
     auth.signUp.mockResolvedValue({ data: { session: { user: { id: "1" } } }, error: null });
     const user = userEvent.setup();
     render(<AuthPage />);
 
+    await waitFor(() => expect(screen.getByText("Sou a terapeuta responsável")).toBeInTheDocument());
+    await user.click(screen.getByText("Sou a terapeuta responsável"));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
     await user.type(screen.getByLabelText("Como podemos te chamar?"), "Ana");
     await preencher(user);
-    await user.click(screen.getByRole("button", { name: "Continuar" }));
-    await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Criar conta"}));
+    await user.click(screen.getByRole("button", { name: "Criar conta" }));
 
     await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
     expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({
@@ -164,6 +171,26 @@ describe("fluxo de login /auth", () => {
       caminho_entrada: "terapeuta",
     });
     expect(navigate).toHaveBeenCalledWith({ to: "/entrada", replace: true });
+  });
+
+  it("confere convite antes de criar conta com acompanhamento", async () => {
+    search.modo = "cadastro";
+    convite.existe = false;
+    const user = userEvent.setup();
+    render(<AuthPage />);
+
+    await user.click(screen.getByText("Sou cliente de uma terapeuta"));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await user.type(screen.getByLabelText("Como podemos te chamar?"), "Bia");
+    await preencher(user);
+    await user.click(screen.getByRole("button", { name: "Conferir convite e continuar" }));
+
+    expect(await screen.findByText(/Não encontramos convite para este e-mail/i)).toBeInTheDocument();
+    expect(auth.signUp).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Criar conta" }));
+    await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
+    expect((auth.signUp.mock.calls[0] as any[])[0].options.data.caminho_entrada).toBe("convite");
   });
 
   it("redireciona quem já tem sessão ativa sem preencher o formulário", async () => {
