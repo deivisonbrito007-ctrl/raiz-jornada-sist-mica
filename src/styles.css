@@ -263,3 +263,40 @@
     font-style: italic;
   }
 }
+
+/* Animações da tela de abertura (splash) */
+@keyframes raiz-respirar {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(1.045);
+    opacity: 1;
+  }
+}
+
+@keyframes raiz-deslizar {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+@utility animate-respirar {
+  animation: raiz-respirar 3.6s ease-in-out infinite;
+}
+
+@utility animate-deslizar {
+  animation: raiz-deslizar 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-respirar,
+  .animate-deslizar {
+    animation: none;
+  }
+}

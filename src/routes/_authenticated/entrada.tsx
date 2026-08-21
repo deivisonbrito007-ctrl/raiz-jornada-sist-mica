@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { getMeuContexto } from "@/lib/raiz.functions";
-import { RaizLogo } from "@/components/raiz-logo";
+import { SplashRaiz } from "@/components/splash-raiz";
 
 export const Route = createFileRoute("/_authenticated/entrada")({
   component: Entrada,
@@ -19,10 +19,5 @@ function Entrada() {
     navigate({ to: data.papel === "terapeuta" ? "/admin" : "/app", replace: true });
   }, [data, navigate]);
 
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
-      <RaizLogo className="h-20 animate-pulse" />
-      <p className="text-sm text-muted-foreground">Preparando o seu espaço...</p>
-    </div>
-  );
+  return <SplashRaiz />;
 }

@@ -17,6 +17,7 @@ import { ProvedorCache } from "@/components/provedor-cache";
 import { definirUsuarioCache, limparCachePersistido } from "@/lib/cache-persistente";
 import { AplicarIntencaoLogin } from "@/components/auth/aplicar-intencao-login";
 import { AvisoReinstalarApp } from "@/components/aviso-reinstalar-app";
+import { TELAS_ABERTURA_IOS } from "@/lib/telas-abertura-ios";
 
 
 
@@ -104,6 +105,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
       { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
+      // telas de abertura do app instalado no iOS (evita tela branca/ícone esticado)
+      ...TELAS_ABERTURA_IOS,
     ],
 
   }),
