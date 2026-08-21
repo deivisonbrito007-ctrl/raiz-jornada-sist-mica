@@ -82,24 +82,24 @@ export function FaixaConfianca() {
 
 export function ComoFunciona() {
   return (
-    <section className="mx-auto max-w-5xl px-6 py-20 md:py-28">
+    <section className="mx-auto max-w-5xl px-6 py-24 md:py-32">
       <h2 className="max-w-xl text-[1.6rem] leading-[1.3] text-floresta md:text-[2.6rem] md:leading-[1.2]">
         Uma jornada que respeita o tempo de cada sistema.
       </h2>
 
-      <ol className="relative mt-12 space-y-10 md:mt-16 md:grid md:grid-cols-3 md:gap-12 md:space-y-0">
+      <ol className="relative mt-14 space-y-12 md:mt-20 md:grid md:grid-cols-3 md:gap-14 md:space-y-0">
         <span
           aria-hidden="true"
           className="absolute left-[1.1rem] top-3 bottom-3 w-px bg-gradient-to-b from-ocre/60 via-salvia/40 to-transparent md:hidden"
         />
         {passos.map((passo, i) => (
-          <li key={passo.titulo} className="relative flex gap-4 md:block">
+          <li key={passo.titulo} className="relative flex gap-5 md:block">
             <span className="relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ocre/50 bg-secondary font-display text-sm font-semibold text-ocre-forte">
               {i + 1}
             </span>
-            <div className="md:mt-5">
+            <div className="md:mt-6">
               <h3 className="text-[1.1rem] leading-snug text-floresta md:text-xl">{passo.titulo}</h3>
-              <p className="mt-2.5 text-[0.95rem] leading-[1.7] text-muted-foreground">{passo.texto}</p>
+              <p className="mt-3 text-[0.95rem] leading-[1.7] text-muted-foreground">{passo.texto}</p>
             </div>
           </li>
         ))}
@@ -110,14 +110,14 @@ export function ComoFunciona() {
 
 export function EixosSistemicos() {
   return (
-    <section className="bg-secondary/60 py-16 md:py-24">
+    <section className="bg-secondary/60 py-20 md:py-28">
       <div className="mx-auto max-w-5xl px-6">
         <h2 className="text-[1.6rem] leading-[1.3] text-floresta md:text-[2.1rem]">Os oito eixos do trabalho</h2>
-        <p className="mt-4 max-w-xl text-[0.95rem] leading-[1.75] text-muted-foreground md:text-base">
+        <p className="mt-5 max-w-xl text-[0.95rem] leading-[1.75] text-muted-foreground md:text-base">
           Toda prática da Raiz pertence a um eixo. É assim que a trilha ganha direção em vez de virar
           uma pilha de conteúdos soltos.
         </p>
-        <ul className="mt-9 flex flex-wrap gap-3">
+        <ul className="mt-11 flex flex-wrap gap-3">
           {eixos.map((eixo) => (
             <li
               key={eixo}
