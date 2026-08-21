@@ -47,15 +47,20 @@ def main():
     for largura, altura in TELAS:
         centro_y = altura * 0.44
         tela = aura(largura, altura, centro_y)
-        # disco creme suave atras do simbolo, para o desenho escuro respirar
-        disco_r = round(min(largura, altura) * 0.30)
-        disco = Image.new("L", (disco_r * 2, disco_r * 2), 0)
+        # halo creme suave atras do simbolo, para o desenho escuro respirar
+        disco_r = round(min(largura, altura) * 0.26)
+        lado = round(disco_r * 3.2)
+        disco = Image.new("L", (lado, lado), 0)
         dd = ImageDraw.Draw(disco)
-        dd.ellipse((0, 0, disco_r * 2 - 1, disco_r * 2 - 1), fill=235)
-        disco = disco.filter(ImageFilter.GaussianBlur(radius=disco_r * 0.16))
+        centro = lado / 2
+        dd.ellipse(
+            (centro - disco_r, centro - disco_r, centro + disco_r, centro + disco_r),
+            fill=225,
+        )
+        disco = disco.filter(ImageFilter.GaussianBlur(radius=disco_r * 0.42))
         tela.paste(
             Image.new("RGB", disco.size, CREME),
-            (round(largura / 2 - disco_r), round(centro_y - disco_r)),
+            (round(largura / 2 - centro), round(centro_y - centro)),
             disco,
         )
 
