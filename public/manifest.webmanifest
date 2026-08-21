@@ -9,7 +9,7 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f3ebd8",
+  "background_color": "#1b2a1d",
   "theme_color": "#1b2a1d",
   "icons": [
     { "src": "/favicon.png", "sizes": "64x64", "type": "image/png", "purpose": "any" },
