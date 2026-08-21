@@ -7,12 +7,13 @@ para que a abertura do app instalado apareca nitida em vez de uma tela branca.
 Uso: python3 scripts/gerar-splash-ios.py <caminho-do-simbolo.png>
 """
 import sys, os
-from PIL import Image, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DESTINO = os.path.join(RAIZ, "public", "splash")
 FUNDO = (27, 42, 29)
 BRILHO = (178, 76, 46)
+CREME = (243, 235, 216)
 
 TELAS = [
     (1290, 2796), (1179, 2556), (1284, 2778), (1170, 2532), (1125, 2436),
@@ -46,7 +47,19 @@ def main():
     for largura, altura in TELAS:
         centro_y = altura * 0.44
         tela = aura(largura, altura, centro_y)
-        alvo = min(largura, altura) * 0.42
+        # disco creme suave atras do simbolo, para o desenho escuro respirar
+        disco_r = round(min(largura, altura) * 0.30)
+        disco = Image.new("L", (disco_r * 2, disco_r * 2), 0)
+        dd = ImageDraw.Draw(disco)
+        dd.ellipse((0, 0, disco_r * 2 - 1, disco_r * 2 - 1), fill=235)
+        disco = disco.filter(ImageFilter.GaussianBlur(radius=disco_r * 0.16))
+        tela.paste(
+            Image.new("RGB", disco.size, CREME),
+            (round(largura / 2 - disco_r), round(centro_y - disco_r)),
+            disco,
+        )
+
+        alvo = min(largura, altura) * 0.34
         escala = alvo / marca.height
         m = marca.resize((max(1, round(marca.width * escala)), round(alvo)), Image.LANCZOS)
         tela.paste(m, (round((largura - m.width) / 2), round(centro_y - m.height / 2)), m)
