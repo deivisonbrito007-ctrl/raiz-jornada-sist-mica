@@ -1,3 +1,4 @@
+import aura from "@/assets/aura-entrada.jpg";
 import { RaizLogo } from "@/components/raiz-logo";
 
 /**
@@ -10,6 +11,14 @@ export function PainelMarca({ frase }: { frase: string }) {
       className="relative isolate overflow-hidden bg-floresta px-6 pb-14 pt-[calc(env(safe-area-inset-top)+2.5rem)] text-center text-floresta-foreground md:px-12 md:pb-12 md:pt-10"
       style={{ backgroundImage: "var(--gradiente-aura)" }}
     >
+      <img
+        src={aura}
+        alt=""
+        aria-hidden="true"
+        width={1024}
+        height={1024}
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover opacity-35 mix-blend-screen"
+      />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10"
