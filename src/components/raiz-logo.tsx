@@ -1,12 +1,19 @@
-import logo from "@/assets/raiz-logo.png.asset.json";
+import marca from "@/assets/raiz-marca.png.asset.json";
 import { cn } from "@/lib/utils";
 
+/**
+ * Símbolo Raiz. Usa o arquivo recortado no desenho (sem margem vazia) e em alta
+ * resolução, para renderizar nítido em telas retina e em qualquer tamanho.
+ */
 export function RaizLogo({ className }: { className?: string }) {
   return (
     <img
-      src={logo.url}
+      src={marca.url}
       alt="Raiz"
-      className={cn("h-10 w-auto select-none", className)}
+      width={1016}
+      height={1152}
+      decoding="async"
+      className={cn("h-10 w-auto select-none object-contain", className)}
       draggable={false}
     />
   );
