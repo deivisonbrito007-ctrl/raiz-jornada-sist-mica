@@ -63,7 +63,7 @@ describe("AvisoReinstalarApp", () => {
     const dialogo = await screen.findByRole("dialog");
     expect(dialogo).toHaveAccessibleName(/versão antiga/i);
     await userEvent.click(screen.getByRole("button", { name: "Reinstalar" }));
-    expect(screen.getByText(/iPhone e iPad/)).toBeInTheDocument();
+    expect(screen.getByText(/iPhone e iPad/, { selector: "p" })).toBeInTheDocument();
     expect(screen.getByText(/Adicionar à Tela de Início/)).toBeInTheDocument();
   });
 
@@ -73,7 +73,7 @@ describe("AvisoReinstalarApp", () => {
     render(<AvisoReinstalarApp />);
     await screen.findByRole("dialog");
     await userEvent.click(screen.getByRole("button", { name: "Reinstalar" }));
-    expect(screen.getByText(/Android \(Chrome\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Android \(Chrome\)/, { selector: "p" })).toBeInTheDocument();
     expect(screen.getByText(/Instalar app/)).toBeInTheDocument();
   });
 
