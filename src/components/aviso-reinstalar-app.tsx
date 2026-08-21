@@ -1,5 +1,5 @@
 import { RefreshCw, Share, MoreVertical, Trash2, ExternalLink } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
   useInstalacaoDesatualizada,
