@@ -79,7 +79,7 @@ export function FormularioCadastro({
   carregando: boolean;
   escolhaVeioDeFora?: boolean;
   avisoConvite?: React.ReactNode;
-  rotuloEnviar?: string;
+  rotuloEnviar?: string | undefined;
 }) {
   const opcoes: Opcao[] = mostrarOpcaoTerapeuta ? [...CAMINHOS, CARTAO_TERAPEUTA] : [...CAMINHOS];
 
