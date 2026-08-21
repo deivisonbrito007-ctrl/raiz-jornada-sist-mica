@@ -10,7 +10,7 @@
  * VERSAO_ICONES (o script scripts/verificar-icones.mjs cobra isso no CI).
  */
 export const VERSAO_APP = "1.1.0";
-export const VERSAO_ICONES = 2;
+export const VERSAO_ICONES = 3;
 
 export const CHAVE_ASSINATURA = "raiz.instalacao.assinatura";
 export const CHAVE_ADIADO = "raiz.instalacao.adiado";
