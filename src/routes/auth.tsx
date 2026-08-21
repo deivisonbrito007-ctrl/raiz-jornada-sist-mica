@@ -384,15 +384,22 @@ function AuthPage() {
                 )}
               </div>
 
-              <div className="my-6 flex items-center gap-4 text-xs uppercase tracking-wider text-muted-foreground">
-                <span className="h-px flex-1 bg-border" />
-                ou
-                <span className="h-px flex-1 bg-border" />
-              </div>
-              <BotaoGoogle
-                destino={destinoSeguro}
-                caminho={caminho === "convite" ? "acompanhado" : "autoguiado"}
-              />
+              {/* No cadastro o Google só aparece depois da escolha, para a
+                  intenção viajar junto com o login. */}
+              {(!cadastro || etapaCadastro === 2) && (
+                <>
+                  <div className="my-6 flex items-center gap-4 text-xs uppercase tracking-wider text-muted-foreground">
+                    <span className="h-px flex-1 bg-border" />
+                    ou
+                    <span className="h-px flex-1 bg-border" />
+                  </div>
+                  <BotaoGoogle
+                    destino={destinoSeguro}
+                    caminho={caminho === "convite" ? "acompanhado" : "autoguiado"}
+                  />
+                </>
+              )}
+
 
               {!cadastro && (
                 <p className="mt-6 text-center text-sm text-muted-foreground">
