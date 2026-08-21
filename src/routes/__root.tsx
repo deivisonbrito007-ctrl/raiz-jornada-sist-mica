@@ -17,6 +17,7 @@ import { ProvedorCache } from "@/components/provedor-cache";
 import { definirUsuarioCache, limparCachePersistido } from "@/lib/cache-persistente";
 import { AplicarIntencaoLogin } from "@/components/auth/aplicar-intencao-login";
 import { AvisoReinstalarApp } from "@/components/aviso-reinstalar-app";
+import { TELAS_ABERTURA_IOS } from "@/lib/telas-abertura-ios";
 
 
 
