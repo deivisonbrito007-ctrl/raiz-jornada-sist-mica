@@ -805,6 +805,25 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const CONTEUDO_TIPOS = [
+  "video",
+  "audio",
+  "meditacao",
+  "aterramento",
+  "movimento_sistemico",
+  "exercicio",
+  "texto",
+  "texto_educativo",
+  "diario_integracao",
+  "pergunta_reflexiva",
+  "checkin",
+  "checkout",
+  "acao_alinhada",
+  "pratica_semanal",
+  "tarefa",
+  "pdf",
+] as const;
+
 export const adminSalvarConteudo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
@@ -812,14 +831,28 @@ export const adminSalvarConteudo = createServerFn({ method: "POST" })
       .object({
         id: z.string().uuid().optional(),
         eixoId: z.string().uuid(),
-        tipo: z.enum(["video", "audio", "exercicio", "texto", "tarefa"]),
-        titulo: z.string().min(1).max(200),
+        tipo: z.enum(CONTEUDO_TIPOS),
+        titulo: z.string().trim().min(1).max(200),
         descricao: z.string().max(2000).default(""),
+        objetivo: z.string().max(2000).default(""),
+        instrucoes: z.string().max(20000).default(""),
+        perguntasIntegracao: z.string().max(4000).default(""),
+        materiais: z.string().max(2000).default(""),
+        sensibilidades: z.string().max(2000).default(""),
+        orientacoesPausa: z.string().max(2000).default(""),
+        transcricao: z.string().max(40000).default(""),
+        legendasPath: z.string().max(500).nullable().optional(),
         corpoTexto: z.string().max(20000).nullable().optional(),
         storagePath: z.string().max(500).nullable().optional(),
         thumbnailPath: z.string().max(500).nullable().optional(),
         duracaoSegundos: z.number().int().min(0).default(0),
         ordem: z.number().int().min(0).default(0),
+        nivel: z.enum(["leve", "intermediario", "profundo"]).default("leve"),
+        status: z.enum(["rascunho", "em_revisao", "publicado", "arquivado"]).default("rascunho"),
+        versao: z.number().int().min(1).max(999).default(1),
+        autorId: z.string().uuid().nullable().optional(),
+        revisorId: z.string().uuid().nullable().optional(),
+        dataRevisao: z.string().max(20).nullable().optional(),
       })
       .parse(input),
   )
@@ -833,11 +866,25 @@ export const adminSalvarConteudo = createServerFn({ method: "POST" })
       tipo: data.tipo,
       titulo: data.titulo,
       descricao: data.descricao,
+      objetivo: data.objetivo,
+      instrucoes: data.instrucoes,
+      perguntas_integracao: data.perguntasIntegracao,
+      materiais: data.materiais,
+      sensibilidades: data.sensibilidades,
+      criterios_interrupcao: data.orientacoesPausa,
+      transcricao: data.transcricao,
+      legendas_path: data.legendasPath || null,
       corpo_texto: data.corpoTexto ?? null,
       storage_path: data.storagePath ?? null,
       thumbnail_path: data.thumbnailPath ?? null,
       duracao_segundos: data.duracaoSegundos,
       ordem: data.ordem,
+      nivel: data.nivel,
+      status: data.status,
+      versao: data.versao,
+      autor_id: data.autorId ?? userId,
+      revisor_id: data.revisorId ?? null,
+      data_revisao: data.dataRevisao || null,
     };
     const query = data.id
       ? supabase.from("conteudos").update(payload).eq("id", data.id)
@@ -847,20 +894,64 @@ export const adminSalvarConteudo = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Exclusão definitiva só quando o conteúdo não está em nenhuma trilha nem em
+ * plano de cliente. Nos demais casos o caminho é arquivar, preservando o
+ * histórico de quem já praticou.
+ */
 export const adminApagarConteudo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
+    const { supabase } = context;
     await garantirPermissao(
-      context.supabase,
+      supabase,
       context.userId,
       "gerenciar_conteudos",
       "adminApagarConteudo",
       { tabela: "conteudos" },
     );
-    const { error } = await context.supabase.from("conteudos").delete().eq("id", data.id);
+
+    const [copias, planos, progresso] = await Promise.all([
+      supabase
+        .from("conteudos")
+        .select("id", { count: "exact", head: true })
+        .eq("conteudo_origem_id", data.id)
+        .not("trilha_id", "is", null),
+      supabase
+        .from("atribuicao_etapas")
+        .select("id", { count: "exact", head: true })
+        .eq("conteudo_id", data.id),
+      supabase
+        .from("progresso")
+        .select("id", { count: "exact", head: true })
+        .eq("conteudo_id", data.id),
+    ]);
+
+    const { data: proprio } = await supabase
+      .from("conteudos")
+      .select("trilha_id")
+      .eq("id", data.id)
+      .maybeSingle();
+
+    const emUso =
+      Boolean(proprio?.trilha_id) ||
+      (copias.count ?? 0) > 0 ||
+      (planos.count ?? 0) > 0 ||
+      (progresso.count ?? 0) > 0;
+
+    if (emUso) {
+      return {
+        ok: false as const,
+        motivo: "em_uso" as const,
+        mensagem:
+          "Este conteúdo está em uso em uma trilha ou plano ativo. Arquive-o para preservar o histórico das pessoas que já praticaram.",
+      };
+    }
+
+    const { error } = await supabase.from("conteudos").delete().eq("id", data.id);
     if (error) throw erroSeguro(error);
-    return { ok: true };
+    return { ok: true as const };
   });
 
 export const adminSalvarEixo = createServerFn({ method: "POST" })
@@ -908,17 +999,171 @@ export const adminListarConteudos = createServerFn({ method: "GET" })
       "adminListarConteudos",
       { tabela: "conteudos" },
     );
-    const [eixos, conteudos] = await Promise.all([
+    const [eixos, conteudos, trilhas, perfis] = await Promise.all([
       context.supabase.from("eixos").select("id, nome, descricao, icone, ordem").order("ordem"),
       context.supabase
         .from("conteudos")
         .select(
-          "id, eixo_id, tipo, titulo, descricao, corpo_texto, storage_path, thumbnail_path, duracao_segundos, ordem",
+          "id, eixo_id, tipo, titulo, descricao, objetivo, instrucoes, perguntas_integracao, corpo_texto, storage_path, thumbnail_path, legendas_path, transcricao, materiais, sensibilidades, criterios_interrupcao, duracao_segundos, ordem, nivel, status, versao, autor_id, revisor_id, data_revisao, updated_at, created_at, trilha_id, conteudo_origem_id",
         )
         .order("ordem"),
+      context.supabase.from("trilhas").select("id, nome, status, eixo_id").order("nome"),
+      context.supabase.from("profiles").select("id, nome, email"),
     ]);
-    return { eixos: eixos.data ?? [], conteudos: conteudos.data ?? [] };
+    return {
+      eixos: eixos.data ?? [],
+      conteudos: conteudos.data ?? [],
+      trilhas: trilhas.data ?? [],
+      pessoas: perfis.data ?? [],
+    };
   });
+
+/** Trilhas que usam o conteúdo (como etapa direta ou como cópia editável). */
+export const adminTrilhasDoConteudo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminTrilhasDoConteudo", {
+      tabela: "conteudos",
+    });
+
+    const { data: etapas, error } = await supabase
+      .from("conteudos")
+      .select("id, titulo, trilha_id, conteudo_origem_id, trilhas(id, nome, status)")
+      .or(`id.eq.${data.id},conteudo_origem_id.eq.${data.id}`)
+      .not("trilha_id", "is", null);
+    if (error) throw erroSeguro(error);
+
+    const mapa = new Map<string, { id: string; nome: string; status: string; copia: boolean }>();
+    for (const etapa of etapas ?? []) {
+      const trilha = (etapa as { trilhas?: { id: string; nome: string; status: string } | null })
+        .trilhas;
+      if (!trilha) continue;
+      if (!mapa.has(trilha.id)) {
+        mapa.set(trilha.id, { ...trilha, copia: etapa.id !== data.id });
+      }
+    }
+
+    const { count } = await supabase
+      .from("atribuicao_etapas")
+      .select("id", { count: "exact", head: true })
+      .in("conteudo_id", [data.id, ...(etapas ?? []).map((e) => e.id)]);
+
+    return { trilhas: [...mapa.values()], planos: count ?? 0 };
+  });
+
+/** Cópia editável em rascunho, preservando o original como origem. */
+export const adminDuplicarConteudo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminDuplicarConteudo", {
+      tabela: "conteudos",
+    });
+
+    const { data: original, error: erroLeitura } = await supabase
+      .from("conteudos")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (erroLeitura) throw erroSeguro(erroLeitura);
+    if (!original) throw new Error("Conteúdo não encontrado.");
+
+    const {
+      id: _id,
+      created_at: _criado,
+      updated_at: _atualizado,
+      ...resto
+    } = original as Record<string, unknown> & { id: string };
+
+    const copia = {
+      ...resto,
+      titulo: `${original.titulo} (cópia)`,
+      status: "rascunho",
+      versao: 1,
+      trilha_id: null,
+      autor_id: userId,
+      revisor_id: null,
+      conteudo_origem_id: original.id,
+    } as never;
+
+    const { data: criado, error } = await supabase
+      .from("conteudos")
+      .insert(copia)
+      .select("id")
+      .single();
+    if (error) throw erroSeguro(error);
+
+    await registrarAuditoria(supabase, atorAuditoria(context), {
+      acao: "conteudo_duplicado",
+      alvoTipo: "conteudo",
+      alvoId: criado.id,
+      detalhes: { origem: original.id, titulo: original.titulo },
+    });
+
+    return { ok: true, id: criado.id };
+  });
+
+/** Envia para revisão, publica, arquiva ou volta para rascunho. */
+export const adminMudarStatusConteudo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        ids: z.array(z.string().uuid()).min(1).max(200),
+        status: z.enum(["rascunho", "em_revisao", "publicado", "arquivado"]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminMudarStatusConteudo", {
+      tabela: "conteudos",
+    });
+
+    const patch: Record<string, unknown> = { status: data.status };
+    if (data.status === "publicado") patch["revisor_id"] = userId;
+    if (data.status === "em_revisao") patch["data_revisao"] = new Date().toISOString().slice(0, 10);
+
+    const { error } = await supabase
+      .from("conteudos")
+      .update(patch as never)
+      .in("id", data.ids);
+    if (error) throw erroSeguro(error);
+
+    await registrarAuditoria(supabase, atorAuditoria(context), {
+      acao:
+        data.status === "publicado"
+          ? "conteudo_publicado"
+          : data.status === "arquivado"
+            ? "conteudo_arquivado"
+            : "conteudo_status_alterado",
+      alvoTipo: "conteudo",
+      alvoId: data.ids[0] ?? null,
+      detalhes: { status: data.status, quantidade: data.ids.length },
+    });
+
+    return { ok: true, quantidade: data.ids.length };
+  });
+
+/** URL assinada de curta duração para pré-visualizar a mídia no painel. */
+export const adminPreviaConteudo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ caminho: z.string().min(1).max(500) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminPreviaConteudo", {
+      tabela: "conteudos",
+    });
+    const { data: assinado, error } = await supabase.storage
+      .from("midias")
+      .createSignedUrl(data.caminho, 900);
+    if (error) throw erroSeguro(error);
+    return { url: assinado?.signedUrl ?? null };
+  });
+
 
 export const adminSalvarPacote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

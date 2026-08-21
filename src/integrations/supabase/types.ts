@@ -428,20 +428,29 @@ export type Database = {
       }
       conteudos: {
         Row: {
+          autor_id: string | null
+          conteudo_origem_id: string | null
           corpo_texto: string | null
           created_at: string
           criterios_interrupcao: string
+          data_revisao: string | null
           descricao: string
           duracao_segundos: number
           eixo_id: string
           id: string
+          instrucoes: string
           legendas_path: string | null
           local_recomendado: string
           materiais: string
+          nivel: Database["public"]["Enums"]["nivel_profundidade"]
+          objetivo: string
           obrigatoria: boolean
           ordem: number
+          perguntas_integracao: string
           permite_repetir: boolean
+          revisor_id: string | null
           sensibilidades: string
+          status: Database["public"]["Enums"]["conteudo_status"]
           storage_path: string | null
           thumbnail_path: string | null
           tipo: Database["public"]["Enums"]["conteudo_tipo"]
@@ -449,22 +458,33 @@ export type Database = {
           titulo: string
           transcricao: string
           trilha_id: string | null
+          updated_at: string
+          versao: number
         }
         Insert: {
+          autor_id?: string | null
+          conteudo_origem_id?: string | null
           corpo_texto?: string | null
           created_at?: string
           criterios_interrupcao?: string
+          data_revisao?: string | null
           descricao?: string
           duracao_segundos?: number
           eixo_id: string
           id?: string
+          instrucoes?: string
           legendas_path?: string | null
           local_recomendado?: string
           materiais?: string
+          nivel?: Database["public"]["Enums"]["nivel_profundidade"]
+          objetivo?: string
           obrigatoria?: boolean
           ordem?: number
+          perguntas_integracao?: string
           permite_repetir?: boolean
+          revisor_id?: string | null
           sensibilidades?: string
+          status?: Database["public"]["Enums"]["conteudo_status"]
           storage_path?: string | null
           thumbnail_path?: string | null
           tipo?: Database["public"]["Enums"]["conteudo_tipo"]
@@ -472,22 +492,33 @@ export type Database = {
           titulo: string
           transcricao?: string
           trilha_id?: string | null
+          updated_at?: string
+          versao?: number
         }
         Update: {
+          autor_id?: string | null
+          conteudo_origem_id?: string | null
           corpo_texto?: string | null
           created_at?: string
           criterios_interrupcao?: string
+          data_revisao?: string | null
           descricao?: string
           duracao_segundos?: number
           eixo_id?: string
           id?: string
+          instrucoes?: string
           legendas_path?: string | null
           local_recomendado?: string
           materiais?: string
+          nivel?: Database["public"]["Enums"]["nivel_profundidade"]
+          objetivo?: string
           obrigatoria?: boolean
           ordem?: number
+          perguntas_integracao?: string
           permite_repetir?: boolean
+          revisor_id?: string | null
           sensibilidades?: string
+          status?: Database["public"]["Enums"]["conteudo_status"]
           storage_path?: string | null
           thumbnail_path?: string | null
           tipo?: Database["public"]["Enums"]["conteudo_tipo"]
@@ -495,8 +526,17 @@ export type Database = {
           titulo?: string
           transcricao?: string
           trilha_id?: string | null
+          updated_at?: string
+          versao?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "conteudos_conteudo_origem_id_fkey"
+            columns: ["conteudo_origem_id"]
+            isOneToOne: false
+            referencedRelation: "conteudos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conteudos_eixo_id_fkey"
             columns: ["eixo_id"]
@@ -1280,7 +1320,24 @@ export type Database = {
         | "pausado"
         | "concluido"
         | "encerrado"
-      conteudo_tipo: "video" | "audio" | "exercicio" | "texto" | "tarefa"
+      conteudo_status: "rascunho" | "em_revisao" | "publicado" | "arquivado"
+      conteudo_tipo:
+        | "video"
+        | "audio"
+        | "exercicio"
+        | "texto"
+        | "tarefa"
+        | "meditacao"
+        | "aterramento"
+        | "movimento_sistemico"
+        | "texto_educativo"
+        | "diario_integracao"
+        | "pergunta_reflexiva"
+        | "checkin"
+        | "checkout"
+        | "acao_alinhada"
+        | "pratica_semanal"
+        | "pdf"
       diario_visibilidade: "somente_eu" | "compartilhado"
       etapa_tipo:
         | "orientacao"
@@ -1440,7 +1497,25 @@ export const Constants = {
         "concluido",
         "encerrado",
       ],
-      conteudo_tipo: ["video", "audio", "exercicio", "texto", "tarefa"],
+      conteudo_status: ["rascunho", "em_revisao", "publicado", "arquivado"],
+      conteudo_tipo: [
+        "video",
+        "audio",
+        "exercicio",
+        "texto",
+        "tarefa",
+        "meditacao",
+        "aterramento",
+        "movimento_sistemico",
+        "texto_educativo",
+        "diario_integracao",
+        "pergunta_reflexiva",
+        "checkin",
+        "checkout",
+        "acao_alinhada",
+        "pratica_semanal",
+        "pdf",
+      ],
       diario_visibilidade: ["somente_eu", "compartilhado"],
       etapa_tipo: [
         "orientacao",

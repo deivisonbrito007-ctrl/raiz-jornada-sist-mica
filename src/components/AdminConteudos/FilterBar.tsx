@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TIPO_LABEL } from "@/lib/raiz-format";
+import { CONTEUDO_STATUS_LABEL, NIVEL_LABEL, TIPO_LABEL } from "@/lib/raiz-format";
 import { cn } from "@/lib/utils";
 import type { EixoAdmin } from "@/hooks/useConteudos";
 
@@ -15,7 +15,11 @@ export type FiltrosConteudos = {
   busca: string;
   eixo: string;
   tipo: string;
+  /** Situação da mídia (com/sem arquivo, com capa). */
   status: string;
+  /** Situação editorial: rascunho, em revisão, publicado, arquivado. */
+  situacao: string;
+  nivel: string;
 };
 
 export const FILTROS_VAZIOS: FiltrosConteudos = {
@@ -23,6 +27,8 @@ export const FILTROS_VAZIOS: FiltrosConteudos = {
   eixo: "todos",
   tipo: "todos",
   status: "todos",
+  situacao: "todos",
+  nivel: "todos",
 };
 
 type Props = {
@@ -49,7 +55,9 @@ export function temFiltroAtivo(filtros: FiltrosConteudos) {
     filtros.busca.trim() !== "" ||
     filtros.eixo !== "todos" ||
     filtros.tipo !== "todos" ||
-    filtros.status !== "todos"
+    filtros.status !== "todos" ||
+    (filtros.situacao ?? "todos") !== "todos" ||
+    (filtros.nivel ?? "todos") !== "todos"
   );
 }
 
@@ -77,6 +85,52 @@ export function FilterBar({ filtros, eixos, onChange, quantidade }: Props) {
       </div>
 
       <div className="grid gap-2 sm:grid-cols-3">
+        <Select
+          value={filtros.situacao ?? "todos"}
+          onValueChange={(v) => onChange({ ...filtros, situacao: v })}
+        >
+          <SelectTrigger
+            aria-label="Filtrar por situação"
+            className={cn(gatilhoBase, (filtros.situacao ?? "todos") !== "todos" && gatilhoAtivo)}
+          >
+            <span className="flex min-w-0 items-center">
+              <SelectValue placeholder="Situação" />
+              {(filtros.situacao ?? "todos") !== "todos" && <Ativo />}
+            </span>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todas as situações</SelectItem>
+            {Object.entries(CONTEUDO_STATUS_LABEL).map(([valor, label]) => (
+              <SelectItem key={valor} value={valor}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filtros.nivel ?? "todos"}
+          onValueChange={(v) => onChange({ ...filtros, nivel: v })}
+        >
+          <SelectTrigger
+            aria-label="Filtrar por profundidade"
+            className={cn(gatilhoBase, (filtros.nivel ?? "todos") !== "todos" && gatilhoAtivo)}
+          >
+            <span className="flex min-w-0 items-center">
+              <SelectValue placeholder="Profundidade" />
+              {(filtros.nivel ?? "todos") !== "todos" && <Ativo />}
+            </span>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todas as profundidades</SelectItem>
+            {Object.entries(NIVEL_LABEL).map(([valor, label]) => (
+              <SelectItem key={valor} value={valor}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Select value={filtros.eixo} onValueChange={(v) => onChange({ ...filtros, eixo: v })}>
           <SelectTrigger
             aria-label="Filtrar por eixo"
