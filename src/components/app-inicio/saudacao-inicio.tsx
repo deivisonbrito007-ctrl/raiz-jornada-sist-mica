@@ -56,6 +56,27 @@ export function SaudacaoInicio({
       <h1 className="mt-3 font-display text-3xl leading-tight">{titulo}</h1>
       <p className="mt-3 max-w-sm text-sm leading-relaxed text-floresta-foreground/85">{frase}</p>
 
+      {(ciclo || eixoFoco) && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {ciclo && (
+            <span className="rounded-full border border-ocre/40 px-3 py-1 text-xs font-medium text-ocre">
+              {ciclo.rotulo}
+            </span>
+          )}
+          {eixoFoco && (
+            <span className="rounded-full bg-floresta-foreground/10 px-3 py-1 text-xs text-floresta-foreground/85 backdrop-blur">
+              Seu foco: {eixoFoco}
+            </span>
+          )}
+        </div>
+      )}
+      {ciclo && (
+        <p className="mt-3 max-w-sm text-sm leading-relaxed text-floresta-foreground/70">
+          {ciclo.frase}
+        </p>
+      )}
+
+
       <dl className="mt-7 flex flex-wrap items-center gap-3">
         <div className="flex min-h-11 items-center gap-3 rounded-2xl bg-floresta-foreground/10 px-4 py-2.5 backdrop-blur">
           <Flame className="h-4 w-4 text-ocre" aria-hidden="true" />
