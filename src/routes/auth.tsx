@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { existeTerapeuta as consultarExisteTerapeuta } from "@/lib/cadastro.functions";
 import { mensagemErroAuth } from "@/lib/erro-auth";
-import { PainelMarca } from "@/components/auth/painel-marca";
+import { MolduraEntrada } from "@/components/auth/moldura-entrada";
 import { FormularioEntrar } from "@/components/auth/formulario-entrar";
 import { FormularioCadastro, type CaminhoEntrada } from "@/components/auth/formulario-cadastro";
 import { EstadoConfirmeEmail } from "@/components/auth/estado-confirme-email";
@@ -169,11 +169,9 @@ function AuthPage() {
     : "Respire. Você chegou ao seu espaço de cuidado.";
 
   return (
-    <div className="min-h-screen bg-background md:grid md:min-h-screen md:grid-cols-[1fr_minmax(0,30rem)]">
-      <PainelMarca frase={frase} />
+    <MolduraEntrada frase={frase}>
+      <div>
 
-      <main className="relative z-10 -mt-8 rounded-t-[2.5rem] bg-background px-6 pb-[calc(env(safe-area-inset-bottom)+3rem)] pt-8 md:mt-0 md:flex md:flex-col md:justify-center md:rounded-none md:px-12 md:py-12">
-        <div className="mx-auto w-full max-w-md">
           {confirmeEmail ? (
             <EstadoConfirmeEmail
               email={email}
@@ -320,8 +318,8 @@ function AuthPage() {
               </p>
             </>
           )}
-        </div>
-      </main>
-    </div>
+      </div>
+    </MolduraEntrada>
+
   );
 }

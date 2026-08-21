@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { mensagemErroAuth } from "@/lib/erro-auth";
-import { PainelMarca } from "@/components/auth/painel-marca";
+import { MolduraEntrada } from "@/components/auth/moldura-entrada";
 import { CampoSenha } from "@/components/auth/campo-senha";
 import { Button } from "@/components/ui/button";
 
@@ -65,11 +65,8 @@ function RedefinirSenha() {
   }
 
   return (
-    <div className="min-h-screen bg-background md:grid md:grid-cols-[1fr_minmax(0,30rem)]">
-      <PainelMarca frase="Uma nova senha e você volta para onde parou." />
-
-      <main className="relative z-10 -mt-8 rounded-t-[2.5rem] bg-background px-6 pb-[calc(env(safe-area-inset-bottom)+3rem)] pt-8 md:mt-0 md:flex md:flex-col md:justify-center md:rounded-none md:px-12 md:py-12">
-        <div className="mx-auto w-full max-w-md">
+    <MolduraEntrada frase="Uma nova senha e você volta para onde parou.">
+      <div>
           <h1 className="font-display text-2xl text-floresta">Criar nova senha</h1>
 
           {linkValido === false ? (
@@ -124,8 +121,7 @@ function RedefinirSenha() {
               </Button>
             </form>
           )}
-        </div>
-      </main>
-    </div>
+      </div>
+    </MolduraEntrada>
   );
 }
