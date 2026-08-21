@@ -42,27 +42,36 @@ function AuthPage() {
 
   // A aba vem da URL: voltar no navegador restaura o estado da tela.
   const aba: Aba = modo === "cadastro" ? "cadastro" : "entrar";
-  const trocarAba = (proxima: Aba) => {
-    setEtapaCadastro(1);
-    navigate({ to: "/auth", search: (anterior) => ({ ...anterior, modo: proxima }), replace: true });
-  };
 
-  const [etapaCadastro, setEtapaCadastro] = useState<1 | 2>(1);
+  const caminhoInicial: CaminhoEntrada =
+    caminhoUrl === "acompanhado" || destinoSeguro?.startsWith("/convite")
+      ? "convite"
+      : caminhoUrl === "autoguiado"
+        ? "propria"
+        : "propria";
+  // Quem já escolheu na página inicial entra direto nos dados, com o resumo à vista.
+  const escolhaVeioDeFora = Boolean(caminhoUrl) || Boolean(destinoSeguro?.startsWith("/convite"));
+
+  const [etapaCadastro, setEtapaCadastro] = useState<1 | 2>(escolhaVeioDeFora ? 2 : 1);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [caminho, setCaminho] = useState<CaminhoEntrada>(
-    caminhoUrl === "acompanhado" || destinoSeguro?.startsWith("/convite") ? "convite" : "propria",
-  );
-  const [souTerapeuta, setSouTerapeuta] = useState(false);
+  const [caminho, setCaminho] = useState<CaminhoEntrada>(caminhoInicial);
 
   const [carregando, setCarregando] = useState(false);
   const [confirmeEmail, setConfirmeEmail] = useState(false);
   const [recuperar, setRecuperar] = useState(false);
   const [linkEnviado, setLinkEnviado] = useState(false);
   const [existeTerapeuta, setExisteTerapeuta] = useState(true);
+  const [convite, setConvite] = useState<EstadoConvite>({ estado: "inicial" });
 
+  const souTerapeuta = caminho === "terapeuta";
   const cadastro = aba === "cadastro";
+
+  const trocarAba = (proxima: Aba) => {
+    setEtapaCadastro(escolhaVeioDeFora ? 2 : 1);
+    navigate({ to: "/auth", search: (anterior) => ({ ...anterior, modo: proxima }), replace: true });
+  };
 
   useEffect(() => {
     consultarExisteTerapeuta()
@@ -75,6 +84,11 @@ function AuthPage() {
     if (caminhoUrl === "acompanhado") setCaminho("convite");
     if (caminhoUrl === "autoguiado") setCaminho("propria");
   }, [caminhoUrl]);
+
+  // Trocar de caminho invalida a conferência de convite anterior.
+  useEffect(() => {
+    setConvite({ estado: "inicial" });
+  }, [caminho]);
 
   useEffect(() => {
     // getUser revalida com o servidor: sessão vencida não redireciona por engano.
@@ -91,6 +105,7 @@ function AuthPage() {
     }
     navigate({ to: "/entrada", replace: true });
   }
+
 
 
   async function entrar(e: React.FormEvent) {
