@@ -364,6 +364,11 @@ function AuthPage() {
                     onEnviar={criarConta}
                     carregando={carregando}
                     avisoConvite={avisoConvite}
+                    rotuloEnviar={
+                      caminho === "convite" && convite.estado === "inicial"
+                        ? "Conferir convite e continuar"
+                        : undefined
+                    }
                   />
 
                 ) : (

@@ -61,6 +61,7 @@ export function FormularioCadastro({
   carregando,
   escolhaVeioDeFora,
   avisoConvite,
+  rotuloEnviar,
 }: {
   etapa: 1 | 2;
   nome: string;
@@ -78,6 +79,7 @@ export function FormularioCadastro({
   carregando: boolean;
   escolhaVeioDeFora?: boolean;
   avisoConvite?: React.ReactNode;
+  rotuloEnviar?: string;
 }) {
   const opcoes: Opcao[] = mostrarOpcaoTerapeuta ? [...CAMINHOS, CARTAO_TERAPEUTA] : [...CAMINHOS];
 
@@ -194,7 +196,7 @@ export function FormularioCadastro({
         disabled={carregando}
         className="h-13 w-full rounded-full bg-terracota text-base font-semibold text-terracota-foreground shadow-organico hover:bg-terracota/90"
       >
-        {carregando ? "Preparando seu espaço..." : "Criar conta"}
+        {carregando ? "Preparando seu espaço..." : (rotuloEnviar ?? "Criar conta")}
       </Button>
 
       <button
