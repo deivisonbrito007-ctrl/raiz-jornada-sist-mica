@@ -75,6 +75,8 @@ describe("fluxo de login /auth", () => {
     auth.signUp.mockResolvedValue({ data: { session: null }, error: null });
     auth.resetPasswordForEmail.mockResolvedValue({ error: null });
     auth.resend.mockResolvedValue({ error: null });
+    convitePendenteMock.mockResolvedValue({ existe: false, terapeuta: null, limitado: false });
+    window.sessionStorage.clear();
   });
 
   it("entra com e-mail e senha e redireciona para a triagem de papel", async () => {
