@@ -385,7 +385,8 @@ describe("troca de passo e de escolha no cadastro", () => {
     render(<AuthPage />);
 
     expect(screen.getByLabelText("Como podemos te chamar?")).toBeInTheDocument();
-    expect(screen.getByText("Com acompanhamento")).toBeInTheDocument();
+    const resumo = screen.getByRole("button", { name: "trocar" }).parentElement as HTMLElement;
+    expect(resumo).toHaveTextContent("Com acompanhamento");
 
     await user.click(screen.getByRole("button", { name: "trocar" }));
     expect(screen.getByText("Sua escolha")).toBeInTheDocument();
