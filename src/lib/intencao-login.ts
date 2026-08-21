@@ -52,9 +52,9 @@ function armazem(): Storage | null {
 
 /** Guarda a intenção antes de sair para o Google, já validada e com carimbo. */
 export function gravarIntencaoLogin(intencao: {
-  destino?: string | null;
-  caminho?: string | null;
-  papel?: string | null;
+  destino?: string | null | undefined;
+  caminho?: string | null | undefined;
+  papel?: string | null | undefined;
 }) {
   const store = armazem();
   if (!store) return;
