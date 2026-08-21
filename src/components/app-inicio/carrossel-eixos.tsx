@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Lock } from "lucide-react";
 import { IconeEixo } from "@/components/icone-eixo";
 import { formatarData } from "@/lib/raiz-format";
+import { ordenarPorAfinidade } from "@/lib/inicio-cliente";
 
 export type EixoResumo = {
   id: string;
@@ -39,8 +40,15 @@ function Anel({ concluidos, total }: { concluidos: number; total: number }) {
  * Os eixos do processo: carrossel com encaixe no mobile, grade no desktop.
  * Cada cartão mostra o quanto já caminhou; os fechados dizem quando abrem.
  */
-export function CarrosselEixos({ eixos }: { eixos: EixoResumo[] }) {
+export function CarrosselEixos({
+  eixos,
+  preferidoId = null,
+}: {
+  eixos: EixoResumo[];
+  preferidoId?: string | null;
+}) {
   if (eixos.length === 0) return null;
+  const ordenados = ordenarPorAfinidade(eixos);
 
   return (
     <section aria-labelledby="titulo-eixos" className="mt-10">
@@ -50,7 +58,7 @@ export function CarrosselEixos({ eixos }: { eixos: EixoResumo[] }) {
             Seus eixos
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Cada eixo é um tema do seu sistema familiar.
+            Organizados pelo que você tem mais sustentado.
           </p>
         </div>
         <Link
@@ -62,7 +70,7 @@ export function CarrosselEixos({ eixos }: { eixos: EixoResumo[] }) {
       </div>
 
       <ul className="-mx-5 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0">
-        {eixos.map((eixo) => (
+        {ordenados.map((eixo) => (
           <li key={eixo.id} className="w-[76%] shrink-0 snap-start sm:w-auto">
             {eixo.liberado ? (
               <Link
@@ -76,7 +84,16 @@ export function CarrosselEixos({ eixos }: { eixos: EixoResumo[] }) {
                   </span>
                   <Anel concluidos={eixo.concluidos} total={eixo.total} />
                 </div>
-                <h3 className="mt-4 font-display text-lg text-floresta">{eixo.nome}</h3>
+                {eixo.id === preferidoId && (
+                  <p className="mt-4 text-[0.65rem] font-medium uppercase tracking-[0.18em] text-terracota">
+                    Seu eixo mais visitado
+                  </p>
+                )}
+                <h3
+                  className={`font-display text-lg text-floresta ${eixo.id === preferidoId ? "mt-1" : "mt-4"}`}
+                >
+                  {eixo.nome}
+                </h3>
                 <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                   {eixo.descricao}
                 </p>
