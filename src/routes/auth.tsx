@@ -318,8 +318,8 @@ function AuthPage() {
               </p>
             </>
           )}
-        </div>
-      </main>
-    </div>
+      </div>
+    </MolduraEntrada>
+
   );
 }
