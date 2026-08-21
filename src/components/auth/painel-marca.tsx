@@ -7,7 +7,7 @@ import { RaizLogo } from "@/components/raiz-logo";
 export function PainelMarca({ frase }: { frase: string }) {
   return (
     <section
-      className="relative isolate overflow-hidden bg-floresta px-6 pb-14 pt-[calc(env(safe-area-inset-top)+2.5rem)] text-center text-floresta-foreground md:px-12 md:pb-16 md:pt-12"
+      className="relative isolate overflow-hidden bg-floresta px-6 pb-14 pt-[calc(env(safe-area-inset-top)+2.5rem)] text-center text-floresta-foreground md:px-12 md:pb-12 md:pt-10"
       style={{ backgroundImage: "var(--gradiente-aura)" }}
     >
       <div
