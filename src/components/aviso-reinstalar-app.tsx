@@ -51,7 +51,15 @@ const INSTRUCOES: Record<PlataformaInstalacao, Passos> = {
   },
 };
 
-function Lista({ titulo, passos, icone }: { titulo: string; passos: string[]; icone: JSX.Element }) {
+function Lista({
+  titulo,
+  passos,
+  icone,
+}: {
+  titulo: string;
+  passos: string[];
+  icone: ReactNode;
+}) {
   return (
     <div className="space-y-2">
       <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
