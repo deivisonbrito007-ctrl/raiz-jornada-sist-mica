@@ -2,6 +2,8 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+import { gravarIntencaoLogin, lerIntencaoLogin } from "@/lib/intencao-login";
+
 const navigate = vi.fn();
 const search: {
   modo?: "entrar" | "cadastro";
@@ -41,10 +43,16 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth, rpc } }));
 vi.mock("@/integrations/lovable", () => ({
   lovable: { auth: { signInWithOAuth: vi.fn(async () => ({ redirected: true })) } },
 }));
-const convite = { existe: false, terapeuta: null as string | null, limitado: false };
+const convitePendenteMock = vi.fn<
+  (args: { data: { email: string } }) => Promise<{
+    existe: boolean;
+    terapeuta: string | null;
+    limitado: boolean;
+  }>
+>();
 vi.mock("@/lib/cadastro.functions", () => ({
   existeTerapeuta: async () => ({ existe: estado.existeTerapeuta }),
-  convitePendente: async () => convite,
+  convitePendente: (args: { data: { email: string } }) => convitePendenteMock(args),
 }));
 vi.mock("sonner", () => ({ toast: { error: toastError, success: vi.fn() } }));
 
@@ -69,6 +77,8 @@ describe("fluxo de login /auth", () => {
     auth.signUp.mockResolvedValue({ data: { session: null }, error: null });
     auth.resetPasswordForEmail.mockResolvedValue({ error: null });
     auth.resend.mockResolvedValue({ error: null });
+    convitePendenteMock.mockResolvedValue({ existe: false, terapeuta: null, limitado: false });
+    window.sessionStorage.clear();
   });
 
   it("entra com e-mail e senha e redireciona para a triagem de papel", async () => {
@@ -175,7 +185,7 @@ describe("fluxo de login /auth", () => {
 
   it("confere convite antes de criar conta com acompanhamento", async () => {
     search.modo = "cadastro";
-    convite.existe = false;
+    convitePendenteMock.mockResolvedValue({ existe: false, terapeuta: null, limitado: false });
     const user = userEvent.setup();
     render(<AuthPage />);
 
@@ -198,5 +208,187 @@ describe("fluxo de login /auth", () => {
     render(<AuthPage />);
 
     await waitFor(() => expect(navigate).toHaveBeenCalledWith({ to: "/entrada", replace: true }));
+  });
+
+  it("limpa a intenção guardada quando a pessoa entra por e-mail e senha", async () => {
+    gravarIntencaoLogin({ destino: "/convite/1", caminho: "acompanhado", papel: "cliente" });
+    const user = userEvent.setup();
+    render(<AuthPage />);
+
+    await preencher(user);
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+
+    await waitFor(() => expect(auth.signInWithPassword).toHaveBeenCalled());
+    expect(lerIntencaoLogin()).toEqual({ destino: null, caminho: null, papel: null });
+  });
+});
+
+describe("conferência de convite no cadastro", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    estado.existeTerapeuta = true;
+    search.modo = "cadastro";
+    delete search.caminho;
+    delete search.next;
+    auth.getUser.mockResolvedValue({ data: { user: null } });
+    auth.signUp.mockResolvedValue({ data: { session: null }, error: null });
+    convitePendenteMock.mockResolvedValue({ existe: false, terapeuta: null, limitado: false });
+    window.sessionStorage.clear();
+  });
+
+  async function irParaDadosComAcompanhamento(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByText("Sou cliente de uma terapeuta"));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await user.type(screen.getByLabelText("Como podemos te chamar?"), "Bia");
+    await preencher(user);
+  }
+
+  it("anuncia o convite encontrado e só cria a conta no segundo passo", async () => {
+    convitePendenteMock.mockResolvedValue({ existe: true, terapeuta: "Ana", limitado: false });
+    const user = userEvent.setup();
+    render(<AuthPage />);
+
+    await irParaDadosComAcompanhamento(user);
+    await user.click(screen.getByRole("button", { name: "Conferir convite e continuar" }));
+
+    expect(convitePendenteMock).toHaveBeenCalledWith({ data: { email: "maria@raiz.app" } });
+    expect(await screen.findByText(/Encontramos um convite para este e-mail de Ana/i)).toBeInTheDocument();
+    expect(auth.signUp).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Criar conta" }));
+    await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
+    expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({
+      nome: "Bia",
+      papel: "cliente",
+      caminho_entrada: "convite",
+    });
+  });
+
+  it("não trava o cadastro quando a conferência falha", async () => {
+    convitePendenteMock.mockRejectedValue(new Error("rede fora"));
+    const user = userEvent.setup();
+    render(<AuthPage />);
+
+    await irParaDadosComAcompanhamento(user);
+    await user.click(screen.getByRole("button", { name: "Conferir convite e continuar" }));
+
+    expect(await screen.findByText(/Não encontramos convite para este e-mail/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Criar conta" }));
+    await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  it("não trava o cadastro quando o limite por e-mail é atingido", async () => {
+    convitePendenteMock.mockResolvedValue({ existe: false, terapeuta: null, limitado: true });
+    const user = userEvent.setup();
+    render(<AuthPage />);
+
+    await irParaDadosComAcompanhamento(user);
+    await user.click(screen.getByRole("button", { name: "Conferir convite e continuar" }));
+
+    expect(await screen.findByText(/Não encontramos convite para este e-mail/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Criar conta" }));
+    await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
+    expect((auth.signUp.mock.calls[0] as any[])[0].options.data.caminho_entrada).toBe("convite");
+  });
+});
+
+describe("troca de passo e de escolha no cadastro", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    estado.existeTerapeuta = true;
+    search.modo = "cadastro";
+    delete search.caminho;
+    delete search.next;
+    auth.getUser.mockResolvedValue({ data: { user: null } });
+    auth.signUp.mockResolvedValue({ data: { session: null }, error: null });
+    convitePendenteMock.mockResolvedValue({ existe: false, terapeuta: null, limitado: false });
+    window.sessionStorage.clear();
+  });
+
+  it("o Google aparece só depois da escolha", async () => {
+    const user = userEvent.setup();
+    render(<AuthPage />);
+
+    expect(screen.queryByRole("button", { name: /Google/i })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("button", { name: /Continuar com Google/i })).toBeInTheDocument();
+  });
+
+  it("volta para a escolha pelo atalho 'trocar' sem perder os dados", async () => {
+    const user = userEvent.setup();
+    render(<AuthPage />);
+
+    await user.click(screen.getByText("Quero começar por conta própria"));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await user.type(screen.getByLabelText("Como podemos te chamar?"), "Bia");
+
+    await user.click(screen.getByRole("button", { name: "trocar" }));
+    expect(screen.getByText("Como você vai usar o Raiz?")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByLabelText("Como podemos te chamar?")).toHaveValue("Bia");
+  });
+
+  it("volta para a escolha pelo botão do rodapé do passo 2", async () => {
+    const user = userEvent.setup();
+    render(<AuthPage />);
+
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await user.click(screen.getByRole("button", { name: /Voltar para a escolha/i }));
+
+    expect(screen.getByText("Como você vai usar o Raiz?")).toBeInTheDocument();
+  });
+
+  it("trocar de escolha invalida a conferência de convite anterior", async () => {
+    const user = userEvent.setup();
+    render(<AuthPage />);
+
+    await user.click(screen.getByText("Sou cliente de uma terapeuta"));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await preencher(user);
+    await user.type(screen.getByLabelText("Como podemos te chamar?"), "Bia");
+    await user.click(screen.getByRole("button", { name: "Conferir convite e continuar" }));
+    expect(await screen.findByText(/Não encontramos convite/i)).toBeInTheDocument();
+
+    // Troca para autoguiado: o aviso e a conferência somem.
+    await user.click(screen.getByRole("button", { name: "trocar" }));
+    await user.click(screen.getByText("Quero começar por conta própria"));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.queryByText(/Não encontramos convite/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Criar conta" })).toBeInTheDocument();
+
+    // Volta para acompanhamento: precisa conferir de novo antes de criar.
+    await user.click(screen.getByRole("button", { name: "trocar" }));
+    await user.click(screen.getByText("Sou cliente de uma terapeuta"));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(
+      screen.getByRole("button", { name: "Conferir convite e continuar" }),
+    ).toBeInTheDocument();
+  });
+
+  it("trocar a aba leva o estado para a URL", async () => {
+    const user = userEvent.setup();
+    render(<AuthPage />);
+
+    await user.click(screen.getByRole("tab", { name: "Entrar" }));
+    expect(navigate).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "/auth", replace: true }),
+    );
+    const chamada = (navigate.mock.calls.at(-1) as any[])[0];
+    expect(chamada.search({ modo: "cadastro" })).toEqual({ modo: "entrar" });
+  });
+
+  it("quem chega com a escolha na URL já entra nos dados com o resumo à vista", async () => {
+    search.caminho = "acompanhado";
+    const user = userEvent.setup();
+    render(<AuthPage />);
+
+    expect(screen.getByLabelText("Como podemos te chamar?")).toBeInTheDocument();
+    const resumo = screen.getByRole("button", { name: "trocar" }).parentElement as HTMLElement;
+    expect(resumo).toHaveTextContent("Com acompanhamento");
+
+    await user.click(screen.getByRole("button", { name: "trocar" }));
+    expect(screen.getByText("Sua escolha")).toBeInTheDocument();
   });
 });
