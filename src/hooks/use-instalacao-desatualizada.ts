@@ -32,8 +32,6 @@ export function contextoDeEdicao(): boolean {
   return (
     host.startsWith("id-preview--") ||
     host.startsWith("preview--") ||
-    host === "localhost" ||
-    host === "127.0.0.1" ||
     host === "lovableproject.com" ||
     host.endsWith(".lovableproject.com") ||
     host === "lovableproject-dev.com" ||
