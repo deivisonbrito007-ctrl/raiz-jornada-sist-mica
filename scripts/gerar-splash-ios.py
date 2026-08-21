@@ -7,7 +7,7 @@ para que a abertura do app instalado apareca nitida em vez de uma tela branca.
 Uso: python3 scripts/gerar-splash-ios.py <caminho-do-simbolo.png>
 """
 import sys, os
-from PIL import Image, ImageDraw
+from PIL import Image, ImageFilter
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DESTINO = os.path.join(RAIZ, "public", "splash")
@@ -22,21 +22,21 @@ TELAS = [
 
 
 def aura(largura, altura, centro_y):
-    camada = Image.new("RGB", (largura, altura), FUNDO)
-    px = camada.load()
-    raio = max(largura, altura) * 0.55
-    cx, cy = largura / 2, centro_y
-    passo = 2
-    for y in range(0, altura, passo):
-        for x in range(0, largura, passo):
+    """Degrade radial suave: calculado pequeno e ampliado com bicubico para
+    evitar faixas visiveis (banding) no fundo escuro."""
+    pequeno_l, pequeno_a = 96, round(96 * altura / largura)
+    base = Image.new("RGB", (pequeno_l, pequeno_a), FUNDO)
+    px = base.load()
+    cx, cy = pequeno_l / 2, pequeno_a * (centro_y / altura)
+    raio = max(pequeno_l, pequeno_a) * 0.62
+    for y in range(pequeno_a):
+        for x in range(pequeno_l):
             d = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5 / raio
-            t = max(0.0, 1.0 - d) ** 2 * 0.30
-            cor = tuple(int(FUNDO[i] + (BRILHO[i] - FUNDO[i]) * t) for i in range(3))
-            for dy in range(passo):
-                for dx in range(passo):
-                    if x + dx < largura and y + dy < altura:
-                        px[x + dx, y + dy] = cor
-    return camada
+            t = max(0.0, 1.0 - d) ** 1.7 * 0.42
+            px[x, y] = tuple(int(FUNDO[i] + (BRILHO[i] - FUNDO[i]) * t) for i in range(3))
+    return base.resize((largura, altura), Image.BICUBIC).filter(
+        ImageFilter.GaussianBlur(radius=max(largura, altura) * 0.01)
+    )
 
 
 def main():
@@ -46,7 +46,7 @@ def main():
     for largura, altura in TELAS:
         centro_y = altura * 0.44
         tela = aura(largura, altura, centro_y)
-        alvo = min(largura, altura) * 0.34
+        alvo = min(largura, altura) * 0.42
         escala = alvo / marca.height
         m = marca.resize((max(1, round(marca.width * escala)), round(alvo)), Image.LANCZOS)
         tela.paste(m, (round((largura - m.width) / 2), round(centro_y - m.height / 2)), m)
