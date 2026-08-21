@@ -3,7 +3,11 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { existeTerapeuta as consultarExisteTerapeuta } from "@/lib/cadastro.functions";
+import {
+  existeTerapeuta as consultarExisteTerapeuta,
+  convitePendente as consultarConvite,
+} from "@/lib/cadastro.functions";
+
 import { mensagemErroAuth } from "@/lib/erro-auth";
 import { MolduraEntrada } from "@/components/auth/moldura-entrada";
 import { FormularioEntrar } from "@/components/auth/formulario-entrar";
