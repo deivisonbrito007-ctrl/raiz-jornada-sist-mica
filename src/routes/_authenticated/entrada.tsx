@@ -19,6 +19,5 @@ function Entrada() {
     navigate({ to: data.papel === "terapeuta" ? "/admin" : "/app", replace: true });
   }, [data, navigate]);
 
-  return (
   return <SplashRaiz />;
 }
