@@ -1,10 +1,38 @@
 export const TIPO_LABEL: Record<string, string> = {
   video: "Vídeo guiado",
-  audio: "Áudio · meditação",
+  audio: "Áudio",
+  meditacao: "Meditação",
+  aterramento: "Aterramento",
+  movimento_sistemico: "Movimento sistêmico",
   exercicio: "Exercício prático",
   texto: "Texto de apoio",
+  texto_educativo: "Texto educativo",
+  diario_integracao: "Diário de integração",
+  pergunta_reflexiva: "Pergunta reflexiva",
+  checkin: "Check-in",
+  checkout: "Check-out",
+  acao_alinhada: "Ação alinhada",
+  pratica_semanal: "Prática semanal",
   tarefa: "Tarefa da semana",
+  pdf: "Material em PDF",
 };
+
+/** Tipos que carregam arquivo de mídia (upload obrigatório na prática). */
+export const TIPOS_COM_MIDIA = ["video", "audio", "meditacao", "aterramento", "pdf"] as const;
+
+export const NIVEL_LABEL: Record<string, string> = {
+  leve: "Leve",
+  intermediario: "Intermediário",
+  profundo: "Profundo",
+};
+
+export const CONTEUDO_STATUS_LABEL: Record<string, string> = {
+  rascunho: "Rascunho",
+  em_revisao: "Em revisão",
+  publicado: "Publicado",
+  arquivado: "Arquivado",
+};
+
 
 export const PAGAMENTO_LABEL: Record<string, string> = {
   pendente: "Pagamento pendente",

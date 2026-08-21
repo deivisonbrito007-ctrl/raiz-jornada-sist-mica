@@ -25,6 +25,10 @@ export const ACOES_AUDITORIA = [
   "prazo_revisao_alterado",
   "etapa_liberada",
   "revisao_marcada",
+  "conteudo_duplicado",
+  "conteudo_publicado",
+  "conteudo_arquivado",
+  "conteudo_status_alterado",
 ] as const;
 
 export type AcaoAuditoria = (typeof ACOES_AUDITORIA)[number];
@@ -54,6 +58,10 @@ export const ACAO_LABEL: Record<AcaoAuditoria, string> = {
   prazo_revisao_alterado: "Prazo de revisão alterado",
   etapa_liberada: "Etapa liberada para o cliente",
   revisao_marcada: "Revisão registrada",
+  conteudo_duplicado: "Conteúdo duplicado",
+  conteudo_publicado: "Conteúdo publicado",
+  conteudo_arquivado: "Conteúdo arquivado",
+  conteudo_status_alterado: "Situação do conteúdo alterada",
 };
 
 
@@ -75,6 +83,7 @@ export type RegistroAuditoria = {
     | "trilha"
     | "atribuicao"
     | "cliente"
+    | "conteudo"
     | "pacote";
   alvoId?: string | null;
   alvoEmail?: string | null;

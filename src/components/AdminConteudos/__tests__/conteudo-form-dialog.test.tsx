@@ -16,7 +16,7 @@ describe("ConteudoFormDialog", () => {
     upload.mockResolvedValue({ error: null });
   });
 
-  it("mantém 'Salvar prática' desabilitado até o título ser preenchido", async () => {
+  it("mantém 'Salvar material' desabilitado até o título ser preenchido", async () => {
     const usuario = userEvent.setup();
     render(
       <ConteudoFormDialog
@@ -27,7 +27,7 @@ describe("ConteudoFormDialog", () => {
         onSalvar={() => {}}
       />,
     );
-    const salvar = screen.getByRole("button", { name: /Salvar prática/i });
+    const salvar = screen.getByRole("button", { name: /Salvar material/i });
     expect(salvar).toBeDisabled();
     await usuario.type(screen.getByLabelText("Título"), "Carta à criança");
     expect(salvar).toBeEnabled();
@@ -46,19 +46,20 @@ describe("ConteudoFormDialog", () => {
       />,
     );
 
-    const editor = await screen.findByRole("textbox", { name: /Corpo do texto/i });
+    await usuario.click(screen.getByRole("tab", { name: "Conteúdo" }));
+    const editor = await screen.findByRole("textbox", { name: /Conteúdo principal/i });
     await usuario.click(editor);
     await usuario.click(screen.getByRole("button", { name: "Negrito" }));
     await usuario.type(editor, "respire");
 
-    await usuario.click(screen.getByRole("button", { name: /Salvar prática/i }));
+    await usuario.click(screen.getByRole("button", { name: /Salvar material/i }));
     await waitFor(() => expect(onSalvar).toHaveBeenCalled());
     const enviado = onSalvar.mock.calls[0]?.[0];
     expect(enviado?.corpoTexto).toMatch(/<strong>respire<\/strong>/);
-    
   });
 
-  it("mostra o upload de mídia apenas para vídeo e áudio", () => {
+  it("mostra o upload de mídia apenas para tipos com arquivo", async () => {
+    const usuario = userEvent.setup();
     const { unmount } = render(
       <ConteudoFormDialog
         form={{ ...formularioVazio("e1"), tipo: "audio", titulo: "Áudio" }}
@@ -68,6 +69,7 @@ describe("ConteudoFormDialog", () => {
         onSalvar={() => {}}
       />,
     );
+    await usuario.click(screen.getByRole("tab", { name: "Conteúdo" }));
     expect(screen.getByLabelText("Escolher mídia")).toBeInTheDocument();
     unmount();
 
@@ -80,6 +82,7 @@ describe("ConteudoFormDialog", () => {
         onSalvar={() => {}}
       />,
     );
+    await usuario.click(screen.getByRole("tab", { name: "Conteúdo" }));
     expect(screen.queryByLabelText("Escolher mídia")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Escolher imagem de capa")).toBeInTheDocument();
   });

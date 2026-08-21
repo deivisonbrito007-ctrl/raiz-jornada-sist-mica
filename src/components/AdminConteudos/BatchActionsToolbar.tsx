@@ -7,7 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { EixoAdmin } from "@/hooks/useConteudos";
+import type { ConteudoStatus, EixoAdmin } from "@/hooks/useConteudos";
+import { CONTEUDO_STATUS_LABEL } from "@/lib/raiz-format";
 
 type Props = {
   quantidade: number;
@@ -16,6 +17,7 @@ type Props = {
   onExcluir: () => void;
   onMoverParaEixo: (eixoId: string) => void;
   onLimpar: () => void;
+  onStatus?: (status: ConteudoStatus) => void;
 };
 
 /** Aparece quando há práticas selecionadas nos cards. */
@@ -26,6 +28,7 @@ export function BatchActionsToolbar({
   onExcluir,
   onMoverParaEixo,
   onLimpar,
+  onStatus,
 }: Props) {
   if (quantidade === 0) return null;
 
@@ -38,6 +41,27 @@ export function BatchActionsToolbar({
       <p className="text-sm font-medium" aria-live="polite">
         {quantidade} selecionada(s)
       </p>
+
+      {onStatus && (
+        <Select
+          disabled={ocupado}
+          onValueChange={(v) => onStatus(v as ConteudoStatus)}
+        >
+          <SelectTrigger
+            aria-label="Mudar situação dos selecionados"
+            className="min-h-11 w-56 rounded-full bg-papel text-floresta focus-visible:ring-2 focus-visible:ring-ouro"
+          >
+            <SelectValue placeholder="Mudar situação" />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(CONTEUDO_STATUS_LABEL).map(([valor, label]) => (
+              <SelectItem key={valor} value={valor}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       <Button
         type="button"
