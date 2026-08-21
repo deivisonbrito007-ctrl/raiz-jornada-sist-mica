@@ -223,6 +223,26 @@ function AuthPage() {
     ? "Comece um espaço só seu para continuar o que se moveu na sessão."
     : "Respire. Você chegou ao seu espaço de cuidado.";
 
+  const avisoConvite =
+    caminho !== "convite" ? null : convite.estado === "conferindo" ? (
+      <p role="status" className="rounded-2xl bg-secondary px-4 py-3 text-sm text-muted-foreground">
+        Conferindo se existe convite para este e-mail...
+      </p>
+    ) : convite.estado === "encontrado" ? (
+      <p role="status" className="rounded-2xl bg-secondary px-4 py-3 text-sm leading-relaxed text-foreground">
+        Encontramos um convite para este e-mail
+        {convite.terapeuta ? ` de ${convite.terapeuta}` : ""}. Ao criar a conta você já entra com
+        acompanhamento.
+      </p>
+    ) : convite.estado === "ausente" ? (
+      <p role="status" className="rounded-2xl border border-terracota/30 bg-terracota/5 px-4 py-3 text-sm leading-relaxed text-foreground">
+        Não encontramos convite para este e-mail. Você pode criar a conta agora: ela começa
+        autoguiada e enviamos seu pedido de acompanhamento para a terapeuta responder. Se você
+        recebeu o convite em outro endereço, corrija o e-mail acima.
+      </p>
+    ) : null;
+
+
   return (
     <MolduraEntrada frase={frase}>
       <div>
