@@ -132,6 +132,20 @@
   --sidebar-border: oklch(0.361 0.031 148.5);
   --sidebar-ring: oklch(0.686 0.126 84.5);
   --shadow-organico: 0 18px 40px -24px oklch(0.268 0.033 148.5 / 0.35);
+  /* Entrada do app: gradiente profundo da marca + halo de luz atrás da logo. */
+  --gradiente-aura: linear-gradient(
+    170deg,
+    oklch(0.208 0.031 148.5) 0%,
+    oklch(0.268 0.033 148.5) 55%,
+    oklch(0.318 0.041 138.5) 100%
+  );
+  --halo-entrada: radial-gradient(
+    circle at 50% 42%,
+    oklch(0.762 0.126 84.5 / 0.42) 0%,
+    oklch(0.686 0.126 84.5 / 0.16) 38%,
+    transparent 70%
+  );
+
 }
 
 .dark {

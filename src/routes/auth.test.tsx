@@ -10,13 +10,17 @@ const auth = {
   getSession: vi.fn<() => Promise<any>>(),
   signInWithPassword: vi.fn<(args: any) => Promise<any>>(),
   signUp: vi.fn<(args: any) => Promise<any>>(),
+  resetPasswordForEmail: vi.fn<(email: string, opts: any) => Promise<any>>(),
+  resend: vi.fn<(args: any) => Promise<any>>(),
 };
 
 const toastError = vi.fn();
 /** controla o retorno de existe_terapeuta() no servidor */
 const estado = { existeTerapeuta: false };
 const rpc = vi.fn(async (fn: string) =>
-  fn === "existe_terapeuta" ? { data: estado.existeTerapeuta, error: null } : { data: null, error: null },
+  fn === "existe_terapeuta"
+    ? { data: estado.existeTerapeuta, error: null }
+    : { data: null, error: null },
 );
 
 vi.mock("@tanstack/react-router", () => ({
@@ -29,6 +33,9 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth, rpc } }));
+vi.mock("@/integrations/lovable", () => ({
+  lovable: { auth: { signInWithOAuth: vi.fn(async () => ({ redirected: true })) } },
+}));
 vi.mock("@/lib/cadastro.functions", () => ({
   existeTerapeuta: async () => ({ existe: estado.existeTerapeuta }),
 }));
@@ -51,6 +58,8 @@ describe("fluxo de login /auth", () => {
     auth.getSession.mockResolvedValue({ data: { session: null } });
     auth.signInWithPassword.mockResolvedValue({ error: null });
     auth.signUp.mockResolvedValue({ data: { session: null }, error: null });
+    auth.resetPasswordForEmail.mockResolvedValue({ error: null });
+    auth.resend.mockResolvedValue({ error: null });
   });
 
   it("entra com e-mail e senha e redireciona para a triagem de papel", async () => {
@@ -59,7 +68,7 @@ describe("fluxo de login /auth", () => {
 
     expect(screen.getByRole("heading", { name: "Bem-vindo de volta" })).toBeInTheDocument();
     await preencher(user);
-    await user.click(screen.getByRole("button", { name: "Entrar" }));
+    await user.click(screen.getByRole("button", { name: "Entrar"}));
 
     await waitFor(() =>
       expect(auth.signInWithPassword).toHaveBeenCalledWith({
@@ -70,31 +79,60 @@ describe("fluxo de login /auth", () => {
     expect(navigate).toHaveBeenCalledWith({ to: "/entrada", replace: true });
   });
 
-  it("mostra erro e não redireciona quando as credenciais falham", async () => {
+  it("mostra mensagem em português quando as credenciais falham", async () => {
     auth.signInWithPassword.mockResolvedValue({ error: new Error("Invalid login credentials") });
     const user = userEvent.setup();
     render(<AuthPage />);
 
     await preencher(user);
-    await user.click(screen.getByRole("button", { name: "Entrar" }));
+    await user.click(screen.getByRole("button", { name: "Entrar"}));
 
-    await waitFor(() => expect(toastError).toHaveBeenCalledWith("Invalid login credentials"));
+    await waitFor(() =>
+      expect(toastError).toHaveBeenCalledWith("E-mail ou senha não conferem. Confira e tente de novo."),
+    );
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it("cadastra cliente por padrão e pede confirmação de e-mail", async () => {
+  it("permite mostrar e ocultar a senha", async () => {
+    const user = userEvent.setup();
+    render(<AuthPage />);
+
+    expect(screen.getByLabelText("Senha")).toHaveAttribute("type", "password");
+    await user.click(screen.getByRole("button", { name: "Mostrar senha" }));
+    expect(screen.getByLabelText("Senha")).toHaveAttribute("type", "text");
+  });
+
+  it("envia o link de recuperação de senha para a rota /reset-password", async () => {
+    const user = userEvent.setup();
+    render(<AuthPage />);
+
+    await user.click(screen.getByRole("button", { name: "Esqueci minha senha" }));
+    await user.type(screen.getByLabelText("E-mail"), "maria@raiz.app");
+    await user.click(screen.getByRole("button", { name: "Enviar link de recuperação" }));
+
+    await waitFor(() =>
+      expect(auth.resetPasswordForEmail).toHaveBeenCalledWith("maria@raiz.app", {
+        redirectTo: `${window.location.origin}/reset-password`,
+      }),
+    );
+    expect(await screen.findByText(/link de redefinição já está a caminho/i)).toBeInTheDocument();
+  });
+
+  it("cadastra cliente em dois passos e pede confirmação de e-mail", async () => {
     search.modo = "cadastro";
     const user = userEvent.setup();
     render(<AuthPage />);
 
     await user.type(screen.getByLabelText("Como podemos te chamar?"), "Maria");
     await preencher(user);
-    await user.click(screen.getByRole("button", { name: "Criar conta" }));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await user.click(screen.getByRole("button", { name: "Criar conta"}));
 
     await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
     expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({
       nome: "Maria",
       papel: "cliente",
+      caminho_entrada: "propria",
     });
     expect(await screen.findByRole("heading", { name: "Confirme seu e-mail" })).toBeInTheDocument();
     expect(navigate).not.toHaveBeenCalled();
@@ -108,13 +146,15 @@ describe("fluxo de login /auth", () => {
 
     await user.type(screen.getByLabelText("Como podemos te chamar?"), "Ana");
     await preencher(user);
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Criar conta" }));
+    await user.click(screen.getByRole("button", { name: "Criar conta"}));
 
     await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
     expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({
       nome: "Ana",
       papel: "terapeuta",
+      caminho_entrada: "terapeuta",
     });
     expect(navigate).toHaveBeenCalledWith({ to: "/entrada", replace: true });
   });
