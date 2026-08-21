@@ -12,18 +12,23 @@ export function SaudacaoInicio({
   streakSemanas,
   feitasNaSemana,
   metaSemanal,
+  ciclo,
+  eixoFoco,
   agora = new Date(),
 }: {
   primeiroNome: string;
   streakSemanas: number;
   feitasNaSemana: number;
   metaSemanal: number;
+  ciclo?: { rotulo: string; frase: string } | null;
+  eixoFoco?: string | null;
   agora?: Date;
 }) {
   const { titulo, frase } = saudacaoDoDia(agora, primeiroNome);
   const meta = Math.max(1, metaSemanal);
   const proporcao = Math.min(1, feitasNaSemana / meta);
   const perimetro = 2 * Math.PI * 20;
+
 
   return (
     <section className="relative isolate overflow-hidden rounded-[2rem] bg-floresta px-6 py-8 text-floresta-foreground shadow-organico">
