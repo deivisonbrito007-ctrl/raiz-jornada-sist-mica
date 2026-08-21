@@ -3,11 +3,16 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const navigate = vi.fn();
-const search: { modo?: "entrar" | "cadastro"; next?: string } = {};
+const search: {
+  modo?: "entrar" | "cadastro";
+  caminho?: "acompanhado" | "autoguiado";
+  next?: string;
+} = {};
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const auth = {
   getSession: vi.fn<() => Promise<any>>(),
+  getUser: vi.fn<() => Promise<any>>(),
   signInWithPassword: vi.fn<(args: any) => Promise<any>>(),
   signUp: vi.fn<(args: any) => Promise<any>>(),
   resetPasswordForEmail: vi.fn<(email: string, opts: any) => Promise<any>>(),
@@ -54,8 +59,10 @@ describe("fluxo de login /auth", () => {
     vi.clearAllMocks();
     estado.existeTerapeuta = false;
     delete search.modo;
+    delete search.caminho;
     delete search.next;
     auth.getSession.mockResolvedValue({ data: { session: null } });
+    auth.getUser.mockResolvedValue({ data: { user: null } });
     auth.signInWithPassword.mockResolvedValue({ error: null });
     auth.signUp.mockResolvedValue({ data: { session: null }, error: null });
     auth.resetPasswordForEmail.mockResolvedValue({ error: null });
@@ -160,7 +167,7 @@ describe("fluxo de login /auth", () => {
   });
 
   it("redireciona quem já tem sessão ativa sem preencher o formulário", async () => {
-    auth.getSession.mockResolvedValue({ data: { session: { user: { id: "1" } } } });
+    auth.getUser.mockResolvedValue({ data: { user: { id: "1" } } });
     render(<AuthPage />);
 
     await waitFor(() => expect(navigate).toHaveBeenCalledWith({ to: "/entrada", replace: true }));

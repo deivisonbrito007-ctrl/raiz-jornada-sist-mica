@@ -167,7 +167,8 @@ export function DoisCaminhos() {
           </p>
           <Link
             to="/auth"
-            search={{ modo: "cadastro" }}
+            search={{ modo: "cadastro", caminho: "acompanhado" }}
+
             className="mt-7 flex min-h-12 items-center justify-center rounded-full bg-terracota px-6 text-sm font-semibold text-terracota-foreground transition-opacity hover:opacity-90"
           >
             Entrar com acompanhamento
@@ -182,7 +183,8 @@ export function DoisCaminhos() {
           </p>
           <Link
             to="/auth"
-            search={{ modo: "cadastro" }}
+            search={{ modo: "cadastro", caminho: "autoguiado" }}
+
             className="mt-7 flex min-h-12 items-center justify-center rounded-full border border-floresta/25 px-6 text-sm font-semibold text-floresta transition-colors hover:bg-secondary"
           >
             Começar autoguiado
