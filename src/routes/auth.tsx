@@ -308,13 +308,12 @@ function AuthPage() {
                     email={email}
                     senha={senha}
                     caminho={caminho}
-                    souTerapeuta={souTerapeuta}
                     mostrarOpcaoTerapeuta={!existeTerapeuta}
+                    escolhaVeioDeFora={escolhaVeioDeFora}
                     onNome={setNome}
                     onEmail={setEmail}
                     onSenha={setSenha}
                     onCaminho={setCaminho}
-                    onSouTerapeuta={setSouTerapeuta}
                     onAvancar={(e) => {
                       e.preventDefault();
                       setEtapaCadastro(2);
@@ -322,7 +321,9 @@ function AuthPage() {
                     onVoltar={() => setEtapaCadastro(1)}
                     onEnviar={criarConta}
                     carregando={carregando}
+                    avisoConvite={avisoConvite}
                   />
+
                 ) : (
                   <FormularioEntrar
                     email={email}
