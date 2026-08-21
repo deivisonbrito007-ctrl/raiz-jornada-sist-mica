@@ -33,7 +33,14 @@ export const Route = createFileRoute("/auth")({
 
 type Aba = "entrar" | "cadastro";
 
+type EstadoConvite =
+  | { estado: "inicial" }
+  | { estado: "conferindo" }
+  | { estado: "encontrado"; terapeuta: string | null }
+  | { estado: "ausente" };
+
 const SELOS = ["Privado", "No seu ritmo", "Com acompanhamento"];
+
 
 function AuthPage() {
   const { modo, caminho: caminhoUrl, next } = Route.useSearch();
