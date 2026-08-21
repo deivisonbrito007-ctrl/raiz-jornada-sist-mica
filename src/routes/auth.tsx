@@ -131,7 +131,25 @@ function AuthPage() {
 
   async function criarConta(e: React.FormEvent) {
     e.preventDefault();
+
+    // Quem diz ser cliente de uma terapeuta ganha uma conferência antes de
+    // criar a conta: sem convite, explicamos o que vai acontecer em vez de
+    // criar silenciosamente uma conta autoguiada.
+    if (caminho === "convite" && convite.estado === "inicial") {
+      setConvite({ estado: "conferindo" });
+      try {
+        const r = await consultarConvite({ data: { email } });
+        if (r.existe) setConvite({ estado: "encontrado", terapeuta: r.terapeuta });
+        else setConvite({ estado: "ausente" });
+      } catch {
+        // Se a conferência falhar, seguimos o cadastro normalmente.
+        setConvite({ estado: "ausente" });
+      }
+      return;
+    }
+
     setCarregando(true);
+
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
