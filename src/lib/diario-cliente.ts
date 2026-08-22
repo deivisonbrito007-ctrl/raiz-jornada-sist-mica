@@ -18,7 +18,75 @@ export type EntradaDiario = {
   compartilhado_em?: string | null;
   compartilhamento_revogado_em?: string | null;
   conteudos?: { titulo?: string | null; eixos?: { nome?: string | null } | null } | null;
+  diario_eixos?:
+    | Array<{ eixo_id: string; eixos?: { nome?: string | null } | null } | null>
+    | null;
 };
+
+export type EixoTag = { id: string; nome: string };
+
+/** Eixos sistêmicos marcados numa reflexão (normalizados e sem repetição). */
+export function eixosDaEntrada(entrada: EntradaDiario): EixoTag[] {
+  const vistos = new Set<string>();
+  const tags: EixoTag[] = [];
+  for (const item of entrada.diario_eixos ?? []) {
+    if (!item?.eixo_id || vistos.has(item.eixo_id)) continue;
+    vistos.add(item.eixo_id);
+    tags.push({ id: item.eixo_id, nome: item.eixos?.nome ?? "Eixo" });
+  }
+  return tags;
+}
+
+/**
+ * Trilhos de convite: em vez de uma pergunta só, quatro caminhos de escuta.
+ * A pessoa escolhe por onde entrar; o convite do dia continua sendo o padrão.
+ */
+export const TRILHOS_CONVITE = [
+  {
+    chave: "corpo",
+    rotulo: "Corpo",
+    convites: [
+      "O que se moveu no seu corpo durante a prática?",
+      "Onde, agora, há tensão — e onde há descanso?",
+      "Qual é a respiração possível neste momento?",
+    ],
+  },
+  {
+    chave: "sistema",
+    rotulo: "Sistema familiar",
+    convites: [
+      "Se pudesse dizer uma frase a alguém do seu sistema, qual seria?",
+      "Que lugar você tem ocupado que talvez não seja o seu?",
+      "O que você carrega que pertence a outra pessoa?",
+    ],
+  },
+  {
+    chave: "despedidas",
+    rotulo: "Despedidas",
+    convites: [
+      "Do que você quer se despedir com gratidão?",
+      "O que já cumpriu a função e pode descansar?",
+      "Que saudade pede espaço hoje?",
+    ],
+  },
+  {
+    chave: "chao",
+    rotulo: "Chão firme",
+    convites: [
+      "Onde, no seu dia, você sentiu chão firme?",
+      "Qual foi o gesto de cuidado que você fez por você?",
+      "O que você reconhece hoje que ontem ainda não conseguia?",
+    ],
+  },
+] as const;
+
+export type ChaveTrilho = (typeof TRILHOS_CONVITE)[number]["chave"];
+
+/** Convites de um trilho (vazio quando a chave não existe). */
+export function convitesDoTrilho(chave: string): readonly string[] {
+  return TRILHOS_CONVITE.find((t) => t.chave === chave)?.convites ?? [];
+}
+
 
 /** Convites de escrita: perguntas que abrem, sem dirigir a resposta. */
 export const CONVITES = [
