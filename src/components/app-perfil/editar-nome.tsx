@@ -47,12 +47,13 @@ export function EditarNome({ nome, email }: Props) {
   return (
     <section
       aria-labelledby="titulo-meus-dados"
-      className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]"
+      className="mt-3 w-full rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)] sm:p-6"
     >
-      <div className="flex items-start justify-between gap-3">
-        <h2 id="titulo-meus-dados" className="font-display text-xl text-floresta">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+        <h2 id="titulo-meus-dados" className="min-w-0 font-display text-xl text-floresta">
           Meus dados
         </h2>
+
         {!editando && (
           <Button
             type="button"
