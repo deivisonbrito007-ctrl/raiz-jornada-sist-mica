@@ -15,6 +15,7 @@ import { PalavraDaTerapeuta } from "@/components/app-inicio/palavra-da-terapeuta
 import { CarrosselEixos } from "@/components/app-inicio/carrossel-eixos";
 import { MomentosRapidos } from "@/components/app-inicio/momentos-rapidos";
 import { BuscarPraticas } from "@/components/app-inicio/buscar-praticas";
+import { ConviteLembreteSemanal } from "@/components/app-inicio/convite-lembrete-semanal";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   head: () => ({
@@ -108,6 +109,8 @@ function Inicio() {
       <PraticaDeHoje convite={convite} primeiroNome={primeiroNome} />
 
       <LembreteRetorno datas={datasConclusao} streakSemanas={streak} />
+
+      <ConviteLembreteSemanal />
 
       {blocos.planoDaTerapeuta && <PalavraDaTerapeuta />}
       {blocos.vitrinePacotes && <VitrinePacotes />}
