@@ -1,14 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { lazy, Suspense } from "react";
-
-/** Carregada só quando a pessoa conclui, para não pesar o player. */
-const CelebracaoPratica = lazy(() =>
-  import("@/components/celebracao-pratica").then((m) => ({ default: m.CelebracaoPratica })),
-);
 import { CHAVES, chaveDe, invalidarPorEvento } from "@/lib/cache-chaves";
 import {
   ArrowLeft,
@@ -31,6 +25,11 @@ import { StatusMidiaBadge } from "@/components/status-midia";
 import { useSincronizarLiberacoes } from "@/hooks/use-sincronizar-liberacoes";
 import { useFocoPlayer } from "@/hooks/use-foco-player";
 import { useFocoTrocaConteudo } from "@/hooks/use-foco-troca-conteudo";
+
+/** Carregada só quando a pessoa conclui, para não pesar o player. */
+const CelebracaoPratica = lazy(() =>
+  import("@/components/celebracao-pratica").then((m) => ({ default: m.CelebracaoPratica })),
+);
 
 
 export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")({
