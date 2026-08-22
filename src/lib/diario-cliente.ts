@@ -257,3 +257,45 @@ export function recortar(texto: string, limite = 320) {
 export function chaveRascunho(conteudoId?: string | null) {
   return `raiz-diario-rascunho-${conteudoId ?? "livre"}`;
 }
+
+export type PontoTempo = {
+  id: string;
+  dia: number;
+  /** 1 a 3 — tamanho do ponto conforme o tamanho do texto */
+  peso: 1 | 2 | 3;
+  compartilhada: boolean;
+  eixoNome: string | null;
+  data: string;
+};
+
+export type FaixaTempo = { chave: string; rotulo: string; pontos: PontoTempo[] };
+
+/**
+ * Linha do tempo das reflexões: uma faixa por mês, um ponto por entrada,
+ * do mais antigo para o mais recente dentro do mês.
+ */
+export function serieLinhaDoTempo(entradas: EntradaDiario[]): FaixaTempo[] {
+  const faixas: FaixaTempo[] = [];
+  for (const grupo of agruparPorMes(entradas)) {
+    const pontos = grupo.entradas
+      .map((entrada): PontoTempo | null => {
+        const data = new Date(entrada.created_at);
+        if (Number.isNaN(data.getTime())) return null;
+        const tamanho = entrada.texto.trim().length;
+        const peso: 1 | 2 | 3 = tamanho > 600 ? 3 : tamanho > 200 ? 2 : 1;
+        const tags = eixosDaEntrada(entrada);
+        return {
+          id: entrada.id,
+          dia: data.getDate(),
+          peso,
+          compartilhada: ehCompartilhada(entrada),
+          eixoNome: tags[0]?.nome ?? entrada.conteudos?.eixos?.nome ?? null,
+          data: entrada.created_at,
+        };
+      })
+      .filter((p): p is PontoTempo => p !== null)
+      .sort((a, b) => a.dia - b.dia);
+    if (pontos.length > 0) faixas.push({ chave: grupo.chave, rotulo: grupo.rotulo, pontos });
+  }
+  return faixas;
+}
