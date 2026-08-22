@@ -77,8 +77,9 @@
   --color-papel-foreground: var(--card-foreground);
   --color-ouro: var(--ocre);
   --color-ouro-foreground: var(--ocre-foreground);
-  --font-serif: "Fraunces", ui-serif, Georgia, serif;
-  --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+
 }
 
 :root {
