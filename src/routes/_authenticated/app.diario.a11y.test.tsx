@@ -107,7 +107,7 @@ function renderizar() {
 
 /** O convite muda a cada dia: buscamos o campo pelo papel. */
 function campoReflexao() {
-  return screen.findByRole("textbox", { name: /.+/ });
+  return screen.findByRole("textbox", { name: /\?$/ });
 }
 
 const entradas = [
@@ -274,7 +274,7 @@ describe("Diário de reflexão — privacidade e ações", () => {
     await screen.findByText("Lembrei da minha avó.");
     await userEvent.click(screen.getAllByRole("button", { name: /Apagar/ })[0]!);
     expect(screen.getByText("Apagar para sempre?")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Apagar" }));
+    await userEvent.click(screen.getAllByRole("button", { name: "Apagar" })[0]!);
     await waitFor(() => expect(apagarFn).toHaveBeenCalledWith({ data: { id: "d-1" } }));
   });
 
