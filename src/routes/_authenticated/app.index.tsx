@@ -16,6 +16,7 @@ import { CarrosselEixos } from "@/components/app-inicio/carrossel-eixos";
 import { MomentosRapidos } from "@/components/app-inicio/momentos-rapidos";
 import { BuscarPraticas } from "@/components/app-inicio/buscar-praticas";
 import { ConviteLembreteSemanal } from "@/components/app-inicio/convite-lembrete-semanal";
+import { RotuloSecao } from "@/components/app-casca/rotulo-secao";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   head: () => ({
@@ -106,23 +107,30 @@ function Inicio() {
         eixoFoco={preferido?.nome ?? null}
       />
 
+      <RotuloSecao texto="Para agora" />
       <PraticaDeHoje convite={convite} primeiroNome={primeiroNome} />
 
       <LembreteRetorno datas={datasConclusao} streakSemanas={streak} />
 
       <ConviteLembreteSemanal />
 
+      {(blocos.planoDaTerapeuta || blocos.vitrinePacotes) && (
+        <RotuloSecao texto={blocos.planoDaTerapeuta ? "Do seu processo" : "Seu acesso"} />
+      )}
       {blocos.planoDaTerapeuta && <PalavraDaTerapeuta />}
       {blocos.vitrinePacotes && <VitrinePacotes />}
 
+      <RotuloSecao texto="Seus eixos" />
       <CarrosselEixos
         eixos={eixos}
         preferidoId={preferido?.id ?? null}
         preferidos={escolhas.preferidos}
       />
 
+      <RotuloSecao texto="Quando há pouco tempo" />
       <MomentosRapidos curta={curta} />
 
+      <RotuloSecao texto="Procurar uma prática" />
       <BuscarPraticas praticas={praticas} eixos={eixos.map((e) => ({ id: e.id, nome: e.nome }))} />
     </div>
   );
