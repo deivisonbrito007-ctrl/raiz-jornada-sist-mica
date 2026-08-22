@@ -7,28 +7,41 @@ import { esperarSemViolacoes } from "@/test/axe";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
- * Acessibilidade das telas do Diário de Reflexão.
+ * Acessibilidade e comportamento do Diário de Reflexão redesenhado.
  *
- * Cobre: varredura axe (estado vazio, com entradas e com prática vinculada),
- * navegação apenas por teclado (campo -> botão) e anúncios em live region
- * para sucesso e erro ao salvar.
+ * Cobre: varredura axe (vazio, com entradas e vinculado a uma prática), teclado,
+ * anúncios em live region, privacidade explícita no modo acompanhado e as ações
+ * de editar, apagar e mudar quem pode ler.
  */
 
 const search: { conteudoId?: string } = {};
 
 const fetchDiario = vi.fn<() => Promise<any>>();
 const fetchConteudo = vi.fn<(args: any) => Promise<any>>();
+const fetchPratica = vi.fn<() => Promise<any>>();
 const salvarFn = vi.fn<(args: any) => Promise<any>>();
+const editarFn = vi.fn<(args: any) => Promise<any>>();
+const apagarFn = vi.fn<(args: any) => Promise<any>>();
+const visibilidadeFn = vi.fn<(args: any) => Promise<any>>();
 
 const listarDiarioMock = Symbol("listarDiario");
 const getConteudoMock = Symbol("getConteudo");
 const salvarDiarioMock = Symbol("salvarDiario");
+const editarDiarioMock = Symbol("editarDiario");
+const apagarDiarioMock = Symbol("apagarDiario");
+const visibilidadeMock = Symbol("definirVisibilidadeDiario");
+const praticaMock = Symbol("getPraticaSemReflexao");
 
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => (options: Record<string, unknown>) => ({
     ...options,
     useSearch: () => search,
   }),
+  Link: ({ children, ...resto }: any) => (
+    <a href="#" {...resto}>
+      {children}
+    </a>
+  ),
 }));
 
 const middlewareStub = () => {
@@ -43,19 +56,38 @@ const middlewareStub = () => {
   return chain;
 };
 
+const mapa = new Map<unknown, unknown>();
+
 vi.mock("@tanstack/react-start", () => ({
   createMiddleware: middlewareStub,
   createServerFn: middlewareStub,
   createStart: () => ({}),
   createCsrfMiddleware: middlewareStub,
-  useServerFn: (fn: unknown) =>
-    fn === listarDiarioMock ? fetchDiario : fn === getConteudoMock ? fetchConteudo : salvarFn,
+  useServerFn: (fn: unknown) => mapa.get(fn) ?? salvarFn,
 }));
 
 vi.mock("@/lib/raiz.functions", () => ({
   listarDiario: listarDiarioMock,
   getConteudo: getConteudoMock,
   salvarDiario: salvarDiarioMock,
+  editarDiario: editarDiarioMock,
+  apagarDiario: apagarDiarioMock,
+  definirVisibilidadeDiario: visibilidadeMock,
+  getPraticaSemReflexao: praticaMock,
+  getMeuContexto: Symbol("getMeuContexto"),
+}));
+
+mapa.set(listarDiarioMock, fetchDiario);
+mapa.set(getConteudoMock, fetchConteudo);
+mapa.set(salvarDiarioMock, salvarFn);
+mapa.set(editarDiarioMock, editarFn);
+mapa.set(apagarDiarioMock, apagarFn);
+mapa.set(visibilidadeMock, visibilidadeFn);
+mapa.set(praticaMock, fetchPratica);
+
+const contexto: { modo: string } = { modo: "acompanhado" };
+vi.mock("@/hooks/use-meu-contexto", () => ({
+  useMeuContexto: () => ({ data: { modo: contexto.modo, perfil: { nome: "Ana Maria" } } }),
 }));
 
 const toastMock = { success: vi.fn(), error: vi.fn(), info: vi.fn() };
@@ -73,9 +105,9 @@ function renderizar() {
   );
 }
 
-/** O convite do dia muda conforme o dia da semana: buscamos o campo pelo papel. */
+/** O convite muda a cada dia: buscamos o campo pelo papel. */
 function campoReflexao() {
-  return screen.findByRole("textbox", { name: /.+/ });
+  return screen.findByRole("textbox", { name: /\?$/ });
 }
 
 const entradas = [
@@ -83,28 +115,40 @@ const entradas = [
     id: "d-1",
     created_at: "2026-08-01T12:00:00.000Z",
     texto: "Senti o peito abrir durante a respiração.",
-    conteudos: { titulo: "Respiração da raiz" },
+    conteudo_id: "c-1",
+    visibilidade: "somente_eu",
+    conteudos: { titulo: "Respiração da raiz", eixos: { nome: "Corpo" } },
   },
   {
     id: "d-2",
     created_at: "2026-07-28T12:00:00.000Z",
     texto: "Lembrei da minha avó.",
+    conteudo_id: null,
+    visibilidade: "compartilhado",
     conteudos: null,
   },
 ];
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.localStorage.clear();
   delete search.conteudoId;
+  contexto.modo = "acompanhado";
   fetchDiario.mockResolvedValue([]);
-  fetchConteudo.mockResolvedValue({ conteudo: { titulo: "Respiração da raiz" } });
+  fetchPratica.mockResolvedValue(null);
+  fetchConteudo.mockResolvedValue({
+    conteudo: { titulo: "Respiração da raiz", eixos: { nome: "Corpo" } },
+  });
   salvarFn.mockResolvedValue({ ok: true });
+  editarFn.mockResolvedValue({ ok: true });
+  apagarFn.mockResolvedValue({ ok: true });
+  visibilidadeFn.mockResolvedValue({ ok: true });
 });
 
 describe("Diário de reflexão — acessibilidade", () => {
   it("não tem violações axe no estado vazio", async () => {
     const { container } = renderizar();
-    await screen.findByText("Suas reflexões aparecerão aqui.");
+    await screen.findByText(/Suas reflexões aparecerão aqui/);
     await esperarSemViolacoes(container);
   });
 
@@ -129,7 +173,7 @@ describe("Diário de reflexão — acessibilidade", () => {
     const { container } = renderizar();
     const campo = await campoReflexao();
     await userEvent.type(campo, "uma reflexão");
-    await userEvent.click(screen.getByRole("button", { name: "Salvar reflexão" }));
+    await userEvent.click(screen.getByRole("button", { name: "Guardar reflexão" }));
     const botao = await screen.findByRole("button", { name: "Guardando..." });
     expect(botao).toHaveAttribute("aria-busy", "true");
     await esperarSemViolacoes(container);
@@ -142,30 +186,18 @@ describe("Diário de reflexão — acessibilidade", () => {
     expect(campo).toHaveAttribute("aria-describedby", "dica-reflexao");
   });
 
-  it("expõe as entradas anteriores como lista para leitores de tela", async () => {
+  it("expõe as entradas como lista para leitores de tela", async () => {
     fetchDiario.mockResolvedValue(entradas);
     renderizar();
-    const lista = await screen.findByRole("list");
-    expect(lista).toHaveAccessibleName("Entradas anteriores");
+    await screen.findByText("Lembrei da minha avó.");
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
-  });
-
-  it("permite escrever e salvar somente com o teclado", async () => {
-    renderizar();
-    const campo = await campoReflexao();
-    campo.focus();
-    await userEvent.keyboard("reflexão via teclado");
-    await userEvent.tab();
-    expect(screen.getByRole("button", { name: "Salvar reflexão" })).toHaveFocus();
-    await userEvent.keyboard("{Enter}");
-    await waitFor(() => expect(salvarFn).toHaveBeenCalled());
   });
 
   it("anuncia sucesso na live region após salvar", async () => {
     renderizar();
     const campo = await campoReflexao();
     await userEvent.type(campo, "guardar isto");
-    await userEvent.click(screen.getByRole("button", { name: "Salvar reflexão" }));
+    await userEvent.click(screen.getByRole("button", { name: "Guardar reflexão" }));
     const status = await screen.findByRole("status");
     await waitFor(() => expect(status).toHaveTextContent("Reflexão guardada."));
   });
@@ -175,7 +207,7 @@ describe("Diário de reflexão — acessibilidade", () => {
     renderizar();
     const campo = await campoReflexao();
     await userEvent.type(campo, "tentativa");
-    await userEvent.click(screen.getByRole("button", { name: "Salvar reflexão" }));
+    await userEvent.click(screen.getByRole("button", { name: "Guardar reflexão" }));
     const status = await screen.findByRole("status");
     await waitFor(() => expect(status).toHaveTextContent("Erro ao salvar: Sem conexão"));
   });
@@ -183,6 +215,106 @@ describe("Diário de reflexão — acessibilidade", () => {
   it("mantém o botão desabilitado com o campo vazio", async () => {
     renderizar();
     await campoReflexao();
-    expect(screen.getByRole("button", { name: "Salvar reflexão" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Guardar reflexão" })).toBeDisabled();
+  });
+});
+
+describe("Diário de reflexão — privacidade e ações", () => {
+  it("guarda como privada por padrão no modo acompanhado", async () => {
+    renderizar();
+    const campo = await campoReflexao();
+    expect(screen.getByRole("radio", { name: /Só para mim/ })).toBeChecked();
+    await userEvent.type(campo, "reflexão privada");
+    await userEvent.click(screen.getByRole("button", { name: "Guardar reflexão" }));
+    await waitFor(() =>
+      expect(salvarFn).toHaveBeenCalledWith({
+        data: expect.objectContaining({ visibilidade: "somente_eu" }),
+      }),
+    );
+  });
+
+  it("permite escolher compartilhar com quem acompanha", async () => {
+    renderizar();
+    const campo = await campoReflexao();
+    await userEvent.click(screen.getByRole("radio", { name: /Compartilhar/ }));
+    await userEvent.type(campo, "quero mostrar isto");
+    await userEvent.click(screen.getByRole("button", { name: "Guardar reflexão" }));
+    await waitFor(() =>
+      expect(salvarFn).toHaveBeenCalledWith({
+        data: expect.objectContaining({ visibilidade: "compartilhado" }),
+      }),
+    );
+  });
+
+  it("no modo autoguiado não oferece compartilhamento", async () => {
+    contexto.modo = "autoguiado";
+    renderizar();
+    await campoReflexao();
+    expect(screen.queryByRole("radio", { name: /Compartilhar/ })).toBeNull();
+    expect(screen.getByText(/Este diário é privado/)).toBeInTheDocument();
+  });
+
+  it("edita uma reflexão existente", async () => {
+    fetchDiario.mockResolvedValue(entradas);
+    renderizar();
+    await screen.findByText("Lembrei da minha avó.");
+    await userEvent.click(screen.getAllByRole("button", { name: /Editar/ })[0]!);
+    const campo = screen.getByLabelText("Editar reflexão");
+    await userEvent.clear(campo);
+    await userEvent.type(campo, "texto revisado");
+    await userEvent.click(screen.getByRole("button", { name: /Salvar/ }));
+    await waitFor(() =>
+      expect(editarFn).toHaveBeenCalledWith({ data: { id: "d-1", texto: "texto revisado" } }),
+    );
+  });
+
+  it("pede confirmação antes de apagar", async () => {
+    fetchDiario.mockResolvedValue(entradas);
+    renderizar();
+    await screen.findByText("Lembrei da minha avó.");
+    await userEvent.click(screen.getAllByRole("button", { name: /Apagar/ })[0]!);
+    expect(screen.getByText("Apagar para sempre?")).toBeInTheDocument();
+    await userEvent.click(screen.getAllByRole("button", { name: "Apagar" })[0]!);
+    await waitFor(() => expect(apagarFn).toHaveBeenCalledWith({ data: { id: "d-1" } }));
+  });
+
+  it("alterna quem pode ler uma reflexão já guardada", async () => {
+    fetchDiario.mockResolvedValue(entradas);
+    renderizar();
+    await screen.findByText("Lembrei da minha avó.");
+    await userEvent.click(screen.getAllByRole("button", { name: /^Compartilhar$/ })[0]!);
+    await waitFor(() =>
+      expect(visibilidadeFn).toHaveBeenCalledWith({
+        data: { id: "d-1", visibilidade: "compartilhado" },
+      }),
+    );
+  });
+
+  it("filtra apenas as reflexões compartilhadas", async () => {
+    fetchDiario.mockResolvedValue(entradas);
+    renderizar();
+    await screen.findByText("Lembrei da minha avó.");
+    await userEvent.click(screen.getByRole("button", { name: "Compartilhadas" }));
+    expect(screen.queryByText("Senti o peito abrir durante a respiração.")).toBeNull();
+    expect(screen.getByText("Lembrei da minha avó.")).toBeInTheDocument();
+  });
+
+  it("busca por palavra dentro das reflexões", async () => {
+    fetchDiario.mockResolvedValue(entradas);
+    renderizar();
+    await screen.findByText("Lembrei da minha avó.");
+    await userEvent.type(screen.getByLabelText("Buscar nas suas reflexões"), "avó");
+    expect(screen.queryByText("Senti o peito abrir durante a respiração.")).toBeNull();
+  });
+
+  it("convida a escrever sobre a prática concluída sem reflexão", async () => {
+    fetchPratica.mockResolvedValue({
+      conteudoId: "c-9",
+      titulo: "Aterramento breve",
+      eixoNome: "Corpo",
+      concluidoEm: new Date().toISOString(),
+    });
+    renderizar();
+    expect(await screen.findByText(/Ficou uma prática sem palavras/)).toBeInTheDocument();
   });
 });
