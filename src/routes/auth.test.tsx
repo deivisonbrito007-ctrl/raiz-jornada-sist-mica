@@ -161,26 +161,14 @@ describe("fluxo de login /auth", () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it("cadastra terapeuta quando o cartão de terapeuta é escolhido", async () => {
+  it("não oferece cadastro de terapeuta: o papel é administrativo", async () => {
     search.modo = "cadastro";
-    auth.signUp.mockResolvedValue({ data: { session: { user: { id: "1" } } }, error: null });
-    const user = userEvent.setup();
     render(<AuthPage />);
 
-    await waitFor(() => expect(screen.getByText("Sou a terapeuta responsável")).toBeInTheDocument());
-    await user.click(screen.getByText("Sou a terapeuta responsável"));
-    await user.click(screen.getByRole("button", { name: "Continuar" }));
-    await user.type(screen.getByLabelText("Como podemos te chamar?"), "Ana");
-    await preencher(user);
-    await user.click(screen.getByRole("button", { name: "Criar conta" }));
-
-    await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
-    expect((auth.signUp.mock.calls[0] as any[])[0].options.data).toEqual({
-      nome: "Ana",
-      papel: "terapeuta",
-      caminho_entrada: "terapeuta",
-    });
-    expect(navigate).toHaveBeenCalledWith({ to: "/entrada", replace: true });
+    await waitFor(() =>
+      expect(screen.getByText("Sou cliente de uma terapeuta")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("Sou a terapeuta responsável")).not.toBeInTheDocument();
   });
 
   it("confere convite antes de criar conta com acompanhamento", async () => {
