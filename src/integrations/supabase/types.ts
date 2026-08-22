@@ -976,6 +976,8 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          eixo_destaque: string | null
+          eixos_preferidos: string[]
           email: string
           id: string
           meta_semanal: number
@@ -983,6 +985,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          eixo_destaque?: string | null
+          eixos_preferidos?: string[]
           email?: string
           id: string
           meta_semanal?: number
@@ -990,12 +994,22 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          eixo_destaque?: string | null
+          eixos_preferidos?: string[]
           email?: string
           id?: string
           meta_semanal?: number
           nome?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_eixo_destaque_fkey"
+            columns: ["eixo_destaque"]
+            isOneToOne: false
+            referencedRelation: "eixos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       progresso: {
         Row: {
