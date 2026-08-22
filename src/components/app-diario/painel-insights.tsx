@@ -77,6 +77,73 @@ export function PainelInsights({
 
         {aberto && (
           <div id="conteudo-insights" className="space-y-8 border-t border-border px-5 py-6">
+            <div className="rounded-2xl bg-secondary/60 p-4">
+              <p className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+                <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-floresta" aria-hidden="true" />
+                <span>
+                  Estas leituras são calculadas no seu aparelho e ficam{" "}
+                  <strong className="font-medium text-foreground">só com você</strong>. Nada aqui é
+                  enviado a quem acompanha o seu processo — a terapeuta vê apenas as reflexões que
+                  você escolheu compartilhar, uma a uma.
+                </span>
+              </p>
+
+              {podeCompartilhar && (
+                <div className="mt-4">
+                  <p id="rotulo-base-insights" className="text-xs font-medium text-foreground">
+                    Sobre quais reflexões calcular
+                  </p>
+                  <div
+                    role="group"
+                    aria-labelledby="rotulo-base-insights"
+                    className="mt-2 flex flex-wrap gap-2"
+                  >
+                    {(
+                      [
+                        { valor: "todas", rotulo: "Todas (só para você)", icone: Lock },
+                        {
+                          valor: "compartilhadas",
+                          rotulo: `Só as compartilhadas (${compartilhadas.length})`,
+                          icone: Share2,
+                        },
+                      ] as const
+                    ).map((opcao) => {
+                      const ativa = baseEfetiva === opcao.valor;
+                      const Icone = opcao.icone;
+                      return (
+                        <button
+                          key={opcao.valor}
+                          type="button"
+                          aria-pressed={ativa}
+                          onClick={() => setBase(opcao.valor)}
+                          className={`inline-flex min-h-9 items-center gap-2 rounded-full border px-4 text-xs transition ${
+                            ativa
+                              ? "border-floresta bg-floresta text-primary-foreground"
+                              : "border-border bg-card text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <Icone className="h-3.5 w-3.5" aria-hidden="true" />
+                          {opcao.rotulo}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    {baseEfetiva === "compartilhadas"
+                      ? "Você está vendo o mesmo recorte que a sua terapeuta poderia ler."
+                      : "Inclui também as reflexões privadas — visíveis apenas nesta tela."}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {vazio ? (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Você ainda não compartilhou nenhuma reflexão. Quando compartilhar, este recorte
+                mostrará o que ela pode ler.
+              </p>
+            ) : (
+              <>
             <div>
               <h3 className="text-[0.68rem] font-medium uppercase tracking-[0.2em] text-salvia">
                 Como os sentimentos se movem
