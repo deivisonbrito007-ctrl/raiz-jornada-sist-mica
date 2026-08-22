@@ -497,6 +497,21 @@ export const definirMetaSemanal = createServerFn({ method: "POST" })
     return { ok: true, meta: data.meta };
   });
 
+/** A pessoa corrige o próprio nome (o e-mail vem da conta e não muda aqui). */
+export const atualizarMeuNome = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ nome: z.string().trim().min(2).max(80) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const nome = data.nome.replace(/\s+/g, " ");
+    const { error } = await supabase.from("profiles").update({ nome }).eq("id", userId);
+    if (error) throw erroSeguro(error);
+    return { ok: true, nome };
+  });
+
+
 export const salvarPreferenciasEixos = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
