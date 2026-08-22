@@ -99,23 +99,28 @@ export const FILTRO_DIARIO_LABEL: Record<FiltroDiario, string> = {
   praticas: "De práticas",
 };
 
-/** Aplica busca por palavra e o filtro escolhido. */
+/** Aplica busca por palavra, filtro escolhido e (opcional) recorte por eixo. */
 export function filtrarEntradas(
   entradas: EntradaDiario[],
-  { busca = "", filtro = "todas" as FiltroDiario } = {},
+  { busca = "", filtro = "todas" as FiltroDiario, eixoId = null as string | null } = {},
 ) {
   const termo = busca.trim().toLowerCase();
   return entradas.filter((entrada) => {
     if (filtro === "privadas" && ehCompartilhada(entrada)) return false;
     if (filtro === "compartilhadas" && !ehCompartilhada(entrada)) return false;
     if (filtro === "praticas" && !entrada.conteudo_id) return false;
+    if (eixoId && !eixosDaEntrada(entrada).some((e) => e.id === eixoId)) return false;
     if (!termo) return true;
+    const tags = eixosDaEntrada(entrada)
+      .map((e) => e.nome)
+      .join(" ");
     const alvo = `${entrada.texto} ${entrada.conteudos?.titulo ?? ""} ${
       entrada.conteudos?.eixos?.nome ?? ""
-    }`.toLowerCase();
+    } ${tags}`.toLowerCase();
     return alvo.includes(termo);
   });
 }
+
 
 export type GrupoMes = { chave: string; rotulo: string; entradas: EntradaDiario[] };
 
