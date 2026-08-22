@@ -119,7 +119,7 @@ function Perfil() {
   }
 
   return (
-    <div className="overflow-x-hidden pb-4">
+    <div className="w-full max-w-full overflow-x-hidden pb-4">
       <CabecalhoPerfil
         nome={perfil?.nome}
         email={perfil?.email}
@@ -156,19 +156,23 @@ function Perfil() {
       <RotuloSecao texto="Este aplicativo" />
       <section
         aria-labelledby="titulo-app"
-        className="mt-3 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]"
+        className="mt-3 w-full rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)] sm:p-6"
       >
         <h2 id="titulo-app" className="font-display text-xl text-floresta">
           Versão instalada
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">Você está com a versão {VERSAO_APP}.</p>
+        <p className="mt-1 break-words text-sm text-muted-foreground">
+          Você está com a versão {VERSAO_APP}.
+        </p>
         <AvisoReinstalarApp />
       </section>
 
-
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="outline" className="mt-6 min-h-11 w-full rounded-full border-floresta/20 text-floresta">
+          <Button
+            variant="outline"
+            className="mt-8 min-h-11 w-full rounded-full border-floresta/20 text-floresta"
+          >
             <LogOut className="h-4 w-4" aria-hidden="true" />
             <span>Sair da conta</span>
           </Button>
