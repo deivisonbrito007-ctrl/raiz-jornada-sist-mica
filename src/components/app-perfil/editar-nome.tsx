@@ -11,7 +11,7 @@ import { CHAVES } from "@/lib/cache-chaves";
 import { atualizarMeuNome } from "@/lib/raiz.functions";
 import { validarNome } from "@/lib/perfil-cliente";
 
-type Props = { nome?: string | null; email?: string | null };
+type Props = { nome?: string | null | undefined; email?: string | null | undefined };
 
 /** Nome editável ali mesmo; e-mail em leitura, com o porquê explicado. */
 export function EditarNome({ nome, email }: Props) {

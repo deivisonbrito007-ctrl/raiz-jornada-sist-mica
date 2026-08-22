@@ -4,11 +4,11 @@ import { iniciaisDe } from "@/components/painel/navegacao";
 import { formatarData } from "@/lib/raiz-format";
 
 type Props = {
-  nome?: string | null;
-  email?: string | null;
-  desde?: string | null;
-  cicloRotulo?: string | null;
-  cicloFrase?: string | null;
+  nome?: string | null | undefined;
+  email?: string | null | undefined;
+  desde?: string | null | undefined;
+  cicloRotulo?: string | null | undefined;
+  cicloFrase?: string | null | undefined;
   streakSemanas: number;
 };
 
