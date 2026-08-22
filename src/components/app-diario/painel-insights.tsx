@@ -1,12 +1,23 @@
 import { useState } from "react";
-import { ChevronDown, Minus, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
+import {
+  ChevronDown,
+  Lock,
+  Minus,
+  Share2,
+  Sparkles,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 
 import {
   TENDENCIA_LABEL,
   insightsDoDiario,
   type Tendencia,
 } from "@/lib/diario-insights";
-import type { EntradaDiario } from "@/lib/diario-cliente";
+import { ehCompartilhada, type EntradaDiario } from "@/lib/diario-cliente";
+
+/** Recorte que alimenta as leituras: tudo (privado) ou só o que já foi compartilhado. */
+type Base = "todas" | "compartilhadas";
 
 function IconeTendencia({ tendencia }: { tendencia: Tendencia }) {
   if (tendencia === "descendo")
