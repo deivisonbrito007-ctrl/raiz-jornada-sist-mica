@@ -1214,3 +1214,79 @@ export const salvarRevisao = createServerFn({ method: "POST" })
     if (error) throw erroSeguro(error);
     return { ok: true };
   });
+
+/** Anotação privada da pessoa para uma etapa — uma linha por etapa, salva automaticamente. */
+export const getAnotacaoEtapa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        conteudoId: z.string().uuid(),
+        atribuicaoId: z.string().uuid().nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    let consulta = supabase
+      .from("anotacoes_etapa")
+      .select("id, texto, updated_at")
+      .eq("cliente_id", userId)
+      .eq("conteudo_id", data.conteudoId);
+    consulta = data.atribuicaoId
+      ? consulta.eq("atribuicao_id", data.atribuicaoId)
+      : consulta.is("atribuicao_id", null);
+    const { data: linha, error } = await consulta.maybeSingle();
+    if (error) throw erroSeguro(error);
+    return { texto: linha?.texto ?? "", salvoEm: linha?.updated_at ?? null };
+  });
+
+export const salvarAnotacaoEtapa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        conteudoId: z.string().uuid(),
+        atribuicaoId: z.string().uuid().nullable().optional(),
+        texto: z.string().max(8000),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    let existente = supabase
+      .from("anotacoes_etapa")
+      .select("id")
+      .eq("cliente_id", userId)
+      .eq("conteudo_id", data.conteudoId);
+    existente = data.atribuicaoId
+      ? existente.eq("atribuicao_id", data.atribuicaoId)
+      : existente.is("atribuicao_id", null);
+    const { data: linha, error: erroBusca } = await existente.maybeSingle();
+    if (erroBusca) throw erroSeguro(erroBusca);
+
+    if (linha) {
+      const { data: atualizada, error } = await supabase
+        .from("anotacoes_etapa")
+        .update({ texto: data.texto })
+        .eq("id", linha.id)
+        .eq("cliente_id", userId)
+        .select("updated_at")
+        .maybeSingle();
+      if (error) throw erroSeguro(error);
+      return { salvoEm: atualizada?.updated_at ?? new Date().toISOString() };
+    }
+
+    const { data: criada, error } = await supabase
+      .from("anotacoes_etapa")
+      .insert({
+        cliente_id: userId,
+        conteudo_id: data.conteudoId,
+        atribuicao_id: data.atribuicaoId ?? null,
+        texto: data.texto,
+      })
+      .select("updated_at")
+      .maybeSingle();
+    if (error) throw erroSeguro(error);
+    return { salvoEm: criada?.updated_at ?? new Date().toISOString() };
+  });
