@@ -31,7 +31,6 @@ const CelebracaoPratica = lazy(() =>
   import("@/components/celebracao-pratica").then((m) => ({ default: m.CelebracaoPratica })),
 );
 
-
 export const Route = createFileRoute("/_authenticated/app/conteudo/$conteudoId")({
   // ?retomar=1 vem do botão "Continuar de onde parei" na trilha
   validateSearch: (busca: Record<string, unknown>): { retomar?: boolean } => {
@@ -56,17 +55,10 @@ function Player() {
   const salvarProgresso = useServerFn(marcarProgresso);
   const persistirPosicao = useServerFn(salvarPosicao);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    isFetching,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ["conteudo", conteudoId],
     queryFn: () => fetchConteudo({ data: { conteudoId } }),
   });
-
 
   // Remoção da prática tem aviso próprio (e anúncio próprio no leitor de tela);
   // as outras mudanças passam pela revalidação da liberação.
@@ -112,8 +104,6 @@ function Player() {
   const [emEspera, setEmEspera] = useState(false);
   /** quando a nova tentativa volta a ser permitida (usado na contagem do aviso) */
   const [esperaAte, setEsperaAte] = useState<number | null>(null);
-
-
 
   useEffect(() => {
     bloqueioRef.current = bloqueio;
@@ -228,7 +218,6 @@ function Player() {
     };
   }, [conteudoId]);
 
-
   const conteudo = data?.conteudo;
   const ehMidia = conteudo?.tipo === "video" || conteudo?.tipo === "audio";
 
@@ -243,7 +232,6 @@ function Player() {
     setTocando(false);
     setBloqueio("validade");
   }
-
 
   /** Ao carregar a nova mídia, volta ao ponto salvo e retoma se estava tocando. */
   function retomarPosicao(el: HTMLVideoElement | HTMLAudioElement) {
@@ -291,8 +279,6 @@ function Player() {
     return () => clearTimeout(timer);
   }, [data?.url, data?.urlExpiraEm]);
 
-
-
   /** Pede uma URL assinada nova ao backend e reinicia o player se estiver liberado. */
   async function renovarMidia() {
     if (renovando || emEspera) return;
@@ -326,7 +312,6 @@ function Player() {
         segurarNovaTentativa();
         toast.error("Esta prática não está mais liberada para você.");
       }
-
     } catch {
       setBloqueio("falha");
       segurarNovaTentativa();
@@ -336,7 +321,6 @@ function Player() {
       void invalidarPorEvento(queryClient, "aoRenovarAcesso");
     }
   }
-
 
   /**
    * Chega um aviso de mudança de liberação: confere na hora se a prática segue
@@ -394,9 +378,6 @@ function Player() {
     }, espera);
   }
 
-
-
-
   async function registrar(status: "em_andamento" | "concluido") {
     if (bloqueio) return;
     await salvarProgresso({ data: { conteudoId, status } });
@@ -419,7 +400,6 @@ function Player() {
     }
   }
 
-
   function pular(segundos: number) {
     const el = mediaRef.current;
     if (el) el.currentTime = Math.max(0, Math.min(el.duration || 0, el.currentTime + segundos));
@@ -438,8 +418,6 @@ function Player() {
     setConcluido(true);
     setCelebrar(true);
   }
-
-
 
   return (
     <div>
@@ -465,21 +443,28 @@ function Player() {
       {/* Carregando: o leitor de tela recebe o estado; o esqueleto é decorativo */}
       {isLoading && (
         <div role="status" aria-live="polite" aria-busy="true" className="mt-6">
-          <span className="sr-only">Carregando a prática. Os controles do player ficam indisponíveis até terminar.</span>
+          <span className="sr-only">
+            Carregando a prática. Os controles do player ficam indisponíveis até terminar.
+          </span>
           <Skeleton aria-hidden="true" className="h-64 rounded-3xl" />
         </div>
       )}
 
       {/* Erro de carregamento: caminho de teclado próprio, com foco no botão */}
-      {isError && !isLoading && <AvisoFalhaCarregamento carregando={isFetching} onTentar={() => void refetch()} />}
-
+      {isError && !isLoading && (
+        <AvisoFalhaCarregamento carregando={isFetching} onTentar={() => void refetch()} />
+      )}
 
       {conteudo && (
         <>
           <p className="mt-5 text-[11px] font-medium uppercase tracking-wider text-salvia">
             {conteudo.eixos?.nome} · {TIPO_LABEL[conteudo.tipo] ?? conteudo.tipo}
           </p>
-          <h1 ref={tituloRef} tabIndex={-1} className="mt-1 text-3xl text-floresta outline-none focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2">
+          <h1
+            ref={tituloRef}
+            tabIndex={-1}
+            className="mt-1 text-3xl text-floresta outline-none focus-visible:ring-2 focus-visible:ring-floresta focus-visible:ring-offset-2"
+          >
             {conteudo.titulo}
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{conteudo.descricao}</p>
@@ -495,7 +480,6 @@ function Player() {
                       : bloqueio
                         ? "expirada"
                         : "liberada"
-
                 }
               />
             </div>
@@ -521,9 +505,7 @@ function Player() {
             </p>
           )}
 
-
           {ehMidia && data?.url && !bloqueio && (
-
             <div className="mt-6 overflow-hidden rounded-3xl bg-palco p-4">
               {conteudo.tipo === "video" ? (
                 <video
@@ -661,8 +643,6 @@ function Player() {
               onVerificar={() => void refetch()}
             />
           )}
-
-
 
           {!ehMidia && bloqueio !== "revogado" && (
             <div className="mt-6 whitespace-pre-line rounded-3xl bg-card p-6 text-[15px] leading-relaxed text-foreground shadow-[var(--shadow-organico)]">

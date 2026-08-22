@@ -83,7 +83,6 @@ function Perfil() {
 
       <PreferenciasLembretes />
 
-
       <div className="mt-6 rounded-3xl bg-secondary p-6">
         <h2 className="text-lg text-floresta">Privacidade</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">

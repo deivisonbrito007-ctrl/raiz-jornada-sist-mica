@@ -68,7 +68,8 @@ function Inicio() {
     total: data?.resumo.totalItens ?? 0,
   });
 
-  const conviteId = convite.estado === "nada" || convite.estado === "ciclo_fechado" ? null : convite.pratica.id;
+  const conviteId =
+    convite.estado === "nada" || convite.estado === "ciclo_fechado" ? null : convite.pratica.id;
   const curta =
     praticas.find(
       (p) =>
@@ -119,10 +120,7 @@ function Inicio() {
 
       <MomentosRapidos curta={curta} />
 
-      <BuscarPraticas
-        praticas={praticas}
-        eixos={eixos.map((e) => ({ id: e.id, nome: e.nome }))}
-      />
+      <BuscarPraticas praticas={praticas} eixos={eixos.map((e) => ({ id: e.id, nome: e.nome }))} />
     </div>
   );
 }

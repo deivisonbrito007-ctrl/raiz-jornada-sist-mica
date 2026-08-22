@@ -10,14 +10,7 @@ export type Saudacao = { titulo: string; frase: string };
 export function saudacaoDoDia(agora: Date = new Date(), primeiroNome = ""): Saudacao {
   const h = agora.getHours();
   const nome = primeiroNome.trim();
-  const base =
-    h < 5
-      ? "Boa madrugada"
-      : h < 12
-        ? "Bom dia"
-        : h < 18
-          ? "Boa tarde"
-          : "Boa noite";
+  const base = h < 5 ? "Boa madrugada" : h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
   const frase =
     h < 5
       ? "A noite também acolhe. Vá com calma."
