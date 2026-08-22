@@ -230,7 +230,7 @@ describe("sincronização de liberações sob latência e eventos fora de ordem"
     const fila = filaControlada(fetchBiblioteca, 3);
     montar(Biblioteca);
     fila[0]!.resolver(bibliotecaComEixoLiberado(true, ["Respiração da raiz"]));
-    expect(await screen.findByText("Pertencimento")).toBeInTheDocument();
+    expect((await screen.findAllByText("Pertencimento"))[0]).toBeInTheDocument();
     await prontoParaEventos();
 
     // evento 1 (revogação) fica lento; evento 2 (nova liberação) responde antes
@@ -283,7 +283,7 @@ describe("sincronização de liberações sob latência e eventos fora de ordem"
     const fila = filaControlada(fetchBiblioteca, 3);
     montar(Biblioteca);
     fila[0]!.resolver(bibliotecaComEixoLiberado(true, ["Respiração da raiz"]));
-    expect(await screen.findByText("Pertencimento")).toBeInTheDocument();
+    expect((await screen.findAllByText("Pertencimento"))[0]).toBeInTheDocument();
     await prontoParaEventos();
 
     // conexão instável: o refetch falha
@@ -310,7 +310,7 @@ describe("sincronização de liberações sob latência e eventos fora de ordem"
     const fila = filaControlada(fetchBiblioteca, 5);
     montar(Biblioteca);
     fila[0]!.resolver(bibliotecaComEixoLiberado(true, ["Respiração da raiz"]));
-    expect(await screen.findByText("Pertencimento")).toBeInTheDocument();
+    expect((await screen.findAllByText("Pertencimento"))[0]).toBeInTheDocument();
     await prontoParaEventos();
 
     for (let i = 2; i <= 4; i += 1) {
