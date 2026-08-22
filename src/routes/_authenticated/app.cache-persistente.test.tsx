@@ -22,6 +22,18 @@ const fetchTrilha = vi.fn<(args: any) => Promise<any>>();
 const getMinhaBibliotecaMock = Symbol("getMinhaBiblioteca");
 const getMeuContextoMock = Symbol("getMeuContexto");
 const getEixoTrilhaMock = Symbol("getEixoTrilha");
+const getMeuOnboardingMock = Symbol("getMeuOnboarding");
+const listarDiarioMock = Symbol("listarDiario");
+const encerrarOnboardingMock = Symbol("encerrarOnboarding");
+const fetchOnboarding = vi.fn<() => Promise<any>>(async () => ({
+  escolheuEixos: true,
+  fezPratica: true,
+  escreveuDiario: true,
+  definiuRitmo: true,
+  dispensadoEm: null,
+  concluidoEm: null,
+}));
+const fetchDiarioLista = vi.fn<() => Promise<any>>(async () => []);
 
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => (options: Record<string, unknown>) => ({
@@ -58,13 +70,22 @@ vi.mock("@tanstack/react-start", () => ({
       ? fetchBiblioteca
       : fn === getMeuContextoMock
         ? fetchContexto
-        : fetchTrilha,
+        : fn === getMeuOnboardingMock
+          ? fetchOnboarding
+          : fn === listarDiarioMock
+            ? fetchDiarioLista
+            : fn === encerrarOnboardingMock
+              ? vi.fn()
+              : fetchTrilha,
 }));
 
 vi.mock("@/lib/raiz.functions", () => ({
   getMinhaBiblioteca: getMinhaBibliotecaMock,
   getMeuContexto: getMeuContextoMock,
   getEixoTrilha: getEixoTrilhaMock,
+  getMeuOnboarding: getMeuOnboardingMock,
+  listarDiario: listarDiarioMock,
+  encerrarOnboarding: encerrarOnboardingMock,
 }));
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn(), info: vi.fn() } }));

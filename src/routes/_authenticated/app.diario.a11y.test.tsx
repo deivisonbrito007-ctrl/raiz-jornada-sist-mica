@@ -66,6 +66,9 @@ vi.mock("@tanstack/react-start", () => ({
   useServerFn: (fn: unknown) => mapa.get(fn) ?? salvarFn,
 }));
 
+const getBibliotecaMock = Symbol("getMinhaBiblioteca");
+const fetchBibliotecaDiario = vi.fn(async () => ({ eixos: [] }));
+
 vi.mock("@/lib/raiz.functions", () => ({
   listarDiario: listarDiarioMock,
   getConteudo: getConteudoMock,
@@ -75,6 +78,7 @@ vi.mock("@/lib/raiz.functions", () => ({
   definirVisibilidadeDiario: visibilidadeMock,
   getPraticaSemReflexao: praticaMock,
   getMeuContexto: Symbol("getMeuContexto"),
+  getMinhaBiblioteca: getBibliotecaMock,
 }));
 
 mapa.set(listarDiarioMock, fetchDiario);
@@ -84,6 +88,7 @@ mapa.set(editarDiarioMock, editarFn);
 mapa.set(apagarDiarioMock, apagarFn);
 mapa.set(visibilidadeMock, visibilidadeFn);
 mapa.set(praticaMock, fetchPratica);
+mapa.set(getBibliotecaMock, fetchBibliotecaDiario);
 
 const contexto: { modo: string } = { modo: "acompanhado" };
 vi.mock("@/hooks/use-meu-contexto", () => ({
