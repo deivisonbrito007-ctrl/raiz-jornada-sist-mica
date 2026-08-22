@@ -74,7 +74,7 @@ function AdminInicio() {
               Adicionar cliente
             </Link>
           )}
-          {pode("gerenciar_liberacoes") && (
+          {pode("criar_planos") && (
             <Link
               to="/admin/clientes"
               className="inline-flex min-h-11 items-center gap-2 rounded-full bg-card px-5 text-sm font-medium text-floresta shadow-[var(--shadow-organico)] hover:bg-card/80"

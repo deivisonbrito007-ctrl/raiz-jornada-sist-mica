@@ -150,7 +150,7 @@ export const adminDefinirLembretesCliente = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_liberacoes", "admin_definir_lembretes", {
+    await garantirPermissao(supabase, userId, "criar_planos", "admin_definir_lembretes", {
       clienteAlvo: data.clienteId,
       rota: "/admin/cliente",
     });

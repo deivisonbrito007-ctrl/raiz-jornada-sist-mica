@@ -39,13 +39,13 @@ describe("validação de permissões no servidor", () => {
       rpc: async () => ({ data: "true" as unknown }),
     };
     await expect(
-      garantirPermissao(supabase as never, "u1", "gerenciar_conteudos", "adminSalvarConteudo"),
+      garantirPermissao(supabase as never, "u1", "criar_conteudos", "adminSalvarConteudo"),
     ).rejects.toThrow();
   });
 
   it("temPermissao só devolve true com confirmação do servidor", async () => {
-    expect(await temPermissao(clienteFalso(["ver_diario"]), "ver_diario")).toBe(true);
-    expect(await temPermissao(clienteFalso([]), "ver_diario")).toBe(false);
+    expect(await temPermissao(clienteFalso(["ver_registros"]), "ver_registros")).toBe(true);
+    expect(await temPermissao(clienteFalso([]), "ver_registros")).toBe(false);
   });
 
   it("cada permissão do catálogo é verificável isoladamente", async () => {

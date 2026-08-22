@@ -1,8 +1,8 @@
 export const PERMISSOES = [
   "ver_clientes",
-  "ver_diario",
-  "gerenciar_liberacoes",
-  "gerenciar_conteudos",
+  "ver_registros",
+  "criar_planos",
+  "criar_conteudos",
   "gerenciar_pacotes",
   "gerenciar_equipe",
 ] as const;
@@ -11,18 +11,18 @@ export type Permissao = (typeof PERMISSOES)[number];
 
 export const PERMISSAO_LABEL: Record<Permissao, string> = {
   ver_clientes: "Ver clientes e progresso",
-  ver_diario: "Ver diário dos clientes",
-  gerenciar_liberacoes: "Liberar e agendar conteúdos",
-  gerenciar_conteudos: "Gerenciar biblioteca e eixos",
+  ver_registros: "Ver diário dos clientes",
+  criar_planos: "Liberar e agendar conteúdos",
+  criar_conteudos: "Gerenciar biblioteca e eixos",
   gerenciar_pacotes: "Gerenciar pacotes e valores",
   gerenciar_equipe: "Gerenciar equipe de admins",
 };
 
 export const PERMISSAO_DESCRICAO: Record<Permissao, string> = {
   ver_clientes: "Acessa a lista de clientes, streaks e progresso das trilhas.",
-  ver_diario: "Lê as reflexões escritas pelos clientes. Conteúdo sensível.",
-  gerenciar_liberacoes: "Libera, revoga e agenda conteúdos para cada cliente.",
-  gerenciar_conteudos: "Cria e edita eixos, mídias, textos e exercícios.",
+  ver_registros: "Lê as reflexões escritas pelos clientes. Conteúdo sensível.",
+  criar_planos: "Libera, revoga e agenda conteúdos para cada cliente.",
+  criar_conteudos: "Cria e edita eixos, mídias, textos e exercícios.",
   gerenciar_pacotes: "Cria pacotes, define valores e vincula clientes.",
   gerenciar_equipe: "Convida, promove e remove outros administradores.",
 };
@@ -37,12 +37,12 @@ export const PERFIS_PERMISSAO: { id: string; nome: string; permissoes: Permissao
   {
     id: "curadoria",
     nome: "Curadoria de conteúdo",
-    permissoes: ["ver_clientes", "gerenciar_conteudos", "gerenciar_liberacoes"],
+    permissoes: ["ver_clientes", "criar_conteudos", "criar_planos"],
   },
   {
     id: "clinico",
     nome: "Apoio clínico",
-    permissoes: ["ver_clientes", "ver_diario", "gerenciar_liberacoes"],
+    permissoes: ["ver_clientes", "ver_registros", "criar_planos"],
   },
   {
     id: "completo",

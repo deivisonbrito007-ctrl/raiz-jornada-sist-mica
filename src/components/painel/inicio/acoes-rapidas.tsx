@@ -23,15 +23,15 @@ export const ACOES_RAPIDAS: AcaoRapida[] = [
     label: "Liberar trilha",
     to: "/admin/clientes",
     icone: RouteIcon,
-    permissao: "gerenciar_liberacoes",
+    permissao: "criar_planos",
   },
   {
     label: "Criar conteúdo",
     to: "/admin/conteudos",
     icone: FilePlus2,
-    permissao: "gerenciar_conteudos",
+    permissao: "criar_conteudos",
   },
-  { label: "Criar trilha", to: "/admin/trilhas", icone: Sparkles, permissao: "gerenciar_conteudos" },
+  { label: "Criar trilha", to: "/admin/trilhas", icone: Sparkles, permissao: "criar_conteudos" },
   {
     label: "Registrar revisão",
     to: "/admin/acompanhamento",

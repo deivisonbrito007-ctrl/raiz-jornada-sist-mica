@@ -41,9 +41,9 @@ function AdminCliente() {
 
   const { pode, carregando } = useMinhasPermissoes();
   const podeVer = pode("ver_clientes");
-  const podeLiberar = pode("gerenciar_liberacoes");
+  const podeLiberar = pode("criar_planos");
   const podePacotes = pode("gerenciar_pacotes");
-  const podeDiario = pode("ver_diario");
+  const podeDiario = pode("ver_registros");
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-cliente", clienteId],
@@ -242,7 +242,7 @@ function AdminCliente() {
                       <div className="flex flex-col items-end gap-2">
                         <label className="flex items-center gap-2 text-xs text-salvia">
                           Eixo completo
-                          <ControlePermitido permissao="gerenciar_liberacoes">
+                          <ControlePermitido permissao="criar_planos">
                             <Switch
                               checked={marcado(eixo.id, null)}
                               aria-label={`Liberar eixo ${eixo.nome}`}
@@ -283,7 +283,7 @@ function AdminCliente() {
                             </p>
                           </div>
                           <div className="flex flex-col items-end gap-2">
-                            <ControlePermitido permissao="gerenciar_liberacoes">
+                            <ControlePermitido permissao="criar_planos">
                               <Switch
                                 checked={marcado(null, conteudo.id) || marcado(eixo.id, null)}
                                 disabled={marcado(eixo.id, null)}
@@ -322,7 +322,7 @@ function AdminCliente() {
 
           <section className="mt-8">
             <h2 className="text-xl text-floresta">Diário da cliente</h2>
-            {!podeDiario && <SecaoSemPermissao permissao="ver_diario" className="mt-4" titulo="Diário restrito" />}
+            {!podeDiario && <SecaoSemPermissao permissao="ver_registros" className="mt-4" titulo="Diário restrito" />}
             <div className={`mt-4 space-y-3 ${podeDiario ? "" : "hidden"}`}>
               {data.diario.length === 0 && (
                 <p className="rounded-3xl border border-dashed border-border p-6 text-sm text-muted-foreground">

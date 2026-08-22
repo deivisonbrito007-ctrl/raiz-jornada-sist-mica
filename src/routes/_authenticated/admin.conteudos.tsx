@@ -90,7 +90,7 @@ function paraFormulario(c: ConteudoAdmin): FormularioConteudo {
 
 function AdminConteudos() {
   const { pode, carregando } = useMinhasPermissoes();
-  const podeGerenciar = pode("gerenciar_conteudos");
+  const podeGerenciar = pode("criar_conteudos");
 
   const {
     conteudos,
@@ -233,7 +233,7 @@ function AdminConteudos() {
       <div>
         <h1 className="font-display text-3xl text-floresta">Conteúdos</h1>
         <SecaoSemPermissao
-          permissao="gerenciar_conteudos"
+          permissao="criar_conteudos"
           className="mt-6"
           titulo="Biblioteca restrita"
         />
@@ -280,7 +280,7 @@ function AdminConteudos() {
               <LayoutGrid className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
-          <ControlePermitido permissao="gerenciar_conteudos">
+          <ControlePermitido permissao="criar_conteudos">
             <Button
               onClick={() => setForm(formularioVazio(eixos[0]?.id ?? "", biblioteca.length + 1))}
               disabled={!eixos.length}

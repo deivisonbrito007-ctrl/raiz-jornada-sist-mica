@@ -176,7 +176,7 @@ export const adminMonitoramentoPlano = createServerFn({ method: "GET" })
     if (error) throw erroSeguro(error);
     if (!plano) throw new Error("Plano não encontrado");
 
-    const podeVerDiario = await supabase.rpc("pode", { _permissao: "ver_diario" });
+    const podeVerDiario = await supabase.rpc("pode", { _permissao: "ver_registros" });
 
     const [etapas, conteudos, checkins, revisoes, apoio, perfis, diario] = await Promise.all([
       supabase
@@ -244,7 +244,7 @@ async function permitirAcao(
   userId: string,
   acao: string,
 ) {
-  await garantirPermissao(supabase, userId, "gerenciar_liberacoes", acao, {
+  await garantirPermissao(supabase, userId, "criar_planos", acao, {
     tabela: "atribuicoes",
     rota: ROTA,
   });
