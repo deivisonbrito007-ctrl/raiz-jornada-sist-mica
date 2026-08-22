@@ -32,11 +32,23 @@ function IconeTendencia({ tendencia }: { tendencia: Tendencia }) {
  * sentimentos se movem, que palavras voltam e como foi cada mês. Fechado por
  * padrão, para que a escrita continue sendo o centro da tela.
  */
-export function PainelInsights({ entradas }: { entradas: EntradaDiario[] }) {
+export function PainelInsights({
+  entradas,
+  podeCompartilhar = false,
+}: {
+  entradas: EntradaDiario[];
+  /** No modo acompanhado existe a opção de ver o recorte já compartilhado. */
+  podeCompartilhar?: boolean;
+}) {
   const [aberto, setAberto] = useState(false);
-  const { vazio, sentimentos, temas, meses } = insightsDoDiario(entradas);
+  const [base, setBase] = useState<Base>("todas");
 
-  if (vazio) return null;
+  const compartilhadas = entradas.filter(ehCompartilhada);
+  const baseEfetiva: Base = podeCompartilhar ? base : "todas";
+  const recorte = baseEfetiva === "compartilhadas" ? compartilhadas : entradas;
+  const { vazio, sentimentos, temas, meses } = insightsDoDiario(recorte);
+
+  if (entradas.length === 0) return null;
 
   return (
     <section aria-labelledby="titulo-insights" className="mt-10">
