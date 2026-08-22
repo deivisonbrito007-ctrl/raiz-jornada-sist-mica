@@ -85,12 +85,10 @@ export function ConviteLembreteSemanal() {
           <BellRing className="h-5 w-5" />
         </span>
         <div className="min-w-0">
-          <h2 id="titulo-convete-lembrete-oculto" className="sr-only">
-            Lembretes semanais
-          </h2>
-          <p id="titulo-convite-lembrete" className="text-lg text-floresta">
+          <h2 id="titulo-convite-lembrete" className="text-lg text-floresta">
             Quer um toque suave por semana?
-          </p>
+          </h2>
+
           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
             Um único aviso na {dia?.toLowerCase()} às {hora}, no seu horário, para você voltar à
             prática sem pressa. Nada de cobranças diárias.
