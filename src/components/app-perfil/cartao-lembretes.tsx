@@ -65,9 +65,9 @@ export function CartaoLembretes() {
   return (
     <section
       aria-labelledby="titulo-lembretes"
-      className="mt-3 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]"
+      className="mt-3 w-full rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)] sm:p-6"
     >
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:gap-4">
         <div className="flex min-w-0 items-start gap-3">
           <span className="shrink-0 rounded-2xl bg-salvia/15 p-3 text-salvia">
             <BellRing className="h-5 w-5" aria-hidden="true" />
@@ -76,7 +76,10 @@ export function CartaoLembretes() {
             <h2 id="titulo-lembretes" className="font-display text-xl text-floresta">
               Lembretes
             </h2>
-            <p aria-live="polite" className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            <p
+              aria-live="polite"
+              className="mt-1 break-words text-sm leading-relaxed text-muted-foreground"
+            >
               {frase}
             </p>
           </div>
@@ -92,11 +95,11 @@ export function CartaoLembretes() {
 
       <Link
         to="/app/lembretes"
-        className="mt-5 flex min-h-11 items-center justify-between gap-3 rounded-2xl bg-secondary px-4 py-3 text-sm text-floresta transition-colors hover:bg-secondary/70"
+        className="mt-5 flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl bg-secondary px-4 py-3 text-sm text-floresta transition-colors hover:bg-secondary/70"
       >
-        <span className="min-w-0">
+        <span className="min-w-0 break-words">
           Ajustar lembretes
-          <span className="mt-0.5 block text-xs text-muted-foreground">
+          <span className="mt-0.5 block break-words text-xs leading-snug text-muted-foreground">
             dia, hora, canais, pausa e histórico
           </span>
         </span>

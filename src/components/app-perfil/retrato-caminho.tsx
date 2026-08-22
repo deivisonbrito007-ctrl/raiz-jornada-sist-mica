@@ -21,23 +21,27 @@ export function RetratoCaminho(props: Props) {
   return (
     <section
       aria-labelledby="titulo-retrato"
-      className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]"
+      className="mt-3 w-full rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)] sm:p-6"
     >
       <h2 id="titulo-retrato" className="font-display text-xl text-floresta">
         Meu retrato do caminho
       </h2>
-      <ul className="mt-4 grid gap-3 sm:grid-cols-3">
+      <ul className="mt-4 grid gap-2.5 sm:grid-cols-3 sm:gap-3">
         {medidas.map((m) => (
           <li key={m.chave}>
             <Link
               to={DESTINOS[m.chave]}
-              className="flex min-h-11 flex-col rounded-2xl bg-secondary p-4 transition-colors hover:bg-secondary/70"
+              className="grid min-h-11 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-2xl bg-secondary p-4 transition-colors hover:bg-secondary/70 sm:flex sm:flex-col sm:items-start sm:gap-0"
             >
-              <span className="font-display text-3xl text-floresta">{m.valor}</span>
-              <span className="mt-0.5 text-xs uppercase tracking-wider text-salvia">
-                {m.rotulo}
+              <span className="font-display text-3xl leading-none text-floresta">{m.valor}</span>
+              <span className="min-w-0">
+                <span className="block break-words text-xs uppercase tracking-wider text-salvia">
+                  {m.rotulo}
+                </span>
+                <span className="mt-0.5 block break-words text-xs leading-snug text-muted-foreground">
+                  {m.detalhe}
+                </span>
               </span>
-              <span className="mt-1 text-xs text-muted-foreground">{m.detalhe}</span>
             </Link>
           </li>
         ))}

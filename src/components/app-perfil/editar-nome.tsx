@@ -47,12 +47,13 @@ export function EditarNome({ nome, email }: Props) {
   return (
     <section
       aria-labelledby="titulo-meus-dados"
-      className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]"
+      className="mt-3 w-full rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)] sm:p-6"
     >
-      <div className="flex items-start justify-between gap-3">
-        <h2 id="titulo-meus-dados" className="font-display text-xl text-floresta">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+        <h2 id="titulo-meus-dados" className="min-w-0 font-display text-xl text-floresta">
           Meus dados
         </h2>
+
         {!editando && (
           <Button
             type="button"
@@ -92,7 +93,7 @@ export function EditarNome({ nome, email }: Props) {
               </p>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               type="submit"
               disabled={mutacao.isPending}
@@ -117,14 +118,14 @@ export function EditarNome({ nome, email }: Props) {
         </form>
       ) : (
         <dl className="mt-4 space-y-4 text-sm">
-          <div>
+          <div className="min-w-0">
             <dt className="text-xs uppercase tracking-wider text-salvia">Nome</dt>
-            <dd className="mt-0.5 text-base text-floresta">{nome || "—"}</dd>
+            <dd className="mt-0.5 break-words text-base text-floresta">{nome || "—"}</dd>
           </div>
-          <div>
+          <div className="min-w-0">
             <dt className="text-xs uppercase tracking-wider text-salvia">E-mail</dt>
-            <dd className="mt-0.5 text-base text-floresta">{email || "—"}</dd>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <dd className="mt-0.5 break-all text-base text-floresta">{email || "—"}</dd>
+            <p className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">
               O e-mail é a chave da sua conta e do seu acesso às trilhas. Para trocá-lo, fale com
               quem acompanha você.
             </p>

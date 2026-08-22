@@ -31,23 +31,25 @@ const CAMINHOS = [
 /** Atalhos do perfil para as telas que continuam o processo. */
 export function MeusCaminhos() {
   return (
-    <section aria-labelledby="titulo-meus-caminhos" className="mt-4">
+    <section aria-labelledby="titulo-meus-caminhos" className="mt-3 w-full">
       <h2 id="titulo-meus-caminhos" className="px-1 font-display text-xl text-floresta">
         Meus caminhos
       </h2>
-      <ul className="mt-3 space-y-3">
+      <ul className="mt-3 space-y-2.5">
         {CAMINHOS.map(({ to, titulo, descricao, icone: Icone }) => (
           <li key={to}>
             <Link
               to={to}
-              className="flex min-h-11 items-center gap-4 rounded-3xl bg-card px-5 py-4 shadow-[var(--shadow-organico)] transition-colors hover:bg-secondary/40"
+              className="flex min-h-11 w-full items-center gap-3 rounded-3xl bg-card px-4 py-4 shadow-[var(--shadow-organico)] transition-colors hover:bg-secondary/40 sm:gap-4 sm:px-5"
             >
-              <span className="rounded-2xl bg-secondary p-2.5 text-salvia">
+              <span className="shrink-0 rounded-2xl bg-secondary p-2.5 text-salvia">
                 <Icone className="h-5 w-5" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium text-floresta">{titulo}</span>
-                <span className="mt-0.5 block text-xs text-muted-foreground">{descricao}</span>
+                <span className="block break-words text-sm font-medium text-floresta">{titulo}</span>
+                <span className="mt-0.5 block break-words text-xs leading-snug text-muted-foreground">
+                  {descricao}
+                </span>
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             </Link>

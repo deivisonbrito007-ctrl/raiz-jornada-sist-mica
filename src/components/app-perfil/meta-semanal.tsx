@@ -27,35 +27,38 @@ export function MetaSemanal({ meta }: Props) {
   return (
     <section
       aria-labelledby="titulo-meu-ritmo"
-      className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]"
+      className="mt-3 w-full rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)] sm:p-6"
     >
       <div className="flex items-start gap-3">
-        <span className="rounded-2xl bg-ocre/15 p-3 text-ocre">
+        <span className="shrink-0 rounded-2xl bg-ocre/15 p-3 text-ocre">
           <Target className="h-5 w-5" aria-hidden="true" />
         </span>
         <div className="min-w-0">
           <h2 id="titulo-meu-ritmo" className="font-display text-xl text-floresta">
             Meu ritmo
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 break-words text-sm leading-relaxed text-muted-foreground">
             Quantas práticas por semana fazem sentido para você agora.
           </p>
         </div>
       </div>
 
-      <div className="mt-5 flex items-center gap-4">
+      <div className="mt-5 flex items-center justify-between gap-3">
         <button
           type="button"
           aria-label="Diminuir meta semanal"
           disabled={atual <= META_MINIMA || mutacao.isPending}
           onClick={() => mutacao.mutate(limitarMeta(atual - 1))}
-          className="grid h-11 w-11 place-items-center rounded-full border border-border text-floresta disabled:opacity-40"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border text-floresta disabled:opacity-40"
         >
           <Minus className="h-4 w-4" aria-hidden="true" />
         </button>
-        <p aria-live="polite" className="font-display text-3xl text-floresta">
+        <p
+          aria-live="polite"
+          className="min-w-0 flex-1 text-center font-display text-3xl leading-none text-floresta"
+        >
           {atual}
-          <span className="ml-1 text-sm text-muted-foreground">
+          <span className="mt-1 block font-sans text-xs text-muted-foreground">
             prática{atual === 1 ? "" : "s"} / semana
           </span>
         </p>
@@ -64,13 +67,15 @@ export function MetaSemanal({ meta }: Props) {
           aria-label="Aumentar meta semanal"
           disabled={atual >= META_MAXIMA || mutacao.isPending}
           onClick={() => mutacao.mutate(limitarMeta(atual + 1))}
-          className="grid h-11 w-11 place-items-center rounded-full border border-border text-floresta disabled:opacity-40"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border text-floresta disabled:opacity-40"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
 
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{rotuloMeta(atual)}</p>
+      <p className="mt-4 break-words text-sm leading-relaxed text-muted-foreground">
+        {rotuloMeta(atual)}
+      </p>
     </section>
   );
 }
