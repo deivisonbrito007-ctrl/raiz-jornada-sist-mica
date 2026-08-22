@@ -158,10 +158,10 @@ function Perfil() {
         aria-labelledby="titulo-app"
         className="mt-3 w-full rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)] sm:p-6"
       >
-        <h2 id="titulo-app" className="font-display text-xl text-floresta">
+        <h2 id="titulo-app" className="perfil-titulo">
           Versão instalada
         </h2>
-        <p className="mt-1 break-words text-sm text-muted-foreground">
+        <p className="mt-1 perfil-texto break-words text-muted-foreground">
           Você está com a versão {VERSAO_APP}.
         </p>
         <AvisoReinstalarApp />

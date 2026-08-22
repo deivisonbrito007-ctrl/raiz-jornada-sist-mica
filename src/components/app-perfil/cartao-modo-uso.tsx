@@ -26,11 +26,11 @@ export function CartaoModoUso({ modo, temTerapeuta, modoDesde }: Props) {
           <Icone className="h-5 w-5" aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <h2 id="titulo-modo-uso" className="font-display text-xl text-floresta">
+          <h2 id="titulo-modo-uso" className="perfil-titulo">
             Meu jeito de caminhar
           </h2>
           <p className="mt-1 break-words text-sm font-medium text-floresta">{texto.titulo}</p>
-          <p className="mt-2 break-words text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-2 perfil-texto break-words text-muted-foreground">
             {texto.descricao}
           </p>
           {modoDesde && (

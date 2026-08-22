@@ -23,7 +23,7 @@ export function RetratoCaminho(props: Props) {
       aria-labelledby="titulo-retrato"
       className="mt-3 w-full rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)] sm:p-6"
     >
-      <h2 id="titulo-retrato" className="font-display text-xl text-floresta">
+      <h2 id="titulo-retrato" className="perfil-titulo">
         Meu retrato do caminho
       </h2>
       <ul className="mt-4 grid gap-2.5 sm:grid-cols-3 sm:gap-3">
@@ -35,10 +35,10 @@ export function RetratoCaminho(props: Props) {
             >
               <span className="font-display text-3xl leading-none text-floresta">{m.valor}</span>
               <span className="min-w-0">
-                <span className="block break-words text-xs uppercase tracking-wider text-salvia">
+                <span className="block break-words perfil-rotulo">
                   {m.rotulo}
                 </span>
-                <span className="mt-0.5 block break-words text-xs leading-snug text-muted-foreground">
+                <span className="mt-0.5 block break-words perfil-nota text-muted-foreground">
                   {m.detalhe}
                 </span>
               </span>

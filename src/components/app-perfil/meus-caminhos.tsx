@@ -32,7 +32,7 @@ const CAMINHOS = [
 export function MeusCaminhos() {
   return (
     <section aria-labelledby="titulo-meus-caminhos" className="mt-3 w-full">
-      <h2 id="titulo-meus-caminhos" className="px-1 font-display text-xl text-floresta">
+      <h2 id="titulo-meus-caminhos" className="px-1 perfil-titulo">
         Meus caminhos
       </h2>
       <ul className="mt-3 space-y-2.5">
@@ -47,7 +47,7 @@ export function MeusCaminhos() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block break-words text-sm font-medium text-floresta">{titulo}</span>
-                <span className="mt-0.5 block break-words text-xs leading-snug text-muted-foreground">
+                <span className="mt-0.5 block break-words perfil-nota text-muted-foreground">
                   {descricao}
                 </span>
               </span>

@@ -50,7 +50,7 @@ export function EditarNome({ nome, email }: Props) {
       className="mt-3 w-full rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)] sm:p-6"
     >
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-        <h2 id="titulo-meus-dados" className="min-w-0 font-display text-xl text-floresta">
+        <h2 id="titulo-meus-dados" className="min-w-0 perfil-titulo">
           Meus dados
         </h2>
 
@@ -74,7 +74,7 @@ export function EditarNome({ nome, email }: Props) {
       {editando ? (
         <form onSubmit={enviar} className="mt-4 space-y-3">
           <div>
-            <Label htmlFor="perfil-nome" className="text-xs uppercase tracking-wider text-salvia">
+            <Label htmlFor="perfil-nome" className="perfil-rotulo">
               Como você quer ser chamada
             </Label>
             <Input
@@ -119,13 +119,13 @@ export function EditarNome({ nome, email }: Props) {
       ) : (
         <dl className="mt-4 space-y-4 text-sm">
           <div className="min-w-0">
-            <dt className="text-xs uppercase tracking-wider text-salvia">Nome</dt>
+            <dt className="perfil-rotulo">Nome</dt>
             <dd className="mt-0.5 break-words text-base text-floresta">{nome || "—"}</dd>
           </div>
           <div className="min-w-0">
-            <dt className="text-xs uppercase tracking-wider text-salvia">E-mail</dt>
+            <dt className="perfil-rotulo">E-mail</dt>
             <dd className="mt-0.5 break-all text-base text-floresta">{email || "—"}</dd>
-            <p className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-1 break-words perfil-nota text-muted-foreground">
               O e-mail é a chave da sua conta e do seu acesso às trilhas. Para trocá-lo, fale com
               quem acompanha você.
             </p>
