@@ -1,50 +1,53 @@
-# Auditoria e redesenho da aba "Jornada" do cliente
+# Aba Equipe com funções, permissões e escopo por cliente
 
-## O que encontrei hoje
+## Como fica a estrutura de pessoas
 
-A tela é uma lista de cartões brancos com barra de progresso e etapas em blocos cinza. Funciona, mas está muito abaixo do padrão que já criamos no Início (cabeçalho com gradiente floresta, halo, cartões orgânicos). Além do visual, há falhas reais:
+- Sua conta atual continua a mesma, com acesso irrestrito, agora chamada **Proprietário** (nome de exibição "Brito", editável no perfil).
+- A terapeuta convidada recebe o perfil **Terapeuta** e vê apenas os clientes vinculados a ela — como só existe uma terapeuta, o vínculo usa o campo "terapeuta responsável" que já existe no cadastro de cada cliente, com a possibilidade de você marcar exceções (autorização específica) por integrante.
+- Os outros perfis existem para quando a equipe crescer, todos com o mínimo de acesso.
 
-- **Etapa personalizada quebra a navegação**: atividades escritas pela terapeuta (sem conteúdo vinculado) recebem um id inventado (`atribuicaoId-ordem`) e ainda são renderizadas como link para `/app/etapa/$conteudoId`. Ao tocar, o cliente cai em erro.
-- **Carregamento sem identidade**: só um texto "Carregando sua jornada..." em vez de skeletons de marca.
-- **Dados que o backend já entrega e a tela ignora**: resumo e objetivo da trilha, motivo da indicação, alertas, orientações de pausa, prazo por etapa, e os check-ins emocionais (50 registros carregados e não usados).
-- **Sem noção de "onde eu estou"**: nenhuma indicação de próxima etapa dentro da lista, nenhum agrupamento entre planos ativos/concluídos, nenhuma leitura de ritmo.
-- **Estado vazio pobre**: quem usa no modo autoguiado vê "aguarde sua terapeuta", sem caminho para começar sozinho.
-- **Metadados incompletos**: falta `og:type` e `twitter:card` no head da rota.
-- **Acolhimento ausente**: nada celebra a conclusão de uma trilha nem convida a respirar antes de começar.
+## Perfis e o que cada um recebe por padrão
 
-## O que vou construir
+| Perfil | Acesso padrão |
+| --- | --- |
+| Proprietário | Tudo, inclusive equipe e auditoria. Nunca pode ser removido nem suspenso. |
+| Administrador | Tudo, exceto gerenciar equipe (opcional por marcação). |
+| Terapeuta | Ver e editar clientes vinculados, criar planos, monitorar trilhas, ver registros compartilhados desses clientes. |
+| Editor de conteúdo | Criar e publicar conteúdos. Nenhum dado de cliente. |
+| Assistente administrativo | Ver clientes (dados cadastrais), gerenciar pacotes. Sem diário, sem check-ins. |
+| Suporte | Ver clientes (cadastro) e ver auditoria. Sem conteúdos, sem registros sensíveis. |
 
-### 1. Cabeçalho vivo da jornada
-Cabeçalho em gradiente floresta com halo suave (mesma linguagem do Início): nome, quantos planos ativos, etapas concluídas no total, e uma frase de ritmo ("você tem caminhado devagar e isso é caminhar"). Botão "Pedir apoio" integrado com destaque suave, não solto no canto.
+Cada perfil é só um ponto de partida: depois de escolher, você pode marcar/desmarcar permissões individualmente e o cartão passa a mostrar "Terapeuta (personalizado)".
 
-### 2. Cartão de plano redesenhado
-- Anel de progresso circular em vez de barra fina, com o percentual ao centro e o nome do eixo.
-- Faixa de "próximo passo" no topo do cartão: título da etapa, duração e botão "Continuar" — o passo mais importante deixa de estar no fim do cartão.
-- Objetivo combinado, motivo da indicação e recado da terapeuta em um bloco "Palavra da terapeuta" com aspas e tipografia serif.
-- Selos (somente em sessão, com acompanhamento, revisão, prazo) unificados num único componente de selo.
-- Alertas e orientações de pausa da trilha em um aviso âmbar de cuidado, com ícone e linguagem gentil.
+## Permissões separadas
 
-### 3. Trilha como caminho, não como lista
-Etapas viram uma trilha vertical com marcadores conectados por linha: concluída (semente cheia), atual (halo pulsante), a fazer (contorno). Cada item mostra tipo, duração, obrigatória/opcional e prazo. Etapas personalizadas ficam expansíveis no lugar (descrição da terapeuta + "marcar como feita" quando aplicável) em vez de link quebrado. Cartão pode recolher etapas já concluídas para reduzir peso visual.
+Visualizar clientes · Editar clientes · Criar planos · Monitorar trilhas · Ver registros compartilhados (diário e check-ins) · Criar conteúdos · Publicar conteúdos · Gerenciar pacotes · Gerenciar equipe · Ver auditoria.
 
-### 4. Estados e organização
-- Filtros suaves: "Em andamento", "Concluídas", "Todas".
-- Planos concluídos ganham cartão de celebração ("Você fechou este ciclo") em tom mais calmo.
-- Estado vazio diferente por modo de uso: acompanhado ("sua terapeuta está montando seu caminho" + acesso à biblioteca livre) e autoguiado (CTA para escolher eixo e começar hoje).
-- Skeletons de marca no carregamento.
+Regras de menor acesso aplicadas no banco, não só na tela:
+- "Ver registros compartilhados" é uma permissão isolada; sem ela, diário e check-ins não carregam nem por requisição direta.
+- Quem tem escopo "somente clientes vinculados" só lê e escreve dados dos clientes cuja responsável é ela (ou dos clientes liberados por exceção).
+- "Publicar conteúdos" é separado de "Criar conteúdos": editor sem publicação deixa em revisão.
 
-### 5. Ritmo e sentimento
-Bloco "Como você tem se sentido" usando os check-ins já carregados: últimas emoções com intensidade, em pílulas coloridas, e link para o diário. Sem gráfico pesado, só leitura acolhedora.
+## Listagem de integrantes
 
-### 6. Apoio
-Seção de pedidos de apoio redesenhada como conversa: sua mensagem e a resposta da terapeuta em bolhas distintas, com estado "aguardando retorno" e o prazo combinado visível.
+Cada linha mostra: iniciais em círculo (ou foto quando houver), nome, e-mail, etiqueta de função, status (Ativo / Suspenso / Convite pendente), número de clientes vinculados, último acesso real e data do convite. Menu de ações em cada linha com: Reenviar convite, Editar função, Definir permissões, Vincular clientes, Suspender/Reativar acesso, Remover da equipe. Filtro por função e por status, e busca por nome/e-mail. Convidar integrante fica no topo, escolhendo a função e ajustando permissões antes de enviar.
+
+## Suspensão e último acesso
+
+- Suspender mantém o registro e o histórico, mas bloqueia tudo imediatamente (as próprias funções de banco passam a negar), com aviso na tela da pessoa e desconexão na próxima navegação.
+- "Último acesso" vem do sistema de autenticação, lido no servidor por quem gerencia a equipe; nunca exposto a outros integrantes.
+
+## Auditoria
+
+Passam a ser registrados com autor, alvo e antes/depois: convite criado, reenviado e cancelado, mudança de função, alteração de permissões, vínculo de clientes alterado, suspensão, reativação e remoção. Aparecem no histórico já existente da aba, com destaque para as ações que retiram acesso.
 
 ## Detalhes técnicos
 
-- Novos componentes em `src/components/app-jornada/`: `cabecalho-jornada.tsx`, `cartao-plano.tsx`, `caminho-etapas.tsx`, `selos-plano.tsx`, `aviso-cuidado.tsx`, `pulso-emocional.tsx`, `conversa-apoio.tsx`, `jornada-vazia.tsx`.
-- `src/routes/_authenticated/app.jornada.tsx` passa a ser composição + filtro de status; head recebe `og:type` e `twitter:card`.
-- Etapas personalizadas: não renderizar `Link`; usar `<details>`/estado local acessível. Correção de bug real.
-- Modo de uso lido via `getMeuContexto` + `blocosDoModo`, como no Início, para o estado vazio.
-- Apenas frontend: nenhuma migração, nenhuma mudança em `getMinhaJornada` (todos os campos usados já vêm no payload).
-- Tokens semânticos existentes (floresta, salvia, ocre, terracota); zero cor hardcoded.
-- Testes: `src/routes/_authenticated/app.jornada.test.tsx` cobrindo etapa personalizada sem link, filtro de status, estado vazio por modo e a11y do progresso/trilha.
+- Migração: nova tabela `equipe_membros` (user_id, funcao enum `equipe_funcao`, status enum `equipe_status`, escopo enum `equipe_escopo` = `todos`/`vinculados`, convidado_em, criado_por, timestamps) substituindo o papel implícito de `equipe_admins`; `convites_equipe` ganha `funcao`, `escopo` e `reenviado_em`; nova `equipe_clientes` (user_id, cliente_id) para exceções de vínculo. GRANTs + RLS restritas a `gerenciar_equipe` em todas.
+- Ampliar `PERMISSOES` para as 10 permissões (`ver_clientes`, `editar_clientes`, `criar_planos`, `monitorar_trilhas`, `ver_registros`, `criar_conteudos`, `publicar_conteudos`, `gerenciar_pacotes`, `gerenciar_equipe`, `ver_auditoria`) com mapa de migração das antigas (`ver_diario`→`ver_registros`, `gerenciar_conteudos`→`criar_conteudos`+`publicar_conteudos`, `gerenciar_liberacoes`→`criar_planos`+`monitorar_trilhas`).
+- Funções security definer atualizadas: `tem_permissao` passa a exigir status `ativo`; `pode_administrar` idem; nova `escopo_cliente(_user_id, _cliente)` usada em `acompanha_cliente` para restringir por `clientes_acesso.terapeuta_id` ou `equipe_clientes`. RLS de `diario`, `checkins`, `revisoes`, `progresso`, `atribuicoes`, `conteudos` e `pacotes` reescritas sobre as novas permissões.
+- `src/lib/equipe-funcoes.ts` novo: enum de funções, rótulos, descrições e matriz função→permissões padrão. `src/lib/permissoes.ts` atualizado.
+- `src/lib/equipe.functions.ts`: novas funções `equipeReenviarConvite`, `equipeDefinirFuncao`, `equipeVincularClientes`, `equipeAlterarStatus`; `equipeListar` passa a devolver função, status, contagem de vínculos, último acesso (via cliente administrativo, apenas `last_sign_in_at`) e data do convite. Todas com `garantirPermissao('gerenciar_equipe')` e `registrarAuditoria`.
+- `src/lib/auditoria-equipe.ts`: novas ações `funcao_alterada`, `convite_reenviado`, `vinculos_alterados`, `acesso_suspenso`, `acesso_reativado`.
+- UI: `src/components/painel/equipe/` com `lista-membros.tsx`, `linha-membro.tsx`, `dialogo-convite.tsx`, `dialogo-funcao.tsx`, `dialogo-vinculos.tsx`, `avatar-iniciais.tsx`; `admin.equipe.tsx` reduz a composição. `use-minhas-permissoes` e a barra lateral passam a considerar as novas permissões e o status suspenso.
+- Testes: `equipe-funcoes.test.ts` (matriz de perfis e menor acesso), `equipe-escopo.rls.test.ts` (editor não lê cliente; assistente não lê diário/check-ins; terapeuta só vê vinculados; suspenso não lê nada) e teste da listagem/ações na tela.
