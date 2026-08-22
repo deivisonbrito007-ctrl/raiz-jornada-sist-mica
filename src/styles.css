@@ -216,12 +216,12 @@
   h4,
   .font-display {
     font-family: var(--font-serif);
-    font-variation-settings:
-      "SOFT" 40,
-      "WONK" 1;
-    letter-spacing: -0.01em;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    line-height: 1.15;
   }
 }
+
 
 @utility shadow-organico {
   box-shadow: var(--shadow-organico);
