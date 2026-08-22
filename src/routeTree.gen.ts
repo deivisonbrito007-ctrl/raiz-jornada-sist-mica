@@ -35,6 +35,7 @@ import { Route as AuthenticatedAdminPerfilRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminTrilhasRouteImport } from './routes/_authenticated/admin.trilhas'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppDiarioRouteImport } from './routes/_authenticated/app.diario'
+import { Route as AuthenticatedAppEixosPreferidosRouteImport } from './routes/_authenticated/app.eixos-preferidos'
 import { Route as AuthenticatedAppHistoricoRouteImport } from './routes/_authenticated/app.historico'
 import { Route as AuthenticatedAppJornadaRouteImport } from './routes/_authenticated/app.jornada'
 import { Route as AuthenticatedAppPerfilRouteImport } from './routes/_authenticated/app.perfil'
@@ -189,6 +190,12 @@ const AuthenticatedAppDiarioRoute = AuthenticatedAppDiarioRouteImport.update({
   path: '/diario',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppEixosPreferidosRoute =
+  AuthenticatedAppEixosPreferidosRouteImport.update({
+    id: '/eixos-preferidos',
+    path: '/eixos-preferidos',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppHistoricoRoute =
   AuthenticatedAppHistoricoRouteImport.update({
     id: '/historico',
@@ -277,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/admin/perfil': typeof AuthenticatedAdminPerfilRoute
   '/admin/trilhas': typeof AuthenticatedAdminTrilhasRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
+  '/app/eixos-preferidos': typeof AuthenticatedAppEixosPreferidosRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
   '/app/jornada': typeof AuthenticatedAppJornadaRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
@@ -313,6 +321,7 @@ export interface FileRoutesByTo {
   '/admin/perfil': typeof AuthenticatedAdminPerfilRoute
   '/admin/trilhas': typeof AuthenticatedAdminTrilhasRoute
   '/app/diario': typeof AuthenticatedAppDiarioRoute
+  '/app/eixos-preferidos': typeof AuthenticatedAppEixosPreferidosRoute
   '/app/historico': typeof AuthenticatedAppHistoricoRoute
   '/app/jornada': typeof AuthenticatedAppJornadaRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
@@ -353,6 +362,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/perfil': typeof AuthenticatedAdminPerfilRoute
   '/_authenticated/admin/trilhas': typeof AuthenticatedAdminTrilhasRoute
   '/_authenticated/app/diario': typeof AuthenticatedAppDiarioRoute
+  '/_authenticated/app/eixos-preferidos': typeof AuthenticatedAppEixosPreferidosRoute
   '/_authenticated/app/historico': typeof AuthenticatedAppHistoricoRoute
   '/_authenticated/app/jornada': typeof AuthenticatedAppJornadaRoute
   '/_authenticated/app/perfil': typeof AuthenticatedAppPerfilRoute
@@ -393,6 +403,7 @@ export interface FileRouteTypes {
     | '/admin/perfil'
     | '/admin/trilhas'
     | '/app/diario'
+    | '/app/eixos-preferidos'
     | '/app/historico'
     | '/app/jornada'
     | '/app/perfil'
@@ -429,6 +440,7 @@ export interface FileRouteTypes {
     | '/admin/perfil'
     | '/admin/trilhas'
     | '/app/diario'
+    | '/app/eixos-preferidos'
     | '/app/historico'
     | '/app/jornada'
     | '/app/perfil'
@@ -468,6 +480,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/perfil'
     | '/_authenticated/admin/trilhas'
     | '/_authenticated/app/diario'
+    | '/_authenticated/app/eixos-preferidos'
     | '/_authenticated/app/historico'
     | '/_authenticated/app/jornada'
     | '/_authenticated/app/perfil'
@@ -680,6 +693,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppDiarioRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/eixos-preferidos': {
+      id: '/_authenticated/app/eixos-preferidos'
+      path: '/eixos-preferidos'
+      fullPath: '/app/eixos-preferidos'
+      preLoaderRoute: typeof AuthenticatedAppEixosPreferidosRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/historico': {
       id: '/_authenticated/app/historico'
       path: '/historico'
@@ -804,6 +824,7 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppDiarioRoute: typeof AuthenticatedAppDiarioRoute
+  AuthenticatedAppEixosPreferidosRoute: typeof AuthenticatedAppEixosPreferidosRoute
   AuthenticatedAppHistoricoRoute: typeof AuthenticatedAppHistoricoRoute
   AuthenticatedAppJornadaRoute: typeof AuthenticatedAppJornadaRoute
   AuthenticatedAppPerfilRoute: typeof AuthenticatedAppPerfilRoute
@@ -816,6 +837,7 @@ interface AuthenticatedAppRouteChildren {
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppDiarioRoute: AuthenticatedAppDiarioRoute,
+  AuthenticatedAppEixosPreferidosRoute: AuthenticatedAppEixosPreferidosRoute,
   AuthenticatedAppHistoricoRoute: AuthenticatedAppHistoricoRoute,
   AuthenticatedAppJornadaRoute: AuthenticatedAppJornadaRoute,
   AuthenticatedAppPerfilRoute: AuthenticatedAppPerfilRoute,
