@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { History } from "lucide-react";
+import { History, Sparkles } from "lucide-react";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -66,6 +66,19 @@ function Perfil() {
           </span>
         </span>
         <History className="h-5 w-5 shrink-0 text-salvia" aria-hidden="true" />
+      </Link>
+
+      <Link
+        to="/app/eixos-preferidos"
+        className="mt-4 flex min-h-11 items-center justify-between rounded-3xl bg-card px-6 py-4 text-sm text-floresta shadow-[var(--shadow-organico)]"
+      >
+        <span>
+          Meus eixos preferidos
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            Escolha seus temas e qual eixo fica em destaque no Início
+          </span>
+        </span>
+        <Sparkles className="h-5 w-5 shrink-0 text-salvia" aria-hidden="true" />
       </Link>
 
       <PreferenciasLembretes />

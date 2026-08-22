@@ -43,12 +43,14 @@ function Anel({ concluidos, total }: { concluidos: number; total: number }) {
 export function CarrosselEixos({
   eixos,
   preferidoId = null,
+  preferidos = [],
 }: {
   eixos: EixoResumo[];
   preferidoId?: string | null;
+  preferidos?: readonly string[];
 }) {
   if (eixos.length === 0) return null;
-  const ordenados = ordenarPorAfinidade(eixos);
+  const ordenados = ordenarPorAfinidade(eixos, { destaqueId: preferidoId, preferidos });
 
   return (
     <section aria-labelledby="titulo-eixos" className="mt-10">
@@ -62,10 +64,10 @@ export function CarrosselEixos({
           </p>
         </div>
         <Link
-          to="/app/jornada"
+          to="/app/eixos-preferidos"
           className="inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-medium text-terracota"
         >
-          Ver tudo <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          Escolher <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
 
@@ -86,7 +88,7 @@ export function CarrosselEixos({
                 </div>
                 {eixo.id === preferidoId && (
                   <p className="mt-4 text-[0.65rem] font-medium uppercase tracking-[0.18em] text-terracota">
-                    Seu eixo mais visitado
+                    Seu eixo em destaque
                   </p>
                 )}
                 <h3

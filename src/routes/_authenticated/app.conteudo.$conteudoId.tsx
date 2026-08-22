@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { CelebracaoPratica } from "@/components/celebracao-pratica";
 import { CHAVES, chaveDe, invalidarPorEvento } from "@/lib/cache-chaves";
 import {
   ArrowLeft,
@@ -97,6 +98,7 @@ function Player() {
   const [total, setTotal] = useState(0);
   const [terminou, setTerminou] = useState(false);
   const [concluido, setConcluido] = useState(false);
+  const [celebrar, setCelebrar] = useState(false);
   const [bloqueio, setBloqueio] = useState<MotivoBloqueio | null>(null);
   /** espelho do bloqueio para leitura dentro de callbacks de tempo real */
   const bloqueioRef = useRef<MotivoBloqueio | null>(null);
@@ -430,7 +432,7 @@ function Player() {
     }
     await registrar("concluido");
     setConcluido(true);
-    toast.success("Prática concluída. Que tal registrar no diário?");
+    setCelebrar(true);
   }
 
 
@@ -713,6 +715,11 @@ function Player() {
         </>
       )}
 
+      <CelebracaoPratica
+        aberto={celebrar}
+        onFechar={() => setCelebrar(false)}
+        conteudoId={conteudoId}
+      />
     </div>
   );
 }
