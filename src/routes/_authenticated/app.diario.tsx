@@ -27,6 +27,7 @@ import { CabecalhoDiario } from "@/components/app-diario/cabecalho-diario";
 import { ConviteEscrita } from "@/components/app-diario/convite-escrita";
 import { FioContinuidade } from "@/components/app-diario/fio-continuidade";
 import { ListaReflexoes } from "@/components/app-diario/lista-reflexoes";
+import { PainelInsights } from "@/components/app-diario/painel-insights";
 
 export const Route = createFileRoute("/_authenticated/app/diario")({
   validateSearch: z.object({ conteudoId: z.string().uuid().optional() }),
