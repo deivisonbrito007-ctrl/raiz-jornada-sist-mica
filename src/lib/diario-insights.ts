@@ -110,7 +110,7 @@ export function temasRecorrentes(entradas: EntradaDiario[], limite = 8): Tema[] 
       .toLowerCase()
       .replace(/[^\p{L}\s]/gu, " ")
       .split(/\s+/)
-      .filter((p) => p.length > 3 && !PALAVRAS_VAZIAS.has(p));
+      .filter((p) => p.length > 2 && !PALAVRAS_VAZIAS.has(p));
     const vistas = new Set<string>();
     for (const palavra of palavras) {
       const atual = contagem.get(palavra) ?? { total: 0, entradas: 0 };
