@@ -147,7 +147,30 @@
     transparent 70%
   );
 
+  /* Capa editorial das telas do cliente (Início, Jornada, Diário, Perfil). */
+  --gradiente-capa: linear-gradient(
+    155deg,
+    oklch(0.238 0.036 152.5) 0%,
+    oklch(0.288 0.042 146.5) 52%,
+    oklch(0.352 0.052 138.5) 100%
+  );
+  /* Palco imersivo do player de prática. */
+  --gradiente-imersao: linear-gradient(
+    180deg,
+    oklch(0.192 0.028 150.5) 0%,
+    oklch(0.252 0.036 148.5) 60%,
+    oklch(0.212 0.03 150.5) 100%
+  );
+  /* Brilho suave usado atrás de títulos e selos na capa. */
+  --halo-capa: radial-gradient(
+    circle at 78% 12%,
+    oklch(0.762 0.126 84.5 / 0.28) 0%,
+    oklch(0.482 0.121 35.8 / 0.14) 42%,
+    transparent 72%
+  );
+  --shadow-capa: 0 26px 60px -30px oklch(0.238 0.036 152.5 / 0.55);
 }
+
 
 .dark {
   --background: oklch(0.129 0.042 264.695);
