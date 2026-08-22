@@ -146,6 +146,15 @@ function Perfil() {
 
       <PreferenciasLembretes />
 
+      <Link
+        to="/app/lembretes"
+        className="mt-3 flex min-h-12 items-center justify-between gap-3 rounded-[1.75rem] bg-card px-5 py-4 text-sm shadow-organico transition hover:bg-secondary/40"
+      >
+        <span className="text-foreground">Central de lembretes e histórico</span>
+        <span className="text-xs text-muted-foreground">pausar, ajustar, ver o que foi enviado</span>
+      </Link>
+
+
       <MeusCaminhos />
 
       <BlocoPrivacidade modo={modo} />
