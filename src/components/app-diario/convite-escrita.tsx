@@ -158,7 +158,7 @@ export function ConviteEscrita({
                     : "bg-secondary text-foreground hover:bg-secondary/70"
                 }`}
               >
-                <span aria-hidden="true">{s.emoji}</span> {s.rotulo}
+                {s.rotulo}
               </button>
             );
           })}
