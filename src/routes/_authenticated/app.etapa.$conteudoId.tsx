@@ -536,7 +536,10 @@ function EtapaTrilha() {
         </section>
       )}
 
+      <AnotacoesEtapa conteudoId={conteudoId} atribuicaoId={atribuicaoId} />
+
       <nav aria-label="Outras etapas" className="flex flex-wrap justify-between gap-2">
+
         {data?.anteriorId ? (
           <Link
             to="/app/etapa/$conteudoId"
