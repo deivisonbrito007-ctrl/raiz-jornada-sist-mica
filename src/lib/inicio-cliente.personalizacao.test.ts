@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { cicloAtual, eixoPreferido, ordenarPorAfinidade } from "./inicio-cliente";
+import {
+  cicloAtual,
+  eixoEmDestaque,
+  eixoPreferido,
+  ordenarPorAfinidade,
+  recompensaDaConclusao,
+} from "./inicio-cliente";
 
 const eixo = (over: Partial<Parameters<typeof eixoPreferido>[0][number]> & { id: string }) => ({
   nome: over.id,
@@ -62,5 +68,58 @@ describe("ordenarPorAfinidade", () => {
       eixo({ id: "pref", concluidos: 2 }),
     ]).map((e) => e.id);
     expect(ordem).toEqual(["pref", "a", "fechado"]);
+  });
+});
+
+describe("eixoEmDestaque", () => {
+  const eixos = [
+    { id: "a", nome: "A", liberado: true, concluidos: 5, total: 6 },
+    { id: "b", nome: "B", liberado: true, concluidos: 1, total: 6 },
+    { id: "c", nome: "C", liberado: false, concluidos: 0, total: 4 },
+  ];
+
+  it("respeita a escolha explícita da pessoa", () => {
+    expect(eixoEmDestaque(eixos, { destaqueId: "b" })?.id).toBe("b");
+  });
+
+  it("ignora escolha em eixo fechado e cai no preferido marcado", () => {
+    expect(eixoEmDestaque(eixos, { destaqueId: "c", preferidos: ["b"] })?.id).toBe("b");
+  });
+
+  it("sem escolhas, usa a afinidade do histórico", () => {
+    expect(eixoEmDestaque(eixos)?.id).toBe("a");
+  });
+
+  it("coloca destaque e preferidos na frente, fechados no fim", () => {
+    const ordem = ordenarPorAfinidade(eixos, { destaqueId: "b", preferidos: ["b", "a"] }).map(
+      (e) => e.id,
+    );
+    expect(ordem).toEqual(["b", "a", "c"]);
+  });
+});
+
+describe("recompensaDaConclusao", () => {
+  it("celebra a primeira prática com o nome da pessoa", () => {
+    const r = recompensaDaConclusao({ totalConcluidos: 1, primeiroNome: "Ana Paula" });
+    expect(r.selo).toBe("Primeira semente");
+    expect(r.titulo).toContain("Ana");
+  });
+
+  it("marca a meta da semana alcançada", () => {
+    const r = recompensaDaConclusao({ totalConcluidos: 8, feitasNaSemana: 3, metaSemanal: 3 });
+    expect(r.metaAlcancada).toBe(true);
+    expect(r.selo).toBe("Semana cuidada");
+    expect(r.marcos[0]?.valor).toBe("3 de 3");
+  });
+
+  it("reconhece sequência longa sem meta batida", () => {
+    const r = recompensaDaConclusao({
+      totalConcluidos: 20,
+      feitasNaSemana: 1,
+      metaSemanal: 4,
+      streakSemanas: 6,
+    });
+    expect(r.selo).toBe("Raiz firme");
+    expect(r.metaAlcancada).toBe(false);
   });
 });

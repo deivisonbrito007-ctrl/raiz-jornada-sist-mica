@@ -15,7 +15,7 @@ export const getMeuContexto = createServerFn({ method: "GET" })
     const [perfil, papeis, pacotes, permissoes, acesso] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, nome, email, created_at, meta_semanal")
+        .select("id, nome, email, created_at, meta_semanal, eixos_preferidos, eixo_destaque")
         .eq("id", userId)
         .maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
@@ -47,8 +47,6 @@ export const getMeuContexto = createServerFn({ method: "GET" })
       acessoStatus: acesso.data?.status ?? null,
     };
   });
-
-
 
 export const getMinhaBiblioteca = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -146,7 +144,9 @@ export const getMinhaBiblioteca = createServerFn({ method: "GET" })
             idsLiberados.has(p.conteudo_id),
         )
         .sort((a, b) =>
-          String(b.posicao_atualizada_em ?? "").localeCompare(String(a.posicao_atualizada_em ?? "")),
+          String(b.posicao_atualizada_em ?? "").localeCompare(
+            String(a.posicao_atualizada_em ?? ""),
+          ),
         )
         .map((p) => {
           const pratica = praticas.find((x) => x.id === p.conteudo_id)!;
@@ -220,10 +220,11 @@ export const getMeuHistorico = createServerFn({ method: "GET" })
         .order("created_at", { ascending: false }),
     ]);
 
-    const progressoPorConteudo = new Map(
-      (progresso.data ?? []).map((p) => [p.conteudo_id, p]),
-    );
-    const reflexoesPorConteudo = new Map<string, { id: string; texto: string; criadoEm: string }[]>();
+    const progressoPorConteudo = new Map((progresso.data ?? []).map((p) => [p.conteudo_id, p]));
+    const reflexoesPorConteudo = new Map<
+      string,
+      { id: string; texto: string; criadoEm: string }[]
+    >();
     const reflexoesGerais: { id: string; texto: string; criadoEm: string }[] = [];
     for (const entrada of diario.data ?? []) {
       const item = { id: entrada.id, texto: entrada.texto, criadoEm: entrada.created_at };
@@ -284,7 +285,6 @@ export const getMeuHistorico = createServerFn({ method: "GET" })
       },
     };
   });
-
 
 export const getEixoTrilha = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -390,7 +390,6 @@ export const getConteudo = createServerFn({ method: "GET" })
       }
     }
 
-
     const { data: prog } = await supabase
       .from("progresso")
       .select("status, posicao_segundos, estava_tocando, posicao_atualizada_em")
@@ -409,8 +408,6 @@ export const getConteudo = createServerFn({ method: "GET" })
       limitado,
       esperarSegundos,
     };
-
-
   });
 
 export const marcarProgresso = createServerFn({ method: "POST" })
@@ -450,7 +447,11 @@ export const salvarPosicao = createServerFn({ method: "POST" })
     z
       .object({
         conteudoId: z.string().uuid(),
-        posicaoSegundos: z.number().finite().min(0).max(60 * 60 * 12),
+        posicaoSegundos: z
+          .number()
+          .finite()
+          .min(0)
+          .max(60 * 60 * 12),
         tocando: z.boolean().optional(),
       })
       .parse(input),
@@ -483,7 +484,6 @@ export const salvarPosicao = createServerFn({ method: "POST" })
     return { ok: true, posicaoSegundos: Math.floor(data.posicaoSegundos) };
   });
 
-
 export const definirMetaSemanal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ meta: z.number().int().min(1).max(14) }).parse(input))
@@ -495,6 +495,28 @@ export const definirMetaSemanal = createServerFn({ method: "POST" })
       .eq("id", userId);
     if (error) throw erroSeguro(error);
     return { ok: true, meta: data.meta };
+  });
+
+export const salvarPreferenciasEixos = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        preferidos: z.array(z.string().uuid()).max(40),
+        destaque: z.string().uuid().nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const preferidos = Array.from(new Set(data.preferidos));
+    const destaque = data.destaque && preferidos.includes(data.destaque) ? data.destaque : null;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ eixos_preferidos: preferidos, eixo_destaque: destaque })
+      .eq("id", userId);
+    if (error) throw erroSeguro(error);
+    return { ok: true, preferidos, destaque };
   });
 
 export const salvarDiario = createServerFn({ method: "POST" })
@@ -1163,7 +1185,6 @@ export const adminPreviaConteudo = createServerFn({ method: "POST" })
     if (error) throw erroSeguro(error);
     return { url: assinado?.signedUrl ?? null };
   });
-
 
 export const adminSalvarPacote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

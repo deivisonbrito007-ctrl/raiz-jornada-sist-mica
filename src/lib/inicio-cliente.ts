@@ -10,14 +10,7 @@ export type Saudacao = { titulo: string; frase: string };
 export function saudacaoDoDia(agora: Date = new Date(), primeiroNome = ""): Saudacao {
   const h = agora.getHours();
   const nome = primeiroNome.trim();
-  const base =
-    h < 5
-      ? "Boa madrugada"
-      : h < 12
-        ? "Bom dia"
-        : h < 18
-          ? "Boa tarde"
-          : "Boa noite";
+  const base = h < 5 ? "Boa madrugada" : h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
   const frase =
     h < 5
       ? "A noite também acolhe. Vá com calma."
@@ -160,15 +153,112 @@ export function eixoPreferido(eixos: readonly EixoAfinidade[]): EixoAfinidade | 
   )[0]!;
 }
 
-/** Ordena os eixos pela afinidade: preferido primeiro, fechados no fim. */
-export function ordenarPorAfinidade<T extends EixoAfinidade>(eixos: readonly T[]): T[] {
-  const preferido = eixoPreferido(eixos);
+/**
+ * Ordena os eixos pela afinidade: o escolhido para destaque primeiro, depois os
+ * marcados como preferidos, então o de maior histórico e, no fim, os fechados.
+ */
+export function ordenarPorAfinidade<T extends EixoAfinidade>(
+  eixos: readonly T[],
+  escolhas: Escolhas = {},
+): T[] {
+  const preferido = eixoEmDestaque(eixos, escolhas);
+  const marcados = new Set(escolhas.preferidos ?? []);
+  const peso = (e: T) => {
+    if (preferido && e.id === preferido.id) return 0;
+    if (marcados.has(e.id)) return 1;
+    return 2;
+  };
   return [...eixos].sort((a, b) => {
     if (a.liberado !== b.liberado) return a.liberado ? -1 : 1;
-    if (preferido) {
-      if (a.id === preferido.id) return -1;
-      if (b.id === preferido.id) return 1;
-    }
-    return 0;
+    return peso(a) - peso(b);
   });
+}
+
+export type Escolhas = {
+  /** eixo que a pessoa escolheu ver em destaque no Início */
+  destaqueId?: string | null;
+  /** eixos marcados como preferidos na tela de preferências */
+  preferidos?: readonly string[];
+};
+
+/**
+ * O eixo em destaque: a escolha explícita da pessoa vence; depois um preferido
+ * marcado; por último a afinidade calculada pelo histórico.
+ */
+export function eixoEmDestaque<T extends EixoAfinidade>(
+  eixos: readonly T[],
+  { destaqueId = null, preferidos = [] }: Escolhas = {},
+): T | null {
+  const escolhido = destaqueId ? eixos.find((e) => e.id === destaqueId && e.liberado) : null;
+  if (escolhido) return escolhido;
+  const marcado = eixos.find((e) => e.liberado && preferidos.includes(e.id));
+  if (marcado) return marcado;
+  return (eixoPreferido(eixos) as T | undefined) ?? null;
+}
+
+export type Recompensa = {
+  /** palavra curta do selo ganho */
+  selo: string;
+  titulo: string;
+  frase: string;
+  marcos: Array<{ rotulo: string; valor: string }>;
+  /** true quando a meta da semana foi alcançada agora */
+  metaAlcancada: boolean;
+};
+
+/**
+ * O que dizer quando a pessoa acaba de concluir uma prática: um selo simples,
+ * uma frase de acolhimento e as marcações do ritmo (semana, meta, sequência).
+ */
+export function recompensaDaConclusao({
+  totalConcluidos = 0,
+  feitasNaSemana = 0,
+  metaSemanal = 3,
+  streakSemanas = 0,
+  primeiroNome = "",
+}: {
+  totalConcluidos?: number;
+  feitasNaSemana?: number;
+  metaSemanal?: number;
+  streakSemanas?: number;
+  primeiroNome?: string;
+}): Recompensa {
+  const nome = primeiroNome.trim();
+  const meta = Math.max(1, metaSemanal);
+  const metaAlcancada = feitasNaSemana >= meta;
+  const selo =
+    totalConcluidos <= 1
+      ? "Primeira semente"
+      : metaAlcancada
+        ? "Semana cuidada"
+        : streakSemanas >= 4
+          ? "Raiz firme"
+          : "Passo dado";
+  const titulo =
+    totalConcluidos <= 1
+      ? nome
+        ? `Você começou, ${nome}`
+        : "Você começou"
+      : metaAlcancada
+        ? "Sua meta da semana está cumprida"
+        : "Mais um passo no seu caminho";
+  const frase = metaAlcancada
+    ? "Você sustentou o combinado desta semana. O que vier agora é acréscimo, não obrigação."
+    : totalConcluidos <= 1
+      ? "Toda mudança começa por um gesto pequeno como este. Guarde o que sentiu."
+      : "O corpo aprende pela repetição gentil. Volte quando fizer sentido para você.";
+  return {
+    selo,
+    titulo,
+    frase,
+    metaAlcancada,
+    marcos: [
+      { rotulo: "Nesta semana", valor: `${feitasNaSemana} de ${meta}` },
+      {
+        rotulo: "Sequência",
+        valor: `${streakSemanas} ${streakSemanas === 1 ? "semana" : "semanas"}`,
+      },
+      { rotulo: "No total", valor: `${totalConcluidos}` },
+    ],
+  };
 }
