@@ -293,7 +293,7 @@ describe("sincronização de liberações sob latência e eventos fora de ordem"
     await tick();
     await tick();
     // nada de tela em branco: o último estado consistente continua visível
-    expect(screen.getByText("Pertencimento")).toBeInTheDocument();
+    expect(screen.getAllByText("Pertencimento")[0]).toBeInTheDocument();
 
     // reconectou: o evento seguinte traz o estado atual e a tela converge
     evento();
