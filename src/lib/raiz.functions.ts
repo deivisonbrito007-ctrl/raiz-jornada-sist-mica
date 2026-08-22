@@ -526,18 +526,86 @@ export const salvarDiario = createServerFn({ method: "POST" })
       .object({
         texto: z.string().min(1).max(8000),
         conteudoId: z.string().uuid().nullable().optional(),
+        visibilidade: z.enum(["somente_eu", "compartilhado"]).default("somente_eu"),
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const compartilhado = data.visibilidade === "compartilhado";
     const { error } = await supabase.from("diario").insert({
       cliente_id: userId,
       conteudo_id: data.conteudoId ?? null,
       texto: data.texto,
+      visibilidade: data.visibilidade,
+      compartilhado_em: compartilhado ? new Date().toISOString() : null,
     });
     if (error) throw erroSeguro(error);
     return { ok: true };
+  });
+
+/** Reescreve o texto de uma reflexão da própria pessoa (a RLS garante o dono). */
+export const editarDiario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({ id: z.string().uuid(), texto: z.string().min(1).max(8000) })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("diario")
+      .update({ texto: data.texto })
+      .eq("id", data.id)
+      .eq("cliente_id", userId);
+    if (error) throw erroSeguro(error);
+    return { ok: true };
+  });
+
+export const apagarDiario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("diario")
+      .delete()
+      .eq("id", data.id)
+      .eq("cliente_id", userId);
+    if (error) throw erroSeguro(error);
+    return { ok: true };
+  });
+
+/**
+ * Abre ou recolhe o compartilhamento de uma reflexão com quem acompanha.
+ * Ao recolher, guardamos a data da revogação — o histórico do cuidado importa.
+ */
+export const definirVisibilidadeDiario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        visibilidade: z.enum(["somente_eu", "compartilhado"]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const agora = new Date().toISOString();
+    const compartilhar = data.visibilidade === "compartilhado";
+    const { error } = await supabase
+      .from("diario")
+      .update({
+        visibilidade: data.visibilidade,
+        compartilhado_em: compartilhar ? agora : null,
+        compartilhamento_revogado_em: compartilhar ? null : agora,
+      })
+      .eq("id", data.id)
+      .eq("cliente_id", userId);
+    if (error) throw erroSeguro(error);
+    return { ok: true, visibilidade: data.visibilidade };
   });
 
 export const listarDiario = createServerFn({ method: "GET" })
@@ -546,12 +614,48 @@ export const listarDiario = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data } = await supabase
       .from("diario")
-      .select("id, texto, created_at, conteudo_id, conteudos(titulo, eixos(nome))")
+      .select(
+        "id, texto, created_at, conteudo_id, atribuicao_id, visibilidade, compartilhado_em, compartilhamento_revogado_em, conteudos(titulo, eixos(nome))",
+      )
       .eq("cliente_id", userId)
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(200);
     return data ?? [];
   });
+
+/**
+ * Fio de continuidade: a última prática concluída que ainda não ganhou uma
+ * reflexão. Serve de convite delicado, nunca de cobrança.
+ */
+export const getPraticaSemReflexao = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const [progresso, diario] = await Promise.all([
+      supabase
+        .from("progresso")
+        .select("conteudo_id, concluido_em, conteudos(titulo, eixos(nome))")
+        .eq("cliente_id", userId)
+        .eq("status", "concluido")
+        .order("concluido_em", { ascending: false })
+        .limit(20),
+      supabase.from("diario").select("conteudo_id").eq("cliente_id", userId),
+    ]);
+    const comReflexao = new Set(
+      (diario.data ?? []).map((d) => d.conteudo_id).filter((id): id is string => Boolean(id)),
+    );
+    const alvo = (progresso.data ?? []).find(
+      (p) => p.conteudo_id && !comReflexao.has(p.conteudo_id) && p.conteudos?.titulo,
+    );
+    if (!alvo?.conteudo_id) return null;
+    return {
+      conteudoId: alvo.conteudo_id,
+      titulo: alvo.conteudos?.titulo ?? "",
+      eixoNome: alvo.conteudos?.eixos?.nome ?? "",
+      concluidoEm: alvo.concluido_em,
+    };
+  });
+
 
 export const listarNotificacoes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
