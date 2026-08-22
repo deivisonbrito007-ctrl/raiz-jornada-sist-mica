@@ -6,10 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   CONVITES,
   SENTIMENTOS,
+  TRILHOS_CONVITE,
   chaveRascunho,
   comporTexto,
   conviteDoDia,
   convitePorIndice,
+  convitesDoTrilho,
   type Visibilidade,
 } from "@/lib/diario-cliente";
 
@@ -24,6 +26,7 @@ export function ConviteEscrita({
   conteudoId,
   podeCompartilhar,
   enviando,
+  eixos = [],
   onEnviar,
 }: {
   tituloPratica?: string | null;
@@ -31,11 +34,19 @@ export function ConviteEscrita({
   conteudoId?: string | null;
   podeCompartilhar: boolean;
   enviando: boolean;
-  onEnviar: (dados: { texto: string; visibilidade: Visibilidade }) => Promise<void> | void;
+  eixos?: Array<{ id: string; nome: string }>;
+  onEnviar: (dados: {
+    texto: string;
+    visibilidade: Visibilidade;
+    eixos: string[];
+  }) => Promise<void> | void;
 }) {
   const [indiceConvite, setIndiceConvite] = useState<number | null>(null);
+  const [trilho, setTrilho] = useState<string | null>(null);
+  const [indiceTrilho, setIndiceTrilho] = useState(0);
   const [texto, setTexto] = useState("");
   const [sentimentos, setSentimentos] = useState<string[]>([]);
+  const [eixosMarcados, setEixosMarcados] = useState<string[]>([]);
   const [visibilidade, setVisibilidade] = useState<Visibilidade>("somente_eu");
 
   const chave = chaveRascunho(conteudoId);
@@ -60,9 +71,30 @@ export function ConviteEscrita({
   }, [chave, texto]);
 
   const convite = useMemo(() => {
+    if (trilho) {
+      const lista = convitesDoTrilho(trilho);
+      if (lista.length > 0) return lista[indiceTrilho % lista.length]!;
+    }
     if (tituloPratica) return `Depois de "${tituloPratica}": o que se moveu em você?`;
     return indiceConvite === null ? conviteDoDia() : convitePorIndice(indiceConvite);
-  }, [indiceConvite, tituloPratica]);
+  }, [indiceConvite, indiceTrilho, trilho, tituloPratica]);
+
+  function escolherTrilho(chaveTrilho: string) {
+    setTrilho((atual) => {
+      if (atual === chaveTrilho) {
+        setIndiceTrilho((i) => i + 1);
+        return atual;
+      }
+      setIndiceTrilho(0);
+      return chaveTrilho;
+    });
+  }
+
+  function alternarEixo(id: string) {
+    setEixosMarcados((atuais) =>
+      atuais.includes(id) ? atuais.filter((e) => e !== id) : [...atuais, id],
+    );
+  }
 
   function alternarSentimento(chaveSentimento: string) {
     setSentimentos((atuais) =>
@@ -74,9 +106,10 @@ export function ConviteEscrita({
 
   async function enviar() {
     if (!texto.trim()) return;
-    await onEnviar({ texto: comporTexto(texto, sentimentos), visibilidade });
+    await onEnviar({ texto: comporTexto(texto, sentimentos), visibilidade, eixos: eixosMarcados });
     setTexto("");
     setSentimentos([]);
+    setEixosMarcados([]);
     try {
       window.localStorage.removeItem(chave);
     } catch {
@@ -129,6 +162,37 @@ export function ConviteEscrita({
         )}
       </div>
 
+      <div
+        role="group"
+        aria-label="Por onde você quer entrar hoje"
+        className="mt-4 -mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1"
+      >
+        {TRILHOS_CONVITE.map((t) => (
+          <button
+            key={t.chave}
+            type="button"
+            aria-pressed={trilho === t.chave}
+            onClick={() => escolherTrilho(t.chave)}
+            className={`min-h-10 shrink-0 snap-start rounded-full px-4 text-sm transition ${
+              trilho === t.chave
+                ? "bg-floresta text-floresta-foreground"
+                : "bg-secondary text-foreground hover:bg-secondary/70"
+            }`}
+          >
+            {t.rotulo}
+          </button>
+        ))}
+        {trilho && (
+          <button
+            type="button"
+            onClick={() => setTrilho(null)}
+            className="min-h-10 shrink-0 rounded-full px-3 text-xs text-muted-foreground underline decoration-dotted underline-offset-4"
+          >
+            voltar ao convite do dia
+          </button>
+        )}
+      </div>
+
       <Textarea
         id="campo-reflexao"
         value={texto}
@@ -164,6 +228,34 @@ export function ConviteEscrita({
           })}
         </div>
       </fieldset>
+
+      {eixos.length > 0 && (
+        <fieldset className="mt-5">
+          <legend className="text-xs font-medium uppercase tracking-wider text-salvia">
+            A que eixo isso pertence? (opcional)
+          </legend>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {eixos.map((eixo) => {
+              const ativo = eixosMarcados.includes(eixo.id);
+              return (
+                <button
+                  key={eixo.id}
+                  type="button"
+                  aria-pressed={ativo}
+                  onClick={() => alternarEixo(eixo.id)}
+                  className={`min-h-10 rounded-full px-4 text-sm transition ${
+                    ativo
+                      ? "bg-salvia text-floresta-foreground"
+                      : "bg-secondary text-foreground hover:bg-secondary/70"
+                  }`}
+                >
+                  {eixo.nome}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
 
       {podeCompartilhar ? (
         <fieldset className="mt-5 rounded-2xl bg-secondary p-4">
