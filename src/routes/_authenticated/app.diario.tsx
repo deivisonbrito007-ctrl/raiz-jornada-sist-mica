@@ -157,7 +157,7 @@ function Diario() {
 
       <ConviteEscrita
         tituloPratica={conteudoId ? (conteudo?.conteudo?.titulo ?? "esta prática") : null}
-        eixoPratica={conteudoId ? (conteudo?.eixo?.nome ?? null) : null}
+        eixoPratica={conteudoId ? (conteudo?.conteudo?.eixos?.nome ?? null) : null}
         conteudoId={conteudoId ?? null}
         podeCompartilhar={podeCompartilhar}
         enviando={enviando}
