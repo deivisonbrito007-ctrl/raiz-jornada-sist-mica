@@ -1,14 +1,26 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, CalendarCheck, Lock, Users } from "lucide-react";
 
 import { getMinhaEtapa, getMinhaJornada } from "@/lib/trilhas.functions";
-import { ETAPA_LABEL, NIVEL_LABEL, type Nivel, type TipoEtapa } from "@/lib/etapas";
-import { formatarData, formatarDuracao } from "@/lib/raiz-format";
+import { getMeuContexto } from "@/lib/raiz.functions";
+import { blocosDoModo, normalizarModo } from "@/lib/modo-uso";
+import {
+  FILTRO_JORNADA_LABEL,
+  filtrarPlanos,
+  resumoDaJornada,
+  type FiltroJornada,
+} from "@/lib/jornada-cliente";
 import { PedirApoio } from "@/components/pedir-apoio";
+import { Skeleton } from "@/components/ui/skeleton";
 import { usePreCarregarProximas } from "@/hooks/use-pre-carregar-proximas";
 import { ConsentimentoPrimeiroAcesso } from "@/components/consentimento-primeiro-acesso";
+import { CabecalhoJornada } from "@/components/app-jornada/cabecalho-jornada";
+import { CartaoPlano, type PlanoJornada } from "@/components/app-jornada/cartao-plano";
+import { PulsoEmocional } from "@/components/app-jornada/pulso-emocional";
+import { ConversaApoio } from "@/components/app-jornada/conversa-apoio";
+import { JornadaVazia } from "@/components/app-jornada/jornada-vazia";
 
 export const Route = createFileRoute("/_authenticated/app/jornada")({
   head: () => ({
@@ -24,15 +36,25 @@ export const Route = createFileRoute("/_authenticated/app/jornada")({
         property: "og:description",
         content: "Continuidade do acompanhamento entre sessões: trilhas, etapas e apoio.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: MinhaJornada,
 });
 
+const FILTROS: FiltroJornada[] = ["andamento", "concluidas", "todas"];
+
 function MinhaJornada() {
   const queryClient = useQueryClient();
   const carregar = useServerFn(getMinhaJornada);
+  const carregarContexto = useServerFn(getMeuContexto);
   const { data, isLoading } = useQuery({ queryKey: ["minha-jornada"], queryFn: () => carregar() });
+  const { data: contexto } = useQuery({
+    queryKey: ["contexto"],
+    queryFn: () => carregarContexto(),
+  });
+  const [filtro, setFiltro] = useState<FiltroJornada>("andamento");
 
   // Adianta a próxima etapa das trilhas ativas para o toque abrir sem espera.
   const carregarEtapa = useServerFn(getMinhaEtapa);
@@ -48,187 +70,93 @@ function MinhaJornada() {
 
   if (isLoading) {
     return (
-      <p role="status" aria-busy className="text-sm text-muted-foreground">
-        Carregando sua jornada...
-      </p>
+      <div className="space-y-6" role="status" aria-busy="true">
+        <span className="sr-only">Carregando sua jornada</span>
+        <Skeleton className="h-52 rounded-[2rem] bg-floresta/10" />
+        <Skeleton className="h-72 rounded-[2rem] bg-salvia/10" />
+        <Skeleton className="h-40 rounded-[2rem] bg-salvia/10" />
+      </div>
     );
   }
 
-  const consentimentos = data?.consentimentos ?? [];
+  const planos = (data?.trilhas ?? []) as PlanoJornada[];
+  const resumo = resumoDaJornada(planos);
+  const visiveis = filtrarPlanos(planos, filtro);
+  const modo = normalizarModo(contexto?.modo);
+  const blocos = blocosDoModo(modo);
+  const primeiroNome = (contexto?.perfil?.nome || "").split(" ")[0] ?? "";
 
   return (
     <div className="space-y-6">
       <ConsentimentoPrimeiroAcesso
-        aceitos={consentimentos}
+        aceitos={data?.consentimentos ?? []}
         aoAceitar={() => queryClient.invalidateQueries({ queryKey: ["minha-jornada"] })}
       />
 
-      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
-        <div className="min-w-0">
-          <h1 className="font-display text-2xl text-floresta">Minha jornada</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Um passo por vez, no seu ritmo. Nada aqui precisa ser feito às pressas.
-          </p>
-        </div>
-        <div className="shrink-0">
-          <PedirApoio
-            prazoRespostaHoras={data?.prazoRespostaHoras ?? 48}
-            contatos={data?.contatosEmergencia ?? []}
-          />
-        </div>
-      </header>
+      <CabecalhoJornada
+        primeiroNome={primeiroNome}
+        resumo={resumo}
+        acao={
+          blocos.pedirApoio ? (
+            <PedirApoio
+              prazoRespostaHoras={data?.prazoRespostaHoras ?? 48}
+              contatos={data?.contatosEmergencia ?? []}
+            />
+          ) : undefined
+        }
+      />
 
-      {(data?.trilhas ?? []).length === 0 && (
-        <div className="rounded-3xl border border-dashed border-border p-8 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">Nenhuma trilha atribuída ainda</p>
-          <p className="mt-1">
-            Quando sua terapeuta indicar um caminho, ele aparece aqui com o objetivo combinado.
-          </p>
-        </div>
-      )}
-
-      <ul className="space-y-5">
-        {(data?.trilhas ?? []).map((t) => (
-          <li
-            key={t.atribuicaoId}
-            className="rounded-3xl border border-border bg-card p-5 shadow-organico"
-          >
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
-              <div className="min-w-0">
-                <h2 className="truncate font-display text-xl text-floresta">
-                  {t.trilha?.nome ?? "Trilha"}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {NIVEL_LABEL[t.nivel as Nivel]} · {t.frequencia} · desde{" "}
-                  {formatarData(t.dataInicio)}
-                </p>
-              </div>
-              <span className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-floresta">
-                {t.concluidas}/{t.total} etapas
-              </span>
-            </div>
-
+      {planos.length === 0 ? (
+        <JornadaVazia autoguiado={modo === "autoguiado"} />
+      ) : (
+        <>
+          {resumo.fechados > 0 && (
             <div
-              className="mt-4 h-2 w-full overflow-hidden rounded-full bg-secondary"
-              role="progressbar"
-              aria-valuenow={t.percentual}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label={`Progresso da trilha ${t.trilha?.nome ?? ""}`}
+              role="group"
+              aria-label="Filtrar caminhos"
+              className="flex flex-wrap gap-2 rounded-full bg-secondary/60 p-1.5"
             >
-              <div className="h-full rounded-full bg-salvia" style={{ width: `${t.percentual}%` }} />
+              {FILTROS.map((opcao) => (
+                <button
+                  key={opcao}
+                  type="button"
+                  onClick={() => setFiltro(opcao)}
+                  aria-pressed={filtro === opcao}
+                  className={`min-h-11 rounded-full px-4 text-sm font-medium transition-colors ${
+                    filtro === opcao
+                      ? "bg-card text-floresta shadow-organico"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {FILTRO_JORNADA_LABEL[opcao]}
+                </button>
+              ))}
             </div>
+          )}
 
-            {t.objetivo && (
-              <p className="mt-4 rounded-2xl bg-secondary p-4 text-sm text-foreground">
-                <span className="font-medium">Objetivo combinado: </span>
-                {t.objetivo}
-              </p>
-            )}
-            {t.mensagem && (
-              <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{t.mensagem}</p>
-            )}
-
-            <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              {t.somenteEmSessao && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-terracota/10 px-3 py-1 text-terracota">
-                  <Lock className="h-3.5 w-3.5" aria-hidden /> Somente em sessão
-                </span>
-              )}
-              {t.exigeAcompanhamento && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-ocre/15 px-3 py-1 text-floresta">
-                  <Users className="h-3.5 w-3.5" aria-hidden /> Com acompanhamento
-                </span>
-              )}
-              {t.dataRevisao && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-muted-foreground">
-                  <CalendarCheck className="h-3.5 w-3.5" aria-hidden /> Revisão em{" "}
-                  {formatarData(t.dataRevisao)}
-                </span>
-              )}
-            </div>
-
-            {t.orientacoesEspeciais && (
-              <p className="mt-3 rounded-2xl border border-ocre/40 bg-ocre/10 p-4 text-sm text-foreground">
-                {t.orientacoesEspeciais}
-              </p>
-            )}
-
-            <ol className="mt-5 space-y-2">
-              {t.etapas.map((e) => (
-                <li key={e.id}>
-                  <Link
-                    to="/app/etapa/$conteudoId"
-                    params={{ conteudoId: e.id }}
-                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl bg-secondary px-4 py-3 transition-colors hover:bg-secondary/70"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {e.ordem}. {e.titulo}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {ETAPA_LABEL[(e.tipoEtapa ?? "pratica") as TipoEtapa]}
-                        {e.duracaoSegundos ? ` · ${formatarDuracao(e.duracaoSegundos)}` : ""}
-                        {e.obrigatoria ? " · obrigatória" : " · opcional"}
-                      </p>
-                    </div>
-                    <span
-                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
-                        e.status === "concluido"
-                          ? "bg-salvia text-floresta-foreground"
-                          : e.status === "em_andamento"
-                            ? "bg-ocre/20 text-floresta"
-                            : "bg-card text-muted-foreground"
-                      }`}
-                    >
-                      {e.status === "concluido"
-                        ? "Concluída"
-                        : e.status === "em_andamento"
-                          ? "Em andamento"
-                          : "A fazer"}
-                    </span>
-                  </Link>
+          {visiveis.length === 0 ? (
+            <p className="rounded-[2rem] border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+              Nenhum caminho neste filtro por enquanto.
+            </p>
+          ) : (
+            <ul className="space-y-6">
+              {visiveis.map((plano) => (
+                <li key={plano.atribuicaoId}>
+                  <CartaoPlano plano={plano} />
                 </li>
               ))}
-            </ol>
+            </ul>
+          )}
+        </>
+      )}
 
-            {t.proximaEtapaId && (
-              <Link
-                to="/app/etapa/$conteudoId"
-                params={{ conteudoId: t.proximaEtapaId }}
-                className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-terracota px-5 py-2.5 text-sm font-medium text-terracota-foreground"
-              >
-                Continuar próxima etapa
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-            )}
-          </li>
-        ))}
-      </ul>
+      <PulsoEmocional checkins={data?.checkins ?? []} />
 
-      {(data?.apoio ?? []).length > 0 && (
-        <section
-          aria-labelledby="titulo-apoio"
-          className="rounded-3xl border border-border bg-card p-5"
-        >
-          <h2 id="titulo-apoio" className="font-display text-lg text-floresta">
-            Seus pedidos de apoio
-          </h2>
-          <ul className="mt-3 space-y-2">
-            {(data?.apoio ?? []).map((s) => (
-              <li key={s.id} className="rounded-2xl bg-secondary p-4 text-sm">
-                <p className="text-xs text-muted-foreground">
-                  {formatarData(s.created_at)} ·{" "}
-                  {s.status === "respondida" ? "respondido" : "aguardando retorno"}
-                </p>
-                <p className="mt-1 whitespace-pre-line text-foreground">{s.mensagem}</p>
-                {s.resposta && (
-                  <p className="mt-2 rounded-xl bg-card p-3 text-muted-foreground">{s.resposta}</p>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
+      {blocos.pedirApoio && (
+        <ConversaApoio
+          pedidos={data?.apoio ?? []}
+          prazoRespostaHoras={data?.prazoRespostaHoras ?? 48}
+        />
       )}
     </div>
   );
