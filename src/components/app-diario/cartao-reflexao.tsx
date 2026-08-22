@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ehCompartilhada,
+  eixosDaEntrada,
   recortar,
   tempoRelativo,
   type EntradaDiario,
