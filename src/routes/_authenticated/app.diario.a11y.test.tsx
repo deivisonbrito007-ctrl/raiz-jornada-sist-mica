@@ -258,7 +258,7 @@ describe("Diário de reflexão — privacidade e ações", () => {
     fetchDiario.mockResolvedValue(entradas);
     renderizar();
     await screen.findByText("Lembrei da minha avó.");
-    await userEvent.click(screen.getAllByRole("button", { name: /Editar/ })[0]);
+    await userEvent.click(screen.getAllByRole("button", { name: /Editar/ })[0]!);
     const campo = screen.getByLabelText("Editar reflexão");
     await userEvent.clear(campo);
     await userEvent.type(campo, "texto revisado");
@@ -272,7 +272,7 @@ describe("Diário de reflexão — privacidade e ações", () => {
     fetchDiario.mockResolvedValue(entradas);
     renderizar();
     await screen.findByText("Lembrei da minha avó.");
-    await userEvent.click(screen.getAllByRole("button", { name: /Apagar/ })[0]);
+    await userEvent.click(screen.getAllByRole("button", { name: /Apagar/ })[0]!);
     expect(screen.getByText("Apagar para sempre?")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Apagar" }));
     await waitFor(() => expect(apagarFn).toHaveBeenCalledWith({ data: { id: "d-1" } }));
@@ -282,7 +282,7 @@ describe("Diário de reflexão — privacidade e ações", () => {
     fetchDiario.mockResolvedValue(entradas);
     renderizar();
     await screen.findByText("Lembrei da minha avó.");
-    await userEvent.click(screen.getAllByRole("button", { name: /^Compartilhar$/ })[0]);
+    await userEvent.click(screen.getAllByRole("button", { name: /^Compartilhar$/ })[0]!);
     await waitFor(() =>
       expect(visibilidadeFn).toHaveBeenCalledWith({
         data: { id: "d-1", visibilidade: "compartilhado" },
