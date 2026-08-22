@@ -11,7 +11,7 @@ const CANAL_LOCAL = "raiz-permissoes";
 
 /**
  * Revalida as permissões do painel em tempo real: qualquer mudança em
- * equipe_admins / equipe_permissoes chega por realtime (ou por outra aba via
+ * equipe_membros / equipe_permissoes chega por realtime (ou por outra aba via
  * BroadcastChannel) e derruba na hora as rotas já abertas — sem polling nem
  * dependência de foco.
  */
@@ -56,7 +56,7 @@ export function useVigiaPermissoes(ativo = true) {
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "equipe_admins" },
+        { event: "*", schema: "public", table: "equipe_membros" },
         revalidar,
       )
       .subscribe();

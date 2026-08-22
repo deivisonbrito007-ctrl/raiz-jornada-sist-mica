@@ -223,7 +223,7 @@ describe.skipIf(!rlsConfigurado)("RLS real: vazamento entre clientes", () => {
     const promocao = await bruno.db.from("user_roles").insert({ user_id: bruno.id, role: "terapeuta" });
     expect(promocao.error).not.toBeNull();
 
-    const equipe = await bruno.db.from("equipe_admins").insert({ user_id: bruno.id });
+    const equipe = await bruno.db.from("equipe_membros").insert({ user_id: bruno.id });
     expect(equipe.error).not.toBeNull();
 
     const permissao = await bruno.db
