@@ -13,17 +13,17 @@ export function BlocoPrivacidade({ modo }: Props) {
   return (
     <section
       aria-labelledby="titulo-privacidade"
-      className="mt-4 rounded-3xl bg-secondary p-6"
+      className="mt-3 w-full rounded-3xl bg-secondary p-5 sm:p-6"
     >
       <div className="flex items-start gap-3">
-        <span className="rounded-2xl bg-card p-3 text-salvia">
+        <span className="shrink-0 rounded-2xl bg-card p-3 text-salvia">
           <ShieldCheck className="h-5 w-5" aria-hidden="true" />
         </span>
-        <div>
+        <div className="min-w-0">
           <h2 id="titulo-privacidade" className="font-display text-xl text-floresta">
             Cuidado com o que é seu
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 break-words text-sm leading-relaxed text-muted-foreground">
             Privacidade aqui não é letra miúda: é parte do tratamento.
           </p>
         </div>
@@ -31,9 +31,13 @@ export function BlocoPrivacidade({ modo }: Props) {
 
       <dl className="mt-5 space-y-4">
         {itens.map((item) => (
-          <div key={item.titulo}>
-            <dt className="text-xs uppercase tracking-wider text-salvia">{item.titulo}</dt>
-            <dd className="mt-0.5 text-sm leading-relaxed text-muted-foreground">{item.texto}</dd>
+          <div key={item.titulo} className="min-w-0">
+            <dt className="break-words text-xs uppercase tracking-wider text-salvia">
+              {item.titulo}
+            </dt>
+            <dd className="mt-0.5 break-words text-sm leading-relaxed text-muted-foreground">
+              {item.texto}
+            </dd>
           </div>
         ))}
       </dl>
@@ -41,7 +45,7 @@ export function BlocoPrivacidade({ modo }: Props) {
       {modo === "acompanhado" && (
         <Link
           to="/app/diario"
-          className="mt-5 inline-flex min-h-11 items-center rounded-full border border-border bg-card px-5 text-sm text-floresta"
+          className="mt-5 inline-flex min-h-11 max-w-full items-center justify-center rounded-full border border-border bg-card px-5 py-2 text-center text-sm leading-snug text-floresta"
         >
           Revisar o que compartilhei no diário
         </Link>
