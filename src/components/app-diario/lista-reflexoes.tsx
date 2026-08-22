@@ -139,7 +139,10 @@ export function ListaReflexoes({
               <h3 className="text-[0.68rem] font-medium uppercase tracking-[0.2em] text-salvia">
                 {grupo.rotulo}
               </h3>
-              <ul className="mt-4 list-none space-y-4 p-0 sm:ml-6 sm:border-l sm:border-dashed sm:border-salvia/30 sm:pl-6">
+              <ul
+                aria-label={`Reflexões de ${grupo.rotulo}`}
+                className="mt-4 list-none space-y-4 p-0 sm:ml-6 sm:border-l sm:border-dashed sm:border-salvia/30 sm:pl-6"
+              >
                 {grupo.entradas.map((entrada) => (
                   <li key={entrada.id} className="relative">
                     <CartaoReflexao

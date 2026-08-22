@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { BellOff, BellRing, History } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PushDispositivo } from "@/components/app-perfil/push-dispositivo";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -184,7 +185,7 @@ function CentralLembretes() {
         </h2>
 
         <div className="mt-5 space-y-5">
-          <div className="flex items-center justify-between gap-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
             <Label htmlFor="lembretes-ativo" className="text-sm">
               Receber lembretes
             </Label>
@@ -239,7 +240,7 @@ function CentralLembretes() {
             />
           </div>
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
             <Label htmlFor="lembretes-push" className="text-sm">
               No celular (push)
             </Label>
@@ -250,7 +251,7 @@ function CentralLembretes() {
             />
           </div>
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
             <Label htmlFor="lembretes-email" className="text-sm">
               Por e-mail
             </Label>
@@ -260,7 +261,10 @@ function CentralLembretes() {
               onCheckedChange={(v) => setForm({ ...form, canalEmail: v })}
             />
           </div>
+
+          <PushDispositivo />
         </div>
+
 
         <Button
           className="mt-6 min-h-12 w-full rounded-full bg-terracota text-terracota-foreground hover:bg-terracota/90"
