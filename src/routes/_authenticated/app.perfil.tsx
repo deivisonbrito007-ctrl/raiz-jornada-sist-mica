@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -145,6 +145,15 @@ function Perfil() {
       <MetaSemanal meta={perfil?.meta_semanal ?? 3} />
 
       <PreferenciasLembretes />
+
+      <Link
+        to="/app/lembretes"
+        className="mt-3 flex min-h-12 items-center justify-between gap-3 rounded-[1.75rem] bg-card px-5 py-4 text-sm shadow-organico transition hover:bg-secondary/40"
+      >
+        <span className="text-foreground">Central de lembretes e histórico</span>
+        <span className="text-xs text-muted-foreground">pausar, ajustar, ver o que foi enviado</span>
+      </Link>
+
 
       <MeusCaminhos />
 

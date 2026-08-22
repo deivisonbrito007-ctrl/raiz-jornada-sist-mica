@@ -18,7 +18,75 @@ export type EntradaDiario = {
   compartilhado_em?: string | null;
   compartilhamento_revogado_em?: string | null;
   conteudos?: { titulo?: string | null; eixos?: { nome?: string | null } | null } | null;
+  diario_eixos?:
+    | Array<{ eixo_id: string; eixos?: { nome?: string | null } | null } | null>
+    | null;
 };
+
+export type EixoTag = { id: string; nome: string };
+
+/** Eixos sistêmicos marcados numa reflexão (normalizados e sem repetição). */
+export function eixosDaEntrada(entrada: EntradaDiario): EixoTag[] {
+  const vistos = new Set<string>();
+  const tags: EixoTag[] = [];
+  for (const item of entrada.diario_eixos ?? []) {
+    if (!item?.eixo_id || vistos.has(item.eixo_id)) continue;
+    vistos.add(item.eixo_id);
+    tags.push({ id: item.eixo_id, nome: item.eixos?.nome ?? "Eixo" });
+  }
+  return tags;
+}
+
+/**
+ * Trilhos de convite: em vez de uma pergunta só, quatro caminhos de escuta.
+ * A pessoa escolhe por onde entrar; o convite do dia continua sendo o padrão.
+ */
+export const TRILHOS_CONVITE = [
+  {
+    chave: "corpo",
+    rotulo: "Corpo",
+    convites: [
+      "O que se moveu no seu corpo durante a prática?",
+      "Onde, agora, há tensão — e onde há descanso?",
+      "Qual é a respiração possível neste momento?",
+    ],
+  },
+  {
+    chave: "sistema",
+    rotulo: "Sistema familiar",
+    convites: [
+      "Se pudesse dizer uma frase a alguém do seu sistema, qual seria?",
+      "Que lugar você tem ocupado que talvez não seja o seu?",
+      "O que você carrega que pertence a outra pessoa?",
+    ],
+  },
+  {
+    chave: "despedidas",
+    rotulo: "Despedidas",
+    convites: [
+      "Do que você quer se despedir com gratidão?",
+      "O que já cumpriu a função e pode descansar?",
+      "Que saudade pede espaço hoje?",
+    ],
+  },
+  {
+    chave: "chao",
+    rotulo: "Chão firme",
+    convites: [
+      "Onde, no seu dia, você sentiu chão firme?",
+      "Qual foi o gesto de cuidado que você fez por você?",
+      "O que você reconhece hoje que ontem ainda não conseguia?",
+    ],
+  },
+] as const;
+
+export type ChaveTrilho = (typeof TRILHOS_CONVITE)[number]["chave"];
+
+/** Convites de um trilho (vazio quando a chave não existe). */
+export function convitesDoTrilho(chave: string): readonly string[] {
+  return TRILHOS_CONVITE.find((t) => t.chave === chave)?.convites ?? [];
+}
+
 
 /** Convites de escrita: perguntas que abrem, sem dirigir a resposta. */
 export const CONVITES = [
@@ -99,23 +167,28 @@ export const FILTRO_DIARIO_LABEL: Record<FiltroDiario, string> = {
   praticas: "De práticas",
 };
 
-/** Aplica busca por palavra e o filtro escolhido. */
+/** Aplica busca por palavra, filtro escolhido e (opcional) recorte por eixo. */
 export function filtrarEntradas(
   entradas: EntradaDiario[],
-  { busca = "", filtro = "todas" as FiltroDiario } = {},
+  { busca = "", filtro = "todas" as FiltroDiario, eixoId = null as string | null } = {},
 ) {
   const termo = busca.trim().toLowerCase();
   return entradas.filter((entrada) => {
     if (filtro === "privadas" && ehCompartilhada(entrada)) return false;
     if (filtro === "compartilhadas" && !ehCompartilhada(entrada)) return false;
     if (filtro === "praticas" && !entrada.conteudo_id) return false;
+    if (eixoId && !eixosDaEntrada(entrada).some((e) => e.id === eixoId)) return false;
     if (!termo) return true;
+    const tags = eixosDaEntrada(entrada)
+      .map((e) => e.nome)
+      .join(" ");
     const alvo = `${entrada.texto} ${entrada.conteudos?.titulo ?? ""} ${
       entrada.conteudos?.eixos?.nome ?? ""
-    }`.toLowerCase();
+    } ${tags}`.toLowerCase();
     return alvo.includes(termo);
   });
 }
+
 
 export type GrupoMes = { chave: string; rotulo: string; entradas: EntradaDiario[] };
 
@@ -183,4 +256,46 @@ export function recortar(texto: string, limite = 320) {
 /** Chave do rascunho local, separada por prática de origem. */
 export function chaveRascunho(conteudoId?: string | null) {
   return `raiz-diario-rascunho-${conteudoId ?? "livre"}`;
+}
+
+export type PontoTempo = {
+  id: string;
+  dia: number;
+  /** 1 a 3 — tamanho do ponto conforme o tamanho do texto */
+  peso: 1 | 2 | 3;
+  compartilhada: boolean;
+  eixoNome: string | null;
+  data: string;
+};
+
+export type FaixaTempo = { chave: string; rotulo: string; pontos: PontoTempo[] };
+
+/**
+ * Linha do tempo das reflexões: uma faixa por mês, um ponto por entrada,
+ * do mais antigo para o mais recente dentro do mês.
+ */
+export function serieLinhaDoTempo(entradas: EntradaDiario[]): FaixaTempo[] {
+  const faixas: FaixaTempo[] = [];
+  for (const grupo of agruparPorMes(entradas)) {
+    const pontos = grupo.entradas
+      .map((entrada): PontoTempo | null => {
+        const data = new Date(entrada.created_at);
+        if (Number.isNaN(data.getTime())) return null;
+        const tamanho = entrada.texto.trim().length;
+        const peso: 1 | 2 | 3 = tamanho > 600 ? 3 : tamanho > 200 ? 2 : 1;
+        const tags = eixosDaEntrada(entrada);
+        return {
+          id: entrada.id,
+          dia: data.getDate(),
+          peso,
+          compartilhada: ehCompartilhada(entrada),
+          eixoNome: tags[0]?.nome ?? entrada.conteudos?.eixos?.nome ?? null,
+          data: entrada.created_at,
+        };
+      })
+      .filter((p): p is PontoTempo => p !== null)
+      .sort((a, b) => a.dia - b.dia);
+    if (pontos.length > 0) faixas.push({ chave: grupo.chave, rotulo: grupo.rotulo, pontos });
+  }
+  return faixas;
 }

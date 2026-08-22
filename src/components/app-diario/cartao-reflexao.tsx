@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ehCompartilhada,
+  eixosDaEntrada,
   recortar,
   tempoRelativo,
   type EntradaDiario,
@@ -84,6 +85,20 @@ export function CartaoReflexao({
           {entrada.conteudos.eixos?.nome ? ` · eixo ${entrada.conteudos.eixos.nome}` : ""}
         </p>
       )}
+
+      {eixosDaEntrada(entrada).length > 0 && (
+        <ul aria-label="Eixos desta reflexão" className="mt-2 flex list-none flex-wrap gap-2 p-0">
+          {eixosDaEntrada(entrada).map((eixo) => (
+            <li
+              key={eixo.id}
+              className="rounded-full bg-salvia/10 px-2.5 py-1 text-[0.65rem] uppercase tracking-wider text-salvia"
+            >
+              {eixo.nome}
+            </li>
+          ))}
+        </ul>
+      )}
+
 
       {editando ? (
         <div className="mt-3">

@@ -736,6 +736,45 @@ export type Database = {
           },
         ]
       }
+      diario_eixos: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          diario_id: string
+          eixo_id: string
+          id: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          diario_id: string
+          eixo_id: string
+          id?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          diario_id?: string
+          eixo_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diario_eixos_diario_id_fkey"
+            columns: ["diario_id"]
+            isOneToOne: false
+            referencedRelation: "diario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_eixos_eixo_id_fkey"
+            columns: ["eixo_id"]
+            isOneToOne: false
+            referencedRelation: "eixos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dispositivos_push: {
         Row: {
           auth: string
@@ -1040,6 +1079,7 @@ export type Database = {
           dias_inatividade: number
           fuso: string
           hora_local: number
+          silenciado_ate: string | null
           updated_at: string
           user_id: string
         }
@@ -1052,6 +1092,7 @@ export type Database = {
           dias_inatividade?: number
           fuso?: string
           hora_local?: number
+          silenciado_ate?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1064,6 +1105,7 @@ export type Database = {
           dias_inatividade?: number
           fuso?: string
           hora_local?: number
+          silenciado_ate?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1078,6 +1120,8 @@ export type Database = {
           id: string
           meta_semanal: number
           nome: string
+          onboarding_concluido_em: string | null
+          onboarding_dispensado_em: string | null
         }
         Insert: {
           created_at?: string
@@ -1087,6 +1131,8 @@ export type Database = {
           id: string
           meta_semanal?: number
           nome?: string
+          onboarding_concluido_em?: string | null
+          onboarding_dispensado_em?: string | null
         }
         Update: {
           created_at?: string
@@ -1096,6 +1142,8 @@ export type Database = {
           id?: string
           meta_semanal?: number
           nome?: string
+          onboarding_concluido_em?: string | null
+          onboarding_dispensado_em?: string | null
         }
         Relationships: [
           {

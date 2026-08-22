@@ -11,6 +11,7 @@ import {
   editarDiario,
   getConteudo,
   getPraticaSemReflexao,
+  getMinhaBiblioteca,
   listarDiario,
   salvarDiario,
 } from "@/lib/raiz.functions";
@@ -27,6 +28,7 @@ import { CabecalhoDiario } from "@/components/app-diario/cabecalho-diario";
 import { ConviteEscrita } from "@/components/app-diario/convite-escrita";
 import { FioContinuidade } from "@/components/app-diario/fio-continuidade";
 import { ListaReflexoes } from "@/components/app-diario/lista-reflexoes";
+import { LinhaDoTempoDiario } from "@/components/app-diario/linha-do-tempo-diario";
 import { PainelInsights } from "@/components/app-diario/painel-insights";
 
 export const Route = createFileRoute("/_authenticated/app/diario")({
@@ -57,6 +59,7 @@ function Diario() {
   const fetchDiario = useServerFn(listarDiario);
   const fetchConteudo = useServerFn(getConteudo);
   const fetchPraticaSemReflexao = useServerFn(getPraticaSemReflexao);
+  const fetchBiblioteca = useServerFn(getMinhaBiblioteca);
   const salvar = useServerFn(salvarDiario);
   const editar = useServerFn(editarDiario);
   const apagar = useServerFn(apagarDiario);
@@ -67,6 +70,7 @@ function Diario() {
   const [anuncio, setAnuncio] = useState("");
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<FiltroDiario>("todas");
+  const [eixoFiltro, setEixoFiltro] = useState<string | null>(null);
 
   const { data: contexto } = useMeuContexto();
   const modo = normalizarModo(contexto?.modo);
@@ -84,6 +88,14 @@ function Diario() {
     queryFn: () => fetchPraticaSemReflexao(),
     enabled: !conteudoId,
   });
+
+  const { data: biblioteca } = useQuery({
+    queryKey: ["biblioteca"],
+    queryFn: () => fetchBiblioteca(),
+  });
+  const eixosDisponiveis = (biblioteca?.eixos ?? [])
+    .filter((e) => e.liberado)
+    .map((e) => ({ id: e.id, nome: e.nome }));
 
   const lista = (entradas ?? []) as EntradaDiario[];
   const resumo = resumoDoDiario(lista);
@@ -105,10 +117,18 @@ function Diario() {
     }
   }
 
-  async function enviar({ texto, visibilidade }: { texto: string; visibilidade: Visibilidade }) {
+  async function enviar({
+    texto,
+    visibilidade,
+    eixos,
+  }: {
+    texto: string;
+    visibilidade: Visibilidade;
+    eixos: string[];
+  }) {
     setEnviando(true);
     await comCuidado(
-      () => salvar({ data: { texto, conteudoId: conteudoId ?? null, visibilidade } }),
+      () => salvar({ data: { texto, conteudoId: conteudoId ?? null, visibilidade, eixos } }),
       { emAndamento: "Guardando sua reflexão...", sucesso: "Reflexão guardada." },
     );
     setEnviando(false);
@@ -162,10 +182,13 @@ function Diario() {
         conteudoId={conteudoId ?? null}
         podeCompartilhar={podeCompartilhar}
         enviando={enviando}
+        eixos={eixosDisponiveis}
         onEnviar={enviar}
       />
 
       {!conteudoId && praticaSemReflexao && <FioContinuidade pratica={praticaSemReflexao} />}
+
+      <LinhaDoTempoDiario entradas={lista} />
 
       <PainelInsights entradas={lista} podeCompartilhar={podeCompartilhar} />
 
@@ -173,10 +196,13 @@ function Diario() {
         entradas={lista}
         busca={busca}
         filtro={filtro}
+        eixoId={eixoFiltro}
+        eixos={eixosDisponiveis}
         podeCompartilhar={podeCompartilhar}
         ocupado={ocupado}
         onBusca={setBusca}
         onFiltro={setFiltro}
+        onEixo={setEixoFiltro}
         onEditar={aoEditar}
         onApagar={aoApagar}
         onVisibilidade={aoMudarVisibilidade}

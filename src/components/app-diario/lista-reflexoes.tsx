@@ -20,10 +20,13 @@ export function ListaReflexoes({
   entradas,
   busca,
   filtro,
+  eixoId = null,
+  eixos = [],
   podeCompartilhar,
   ocupado,
   onBusca,
   onFiltro,
+  onEixo,
   onEditar,
   onApagar,
   onVisibilidade,
@@ -31,15 +34,18 @@ export function ListaReflexoes({
   entradas: EntradaDiario[];
   busca: string;
   filtro: FiltroDiario;
+  eixoId?: string | null;
+  eixos?: Array<{ id: string; nome: string }>;
   podeCompartilhar: boolean;
   ocupado: boolean;
   onBusca: (valor: string) => void;
   onFiltro: (valor: FiltroDiario) => void;
+  onEixo?: (valor: string | null) => void;
   onEditar: (id: string, texto: string) => Promise<void> | void;
   onApagar: (id: string) => Promise<void> | void;
   onVisibilidade: (id: string, visibilidade: Visibilidade) => Promise<void> | void;
 }) {
-  const filtradas = filtrarEntradas(entradas, { busca, filtro });
+  const filtradas = filtrarEntradas(entradas, { busca, filtro, eixoId });
   const grupos = agruparPorMes(filtradas);
   const opcoes = podeCompartilhar
     ? FILTROS_DIARIO
@@ -86,6 +92,38 @@ export function ListaReflexoes({
             </button>
           ))}
         </div>
+
+        {eixos.length > 0 && onEixo && (
+          <div role="group" aria-label="Filtrar por eixo" className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              aria-pressed={eixoId === null}
+              onClick={() => onEixo(null)}
+              className={`min-h-10 rounded-full px-4 text-sm transition ${
+                eixoId === null
+                  ? "bg-salvia text-floresta-foreground"
+                  : "bg-secondary/60 text-foreground hover:bg-secondary"
+              }`}
+            >
+              Todos os eixos
+            </button>
+            {eixos.map((eixo) => (
+              <button
+                key={eixo.id}
+                type="button"
+                aria-pressed={eixoId === eixo.id}
+                onClick={() => onEixo(eixo.id)}
+                className={`min-h-10 rounded-full px-4 text-sm transition ${
+                  eixoId === eixo.id
+                    ? "bg-salvia text-floresta-foreground"
+                    : "bg-secondary/60 text-foreground hover:bg-secondary"
+                }`}
+              >
+                {eixo.nome}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {filtradas.length === 0 ? (

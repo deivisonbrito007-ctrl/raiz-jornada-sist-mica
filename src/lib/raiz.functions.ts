@@ -542,21 +542,60 @@ export const salvarDiario = createServerFn({ method: "POST" })
         texto: z.string().min(1).max(8000),
         conteudoId: z.string().uuid().nullable().optional(),
         visibilidade: z.enum(["somente_eu", "compartilhado"]).default("somente_eu"),
+        eixos: z.array(z.string().uuid()).max(12).optional(),
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const compartilhado = data.visibilidade === "compartilhado";
-    const { error } = await supabase.from("diario").insert({
-      cliente_id: userId,
-      conteudo_id: data.conteudoId ?? null,
-      texto: data.texto,
-      visibilidade: data.visibilidade,
-      compartilhado_em: compartilhado ? new Date().toISOString() : null,
-    });
+    const { data: criada, error } = await supabase
+      .from("diario")
+      .insert({
+        cliente_id: userId,
+        conteudo_id: data.conteudoId ?? null,
+        texto: data.texto,
+        visibilidade: data.visibilidade,
+        compartilhado_em: compartilhado ? new Date().toISOString() : null,
+      })
+      .select("id")
+      .single();
     if (error) throw erroSeguro(error);
-    return { ok: true };
+
+    const eixos = Array.from(new Set(data.eixos ?? []));
+    if (criada?.id && eixos.length > 0) {
+      const { error: erroTags } = await supabase
+        .from("diario_eixos")
+        .insert(eixos.map((eixoId) => ({ diario_id: criada.id, eixo_id: eixoId, cliente_id: userId })));
+      if (erroTags) throw erroSeguro(erroTags, "marcar eixos da reflexão");
+    }
+    return { ok: true, id: criada?.id ?? null };
+  });
+
+/** Reescreve as marcações de eixo de uma reflexão da própria pessoa. */
+export const definirEixosDiario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({ id: z.string().uuid(), eixos: z.array(z.string().uuid()).max(12) })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const eixos = Array.from(new Set(data.eixos));
+    const { error: erroLimpar } = await supabase
+      .from("diario_eixos")
+      .delete()
+      .eq("diario_id", data.id)
+      .eq("cliente_id", userId);
+    if (erroLimpar) throw erroSeguro(erroLimpar, "atualizar eixos da reflexão");
+    if (eixos.length > 0) {
+      const { error } = await supabase
+        .from("diario_eixos")
+        .insert(eixos.map((eixoId) => ({ diario_id: data.id, eixo_id: eixoId, cliente_id: userId })));
+      if (error) throw erroSeguro(error, "atualizar eixos da reflexão");
+    }
+    return { ok: true, eixos };
   });
 
 /** Reescreve o texto de uma reflexão da própria pessoa (a RLS garante o dono). */
@@ -630,7 +669,7 @@ export const listarDiario = createServerFn({ method: "GET" })
     const { data } = await supabase
       .from("diario")
       .select(
-        "id, texto, created_at, conteudo_id, atribuicao_id, visibilidade, compartilhado_em, compartilhamento_revogado_em, conteudos(titulo, eixos(nome))",
+        "id, texto, created_at, conteudo_id, atribuicao_id, visibilidade, compartilhado_em, compartilhamento_revogado_em, conteudos(titulo, eixos(nome)), diario_eixos(eixo_id, eixos(nome))",
       )
       .eq("cliente_id", userId)
       .order("created_at", { ascending: false })
@@ -1389,6 +1428,61 @@ export const adminAtualizarPagamento = createServerFn({ method: "POST" })
       .from("clientes_pacotes")
       .update({ status_pagamento: data.statusPagamento })
       .eq("id", data.id);
+    if (error) throw erroSeguro(error);
+    return { ok: true };
+  });
+
+
+/**
+ * Estado das boas-vindas do Início: o que a pessoa já fez e se ela pediu para
+ * não ver mais. Só leitura de dados que ela mesma gerou.
+ */
+export const getMeuOnboarding = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const [perfil, progresso, diario, prefs] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("eixos_preferidos, onboarding_dispensado_em, onboarding_concluido_em")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase
+        .from("progresso")
+        .select("id")
+        .eq("cliente_id", userId)
+        .eq("status", "concluido")
+        .limit(1),
+      supabase.from("diario").select("id").eq("cliente_id", userId).limit(1),
+      supabase
+        .from("preferencias_lembretes")
+        .select("ativo, definido_por")
+        .eq("user_id", userId)
+        .maybeSingle(),
+    ]);
+
+    return {
+      escolheuEixos: (perfil.data?.eixos_preferidos ?? []).length > 0,
+      fezPratica: (progresso.data ?? []).length > 0,
+      escreveuDiario: (diario.data ?? []).length > 0,
+      definiuRitmo: Boolean(prefs.data?.ativo),
+      dispensadoEm: perfil.data?.onboarding_dispensado_em ?? null,
+      concluidoEm: perfil.data?.onboarding_concluido_em ?? null,
+    };
+  });
+
+/** A pessoa fecha as boas-vindas — por ter concluído ou por preferir sem elas. */
+export const encerrarOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ motivo: z.enum(["dispensado", "concluido"]) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const agora = new Date().toISOString();
+    const campo =
+      data.motivo === "concluido"
+        ? { onboarding_concluido_em: agora }
+        : { onboarding_dispensado_em: agora };
+    const { error } = await supabase.from("profiles").update(campo).eq("id", userId);
     if (error) throw erroSeguro(error);
     return { ok: true };
   });

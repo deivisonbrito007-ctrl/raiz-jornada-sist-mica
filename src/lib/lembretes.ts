@@ -32,6 +32,8 @@ export type PreferenciaLembretes = {
   fuso: string;
   dias_inatividade: number;
   definido_por: string;
+  /** quando preenchido, nada é enviado até esta data (pausa temporária) */
+  silenciado_ate?: string | null;
 };
 
 export const PREFERENCIA_PADRAO: PreferenciaLembretes = {
@@ -43,7 +45,27 @@ export const PREFERENCIA_PADRAO: PreferenciaLembretes = {
   fuso: "America/Sao_Paulo",
   dias_inatividade: 3,
   definido_por: "cliente",
+  silenciado_ate: null,
 };
+
+/** Opções de pausa oferecidas na central de lembretes. */
+export const PAUSAS_LEMBRETE = [7, 14, 30] as const;
+
+/** Pausa temporária ainda vigente? */
+export function estaSilenciado(
+  prefs: Pick<PreferenciaLembretes, "silenciado_ate">,
+  agora = new Date(),
+) {
+  if (!prefs.silenciado_ate) return false;
+  const ate = new Date(prefs.silenciado_ate).getTime();
+  if (Number.isNaN(ate)) return false;
+  return ate > agora.getTime();
+}
+
+/** Data-limite de uma pausa de N dias a partir de agora. */
+export function fimDaPausa(dias: number, agora = new Date()) {
+  return new Date(agora.getTime() + Math.max(1, Math.trunc(dias)) * 86_400_000).toISOString();
+}
 
 export type PartesLocais = {
   ano: number;
@@ -147,6 +169,7 @@ export function decidirLembrete(
 ): LembreteDecidido | null {
   if (!prefs.ativo) return null;
   if (!prefs.canal_push && !prefs.canal_email) return null;
+  if (estaSilenciado(prefs, agora)) return null;
 
   const partes = partesLocais(agora, prefs.fuso);
   // Só enviamos na hora escolhida pelo cliente — o agendador roda a cada 30 min.

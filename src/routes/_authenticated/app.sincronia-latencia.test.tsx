@@ -22,6 +22,18 @@ const fetchTrilha = vi.fn<(args: any) => Promise<any>>();
 const getMinhaBibliotecaMock = Symbol("getMinhaBiblioteca");
 const getMeuContextoMock = Symbol("getMeuContexto");
 const getEixoTrilhaMock = Symbol("getEixoTrilha");
+const getMeuOnboardingMock = Symbol("getMeuOnboarding");
+const listarDiarioMock = Symbol("listarDiario");
+const encerrarOnboardingMock = Symbol("encerrarOnboarding");
+const fetchOnboarding = vi.fn<() => Promise<any>>(async () => ({
+  escolheuEixos: true,
+  fezPratica: true,
+  escreveuDiario: true,
+  definiuRitmo: true,
+  dispensadoEm: null,
+  concluidoEm: null,
+}));
+const fetchDiarioLista = vi.fn<() => Promise<any>>(async () => []);
 
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => (options: Record<string, unknown>) => ({
@@ -58,13 +70,22 @@ vi.mock("@tanstack/react-start", () => ({
       ? fetchBiblioteca
       : fn === getMeuContextoMock
         ? fetchContexto
-        : fetchTrilha,
+        : fn === getMeuOnboardingMock
+          ? fetchOnboarding
+          : fn === listarDiarioMock
+            ? fetchDiarioLista
+            : fn === encerrarOnboardingMock
+              ? vi.fn()
+              : fetchTrilha,
 }));
 
 vi.mock("@/lib/raiz.functions", () => ({
   getMinhaBiblioteca: getMinhaBibliotecaMock,
   getMeuContexto: getMeuContextoMock,
   getEixoTrilha: getEixoTrilhaMock,
+  getMeuOnboarding: getMeuOnboardingMock,
+  listarDiario: listarDiarioMock,
+  encerrarOnboarding: encerrarOnboardingMock,
 }));
 
 vi.mock("sonner", () => ({
@@ -209,7 +230,7 @@ describe("sincronização de liberações sob latência e eventos fora de ordem"
     const fila = filaControlada(fetchBiblioteca, 3);
     montar(Biblioteca);
     fila[0]!.resolver(bibliotecaComEixoLiberado(true, ["Respiração da raiz"]));
-    expect(await screen.findByText("Pertencimento")).toBeInTheDocument();
+    expect((await screen.findAllByText("Pertencimento"))[0]).toBeInTheDocument();
     await prontoParaEventos();
 
     // evento 1 (revogação) fica lento; evento 2 (nova liberação) responde antes
@@ -262,7 +283,7 @@ describe("sincronização de liberações sob latência e eventos fora de ordem"
     const fila = filaControlada(fetchBiblioteca, 3);
     montar(Biblioteca);
     fila[0]!.resolver(bibliotecaComEixoLiberado(true, ["Respiração da raiz"]));
-    expect(await screen.findByText("Pertencimento")).toBeInTheDocument();
+    expect((await screen.findAllByText("Pertencimento"))[0]).toBeInTheDocument();
     await prontoParaEventos();
 
     // conexão instável: o refetch falha
@@ -272,7 +293,7 @@ describe("sincronização de liberações sob latência e eventos fora de ordem"
     await tick();
     await tick();
     // nada de tela em branco: o último estado consistente continua visível
-    expect(screen.getByText("Pertencimento")).toBeInTheDocument();
+    expect(screen.getAllByText("Pertencimento")[0]).toBeInTheDocument();
 
     // reconectou: o evento seguinte traz o estado atual e a tela converge
     evento();
@@ -289,7 +310,7 @@ describe("sincronização de liberações sob latência e eventos fora de ordem"
     const fila = filaControlada(fetchBiblioteca, 5);
     montar(Biblioteca);
     fila[0]!.resolver(bibliotecaComEixoLiberado(true, ["Respiração da raiz"]));
-    expect(await screen.findByText("Pertencimento")).toBeInTheDocument();
+    expect((await screen.findAllByText("Pertencimento"))[0]).toBeInTheDocument();
     await prontoParaEventos();
 
     for (let i = 2; i <= 4; i += 1) {

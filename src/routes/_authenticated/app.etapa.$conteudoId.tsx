@@ -17,6 +17,9 @@ import { formatarDuracao } from "@/lib/raiz-format";
 import { PedirApoio } from "@/components/pedir-apoio";
 import { AnotacoesEtapa } from "@/components/app-jornada/anotacoes-etapa";
 import { usePreCarregarProximas } from "@/hooks/use-pre-carregar-proximas";
+import { RitualAbertura } from "@/components/app-pratica/ritual-abertura";
+import { RitualFecho } from "@/components/app-pratica/ritual-fecho";
+import { sementeDoFecho } from "@/lib/rituais";
 
 export const Route = createFileRoute("/_authenticated/app/etapa/$conteudoId")({
   head: () => ({
@@ -37,7 +40,7 @@ export const Route = createFileRoute("/_authenticated/app/etapa/$conteudoId")({
   component: EtapaTrilha,
 });
 
-type Fase = "checkin" | "pratica" | "checkout";
+type Fase = "abertura" | "checkin" | "pratica" | "fecho" | "checkout";
 
 /** Materiais e sensibilidades podem vir como texto livre ou lista. */
 function paraLista(valor: unknown): string[] {
@@ -78,7 +81,7 @@ function EtapaTrilha() {
     Boolean(data?.etapa),
   );
 
-  const [fase, setFase] = useState<Fase>("checkin");
+  const [fase, setFase] = useState<Fase>("abertura");
   const [inicial, setInicial] = useState({
     emocao: "",
     intensidade: 5,
@@ -163,7 +166,7 @@ function EtapaTrilha() {
     toast.success("Etapa concluída. Obrigada por cuidar disso.");
     if (data?.proximaId) {
       navigate({ to: "/app/etapa/$conteudoId", params: { conteudoId: data.proximaId } });
-      setFase("checkin");
+      setFase("abertura");
     } else {
       navigate({ to: "/app/jornada" });
     }
@@ -215,6 +218,16 @@ function EtapaTrilha() {
             ))}
           </ul>
         </div>
+      )}
+
+      {fase === "abertura" && (
+        <RitualAbertura
+          titulo={etapa.titulo}
+          onSeguir={(intencao) => {
+            setInicial((atual) => ({ ...atual, intencao: intencao || atual.intencao }));
+            setFase("checkin");
+          }}
+        />
       )}
 
       {fase === "checkin" && (
@@ -404,7 +417,13 @@ function EtapaTrilha() {
           )}
 
           <div className="flex flex-wrap gap-2">
-            <Button className="min-h-11 rounded-full" onClick={() => setFase("checkout")}>
+            <Button
+              className="min-h-11 rounded-full"
+              onClick={() => {
+                setReflexao((atual) => atual || sementeDoFecho(inicial.intencao));
+                setFase("fecho");
+              }}
+            >
               Terminei esta etapa
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Button>
@@ -424,6 +443,10 @@ function EtapaTrilha() {
             />
           </div>
         </section>
+      )}
+
+      {fase === "fecho" && (
+        <RitualFecho intencao={inicial.intencao.trim()} onSeguir={() => setFase("checkout")} />
       )}
 
       {fase === "checkout" && (
