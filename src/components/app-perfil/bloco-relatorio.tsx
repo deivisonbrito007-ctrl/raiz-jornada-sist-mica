@@ -27,12 +27,12 @@ export function BlocoRelatorio({ aoGerar, pronto }: Props) {
   return (
     <section
       aria-labelledby="titulo-relatorio"
-      className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]"
+      className="mt-3 w-full rounded-3xl bg-card p-5 shadow-[var(--shadow-organico)] sm:p-6"
     >
       <h2 id="titulo-relatorio" className="font-display text-xl text-floresta">
         Meu relatório
       </h2>
-      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+      <p className="mt-1 break-words text-sm leading-relaxed text-muted-foreground">
         Um PDF com seu progresso por eixo e suas reflexões — bom para levar à sessão ou guardar
         como memória do processo.
       </p>
@@ -40,7 +40,7 @@ export function BlocoRelatorio({ aoGerar, pronto }: Props) {
         type="button"
         onClick={baixar}
         disabled={gerando || !pronto}
-        className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-floresta px-5 text-sm text-floresta-foreground transition hover:bg-floresta/90 disabled:opacity-60"
+        className="mt-4 inline-flex min-h-11 max-w-full items-center justify-center gap-2 rounded-full bg-floresta px-5 py-2 text-center text-sm leading-snug text-floresta-foreground transition hover:bg-floresta/90 disabled:opacity-60"
       >
         {gerando ? (
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
