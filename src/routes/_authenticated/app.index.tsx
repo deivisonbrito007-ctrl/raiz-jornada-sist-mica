@@ -1,7 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getMeuContexto, getMinhaBiblioteca } from "@/lib/raiz.functions";
+import {
+  encerrarOnboarding,
+  getMeuContexto,
+  getMeuOnboarding,
+  getMinhaBiblioteca,
+  listarDiario,
+} from "@/lib/raiz.functions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { calcularStreak } from "@/lib/raiz-format";
 import { LembreteRetorno } from "@/components/lembrete-retorno";
@@ -17,6 +23,10 @@ import { MomentosRapidos } from "@/components/app-inicio/momentos-rapidos";
 import { BuscarPraticas } from "@/components/app-inicio/buscar-praticas";
 import { ConviteLembreteSemanal } from "@/components/app-inicio/convite-lembrete-semanal";
 import { RotuloSecao } from "@/components/app-casca/rotulo-secao";
+import { ProgressoMarcos } from "@/components/app-inicio/progresso-marcos";
+import { BoasVindasOnboarding } from "@/components/app-inicio/boas-vindas-onboarding";
+import { deveMostrarOnboarding } from "@/lib/onboarding-cliente";
+import { resumoDoDiario, type EntradaDiario } from "@/lib/diario-cliente";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   head: () => ({
@@ -41,12 +51,29 @@ export const Route = createFileRoute("/_authenticated/app/")({
 
 function Inicio() {
   useSincronizarLiberacoes();
+  const queryClient = useQueryClient();
   const fetchBiblioteca = useServerFn(getMinhaBiblioteca);
+  const fetchOnboarding = useServerFn(getMeuOnboarding);
+  const fetchDiario = useServerFn(listarDiario);
+  const fecharOnboarding = useServerFn(encerrarOnboarding);
   const fetchContexto = useServerFn(getMeuContexto);
   const { data: contexto } = useQuery({ queryKey: ["contexto"], queryFn: () => fetchContexto() });
   const { data, isLoading } = useQuery({
     queryKey: ["biblioteca"],
     queryFn: () => fetchBiblioteca(),
+  });
+
+  const { data: onboarding } = useQuery({
+    queryKey: ["onboarding"],
+    queryFn: () => fetchOnboarding(),
+  });
+  const { data: entradasDiario } = useQuery({
+    queryKey: ["diario"],
+    queryFn: () => fetchDiario(),
+  });
+  const mutFechar = useMutation({
+    mutationFn: () => fecharOnboarding({ data: { motivo: "dispensado" } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["onboarding"] }),
   });
 
   const primeiroNome = (contexto?.perfil?.nome || "").split(" ")[0] ?? "";
@@ -64,6 +91,7 @@ function Inicio() {
     preferidos: contexto?.perfil?.eixos_preferidos ?? [],
   };
   const preferido = eixoEmDestaque(eixos, escolhas);
+  const resumoDiario = resumoDoDiario((entradasDiario ?? []) as EntradaDiario[]);
   const ciclo = cicloAtual({
     inicioEm: contexto?.modoDesde ?? contexto?.perfil?.created_at ?? null,
     concluidos: data?.resumo.totalConcluidos ?? 0,
@@ -107,6 +135,17 @@ function Inicio() {
         eixoFoco={preferido?.nome ?? null}
       />
 
+      {onboarding && deveMostrarOnboarding(onboarding) && (
+        <>
+          <RotuloSecao texto="Comece por aqui" />
+          <BoasVindasOnboarding
+            estado={onboarding}
+            primeiroNome={primeiroNome}
+            onFechar={() => mutFechar.mutate()}
+          />
+        </>
+      )}
+
       <RotuloSecao texto="Para agora" />
       <PraticaDeHoje convite={convite} primeiroNome={primeiroNome} />
 
@@ -119,6 +158,16 @@ function Inicio() {
       )}
       {blocos.planoDaTerapeuta && <PalavraDaTerapeuta />}
       {blocos.vitrinePacotes && <VitrinePacotes />}
+
+      <RotuloSecao texto="Seu caminho até aqui" />
+      <ProgressoMarcos
+        streakSemanas={streak}
+        cicloSemana={ciclo.semana}
+        totalConcluidos={data?.resumo.totalConcluidos ?? 0}
+        reflexoes={resumoDiario.total}
+        diasEscrevendo={resumoDiario.diasEscrevendo}
+        eixos={eixos}
+      />
 
       <RotuloSecao texto="Seus eixos" />
       <CarrosselEixos
