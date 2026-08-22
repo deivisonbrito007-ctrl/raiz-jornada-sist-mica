@@ -167,7 +167,7 @@ function Diario() {
 
       {!conteudoId && praticaSemReflexao && <FioContinuidade pratica={praticaSemReflexao} />}
 
-      <PainelInsights entradas={lista} />
+      <PainelInsights entradas={lista} podeCompartilhar={podeCompartilhar} />
 
       <ListaReflexoes
         entradas={lista}
