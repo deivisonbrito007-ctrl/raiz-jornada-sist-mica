@@ -2,7 +2,8 @@
 
 ## Como fica a estrutura de pessoas
 
-- Sua conta atual continua a mesma, com acesso irrestrito, agora chamada **Proprietário** (nome de exibição "Brito", editável no perfil).
+- Sua conta atual continua a mesma, com acesso irrestrito, com o perfil **Administrador** (nome de exibição "Brito", editável no perfil). Concordo com a unificação: Proprietário e Administrador viram um perfil só — dois níveis de "tudo liberado" só criariam confusão sem ganho de segurança.
+- A sua conta fica marcada internamente como conta principal: pode ter outros administradores no futuro, mas o sistema nunca deixa remover ou suspender o último administrador, e ninguém pode remover ou suspender você.
 - A terapeuta convidada recebe o perfil **Terapeuta** e vê apenas os clientes vinculados a ela — como só existe uma terapeuta, o vínculo usa o campo "terapeuta responsável" que já existe no cadastro de cada cliente, com a possibilidade de você marcar exceções (autorização específica) por integrante.
 - Os outros perfis existem para quando a equipe crescer, todos com o mínimo de acesso.
 
@@ -10,8 +11,8 @@
 
 | Perfil | Acesso padrão |
 | --- | --- |
-| Proprietário | Tudo, inclusive equipe e auditoria. Nunca pode ser removido nem suspenso. |
-| Administrador | Tudo, exceto gerenciar equipe (opcional por marcação). |
+| Administrador | Tudo, inclusive equipe e auditoria. O último administrador não pode ser removido nem suspenso. |
+
 | Terapeuta | Ver e editar clientes vinculados, criar planos, monitorar trilhas, ver registros compartilhados desses clientes. |
 | Editor de conteúdo | Criar e publicar conteúdos. Nenhum dado de cliente. |
 | Assistente administrativo | Ver clientes (dados cadastrais), gerenciar pacotes. Sem diário, sem check-ins. |
