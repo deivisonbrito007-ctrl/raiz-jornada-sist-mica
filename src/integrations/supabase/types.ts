@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      anotacoes_etapa: {
+        Row: {
+          atribuicao_id: string | null
+          cliente_id: string
+          conteudo_id: string
+          created_at: string
+          id: string
+          texto: string
+          updated_at: string
+        }
+        Insert: {
+          atribuicao_id?: string | null
+          cliente_id: string
+          conteudo_id: string
+          created_at?: string
+          id?: string
+          texto?: string
+          updated_at?: string
+        }
+        Update: {
+          atribuicao_id?: string | null
+          cliente_id?: string
+          conteudo_id?: string
+          created_at?: string
+          id?: string
+          texto?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anotacoes_etapa_atribuicao_id_fkey"
+            columns: ["atribuicao_id"]
+            isOneToOne: false
+            referencedRelation: "atribuicoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anotacoes_etapa_conteudo_id_fkey"
+            columns: ["conteudo_id"]
+            isOneToOne: false
+            referencedRelation: "conteudos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       atribuicao_etapas: {
         Row: {
           atribuicao_id: string
