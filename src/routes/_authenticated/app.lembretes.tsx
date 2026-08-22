@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { BellOff, BellRing, History } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PushDispositivo } from "@/components/app-perfil/push-dispositivo";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
