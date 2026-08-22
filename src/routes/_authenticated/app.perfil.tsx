@@ -25,7 +25,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { PreferenciasLembretes } from "@/components/preferencias-lembretes";
+import { CartaoLembretes } from "@/components/app-perfil/cartao-lembretes";
+import { RotuloSecao } from "@/components/app-casca/rotulo-secao";
 import { AvisoReinstalarApp } from "@/components/aviso-reinstalar-app";
 import { VERSAO_APP } from "@/lib/versao-app";
 import { CabecalhoPerfil } from "@/components/app-perfil/cabecalho-perfil";
