@@ -21,6 +21,7 @@ import { CartaoPlano, type PlanoJornada } from "@/components/app-jornada/cartao-
 import { PulsoEmocional } from "@/components/app-jornada/pulso-emocional";
 import { ConversaApoio } from "@/components/app-jornada/conversa-apoio";
 import { JornadaVazia } from "@/components/app-jornada/jornada-vazia";
+import { RotuloSecao } from "@/components/app-casca/rotulo-secao";
 
 export const Route = createFileRoute("/_authenticated/app/jornada")({
   head: () => ({
@@ -106,6 +107,8 @@ function MinhaJornada() {
         }
       />
 
+      <RotuloSecao texto="Seus caminhos" />
+
       {planos.length === 0 ? (
         <JornadaVazia autoguiado={modo === "autoguiado"} />
       ) : (
@@ -150,8 +153,10 @@ function MinhaJornada() {
         </>
       )}
 
+      <RotuloSecao texto="Como você tem estado" />
       <PulsoEmocional checkins={data?.checkins ?? []} />
 
+      {blocos.pedirApoio && <RotuloSecao texto="Conversa com a terapeuta" />}
       {blocos.pedirApoio && (
         <ConversaApoio
           pedidos={data?.apoio ?? []}
