@@ -646,9 +646,12 @@ export type Database = {
           created_at: string
           criado_por: string | null
           email: string
+          escopo: Database["public"]["Enums"]["equipe_escopo"]
           expira_em: string
+          funcao: Database["public"]["Enums"]["equipe_funcao"]
           id: string
           permissoes: string[]
+          reenviado_em: string | null
           status: string
           token: string
         }
@@ -657,9 +660,12 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           email: string
+          escopo?: Database["public"]["Enums"]["equipe_escopo"]
           expira_em?: string
+          funcao?: Database["public"]["Enums"]["equipe_funcao"]
           id?: string
           permissoes?: string[]
+          reenviado_em?: string | null
           status?: string
           token?: string
         }
@@ -668,9 +674,12 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           email?: string
+          escopo?: Database["public"]["Enums"]["equipe_escopo"]
           expira_em?: string
+          funcao?: Database["public"]["Enums"]["equipe_funcao"]
           id?: string
           permissoes?: string[]
+          reenviado_em?: string | null
           status?: string
           token?: string
         }
@@ -784,20 +793,62 @@ export type Database = {
         }
         Relationships: []
       }
-      equipe_admins: {
+      equipe_clientes: {
         Row: {
+          cliente_id: string
           created_at: string
           criado_por: string | null
+          id: string
           user_id: string
         }
         Insert: {
+          cliente_id: string
           created_at?: string
           criado_por?: string | null
+          id?: string
           user_id: string
         }
         Update: {
+          cliente_id?: string
           created_at?: string
           criado_por?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      equipe_membros: {
+        Row: {
+          convidado_em: string | null
+          created_at: string
+          criado_por: string | null
+          escopo: Database["public"]["Enums"]["equipe_escopo"]
+          funcao: Database["public"]["Enums"]["equipe_funcao"]
+          principal: boolean
+          status: Database["public"]["Enums"]["equipe_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          convidado_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          escopo?: Database["public"]["Enums"]["equipe_escopo"]
+          funcao?: Database["public"]["Enums"]["equipe_funcao"]
+          principal?: boolean
+          status?: Database["public"]["Enums"]["equipe_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          convidado_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          escopo?: Database["public"]["Enums"]["equipe_escopo"]
+          funcao?: Database["public"]["Enums"]["equipe_funcao"]
+          principal?: boolean
+          status?: Database["public"]["Enums"]["equipe_status"]
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -1345,6 +1396,11 @@ export type Database = {
         Args: { _cliente_id: string; _conteudo_id: string; _eixo_id: string }
         Returns: boolean
       }
+      eh_admin_total: { Args: { _user_id: string }; Returns: boolean }
+      escopo_cliente: {
+        Args: { _cliente: string; _user_id: string }
+        Returns: boolean
+      }
       existe_terapeuta: { Args: never; Returns: boolean }
       has_role: {
         Args: {
@@ -1354,7 +1410,9 @@ export type Database = {
         Returns: boolean
       }
       is_terapeuta: { Args: never; Returns: boolean }
+      membro_ativo: { Args: { _user_id: string }; Returns: boolean }
       minha_atribuicao: { Args: { _atribuicao: string }; Returns: boolean }
+      no_escopo: { Args: { _cliente: string }; Returns: boolean }
       pode: { Args: { _permissao: string }; Returns: boolean }
       pode_administrar: { Args: never; Returns: boolean }
       tem_permissao: {
@@ -1398,6 +1456,14 @@ export type Database = {
         | "pratica_semanal"
         | "pdf"
       diario_visibilidade: "somente_eu" | "compartilhado"
+      equipe_escopo: "todos" | "vinculados"
+      equipe_funcao:
+        | "administrador"
+        | "terapeuta"
+        | "editor"
+        | "assistente"
+        | "suporte"
+      equipe_status: "ativo" | "suspenso"
       etapa_tipo:
         | "orientacao"
         | "preparacao"
@@ -1576,6 +1642,15 @@ export const Constants = {
         "pdf",
       ],
       diario_visibilidade: ["somente_eu", "compartilhado"],
+      equipe_escopo: ["todos", "vinculados"],
+      equipe_funcao: [
+        "administrador",
+        "terapeuta",
+        "editor",
+        "assistente",
+        "suporte",
+      ],
+      equipe_status: ["ativo", "suspenso"],
       etapa_tipo: [
         "orientacao",
         "preparacao",
