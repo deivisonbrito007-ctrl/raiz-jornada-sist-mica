@@ -119,7 +119,7 @@ function Perfil() {
   }
 
   return (
-    <div className="pb-4">
+    <div className="overflow-x-hidden pb-4">
       <CabecalhoPerfil
         nome={perfil?.nome}
         email={perfil?.email}
@@ -129,46 +129,42 @@ function Perfil() {
         streakSemanas={streak}
       />
 
+      <RotuloSecao texto="Retrato do seu caminho" />
       <RetratoCaminho
         praticasConcluidas={biblioteca?.resumo.totalConcluidos ?? 0}
         streakSemanas={streak}
         reflexoes={(diario ?? []).length}
       />
 
+      <RotuloSecao texto="Você" />
+      <EditarNome nome={perfil?.nome} email={perfil?.email} />
       <CartaoModoUso
         modo={modo}
         temTerapeuta={Boolean(contexto?.temTerapeuta)}
         modoDesde={contexto?.modoDesde ?? null}
       />
 
-      <EditarNome nome={perfil?.nome} email={perfil?.email} />
-
+      <RotuloSecao texto="Seu ritmo" />
       <MetaSemanal meta={perfil?.meta_semanal ?? 3} />
+      <CartaoLembretes />
 
-      <PreferenciasLembretes />
-
-      <Link
-        to="/app/lembretes"
-        className="mt-3 flex min-h-12 items-center justify-between gap-3 rounded-[1.75rem] bg-card px-5 py-4 text-sm shadow-organico transition hover:bg-secondary/40"
-      >
-        <span className="text-foreground">Central de lembretes e histórico</span>
-        <span className="text-xs text-muted-foreground">pausar, ajustar, ver o que foi enviado</span>
-      </Link>
-
-
+      <RotuloSecao texto="Seu processo" />
       <MeusCaminhos />
-
       <BlocoPrivacidade modo={modo} />
-
       <BlocoRelatorio aoGerar={gerarRelatorio} pronto={Boolean(biblioteca)} />
 
-      <section aria-labelledby="titulo-app" className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
+      <RotuloSecao texto="Este aplicativo" />
+      <section
+        aria-labelledby="titulo-app"
+        className="mt-3 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]"
+      >
         <h2 id="titulo-app" className="font-display text-xl text-floresta">
-          Este aplicativo
+          Versão instalada
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">Versão instalada {VERSAO_APP}.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Você está com a versão {VERSAO_APP}.</p>
         <AvisoReinstalarApp />
       </section>
+
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
