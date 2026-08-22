@@ -3,7 +3,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { CelebracaoPratica } from "@/components/celebracao-pratica";
+import { lazy, Suspense } from "react";
+
+/** Carregada só quando a pessoa conclui, para não pesar o player. */
+const CelebracaoPratica = lazy(() =>
+  import("@/components/celebracao-pratica").then((m) => ({ default: m.CelebracaoPratica })),
+);
 import { CHAVES, chaveDe, invalidarPorEvento } from "@/lib/cache-chaves";
 import {
   ArrowLeft,
@@ -715,11 +720,15 @@ function Player() {
         </>
       )}
 
-      <CelebracaoPratica
-        aberto={celebrar}
-        onFechar={() => setCelebrar(false)}
-        conteudoId={conteudoId}
-      />
+      {celebrar && (
+        <Suspense fallback={null}>
+          <CelebracaoPratica
+            aberto={celebrar}
+            onFechar={() => setCelebrar(false)}
+            conteudoId={conteudoId}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
