@@ -195,7 +195,11 @@ describe("Diário de reflexão — acessibilidade", () => {
     fetchDiario.mockResolvedValue(entradas);
     renderizar();
     await screen.findByText("Lembrei da minha avó.");
-    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    const listas = screen
+      .getAllByRole("list")
+      .filter((l) => (l.getAttribute("aria-label") ?? "").startsWith("Reflexões de "));
+    const itens = listas.flatMap((l) => Array.from(l.querySelectorAll(":scope > li")));
+    expect(itens).toHaveLength(2);
   });
 
   it("anuncia sucesso na live region após salvar", async () => {
