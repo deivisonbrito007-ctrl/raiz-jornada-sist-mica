@@ -1,11 +1,11 @@
-import { ArrowLeft, Check, HeartHandshake, Sparkles, Stethoscope } from "lucide-react";
+import { ArrowLeft, Check, HeartHandshake, Sparkles } from "lucide-react";
 import { CampoEmail } from "@/components/auth/campo-email";
 import { CampoSenha } from "@/components/auth/campo-senha";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export type CaminhoEntrada = "convite" | "propria" | "terapeuta";
+export type CaminhoEntrada = "convite" | "propria";
 
 const CAMINHOS = [
   {
@@ -24,21 +24,12 @@ const CAMINHOS = [
   },
 ];
 
-const CARTAO_TERAPEUTA = {
-  valor: "terapeuta" as const,
-  icone: Stethoscope,
-  titulo: "Sou a terapeuta responsável",
-  texto: "Você cria as trilhas, os planos e acompanha as pessoas neste espaço.",
-  detalhe: "Disponível apenas para a primeira conta de terapeuta.",
-};
-
 export const ROTULO_CAMINHO: Record<CaminhoEntrada, string> = {
   convite: "Com acompanhamento",
   propria: "Por conta própria",
-  terapeuta: "Conta de terapeuta",
 };
 
-type Opcao = (typeof CAMINHOS)[number] | typeof CARTAO_TERAPEUTA;
+type Opcao = (typeof CAMINHOS)[number];
 
 /**
  * Cadastro em dois passos, agora com a escolha do caminho em primeiro lugar:
@@ -50,7 +41,6 @@ export function FormularioCadastro({
   email,
   senha,
   caminho,
-  mostrarOpcaoTerapeuta,
   onNome,
   onEmail,
   onSenha,
@@ -68,7 +58,6 @@ export function FormularioCadastro({
   email: string;
   senha: string;
   caminho: CaminhoEntrada;
-  mostrarOpcaoTerapeuta: boolean;
   onNome: (v: string) => void;
   onEmail: (v: string) => void;
   onSenha: (v: string) => void;
@@ -81,7 +70,7 @@ export function FormularioCadastro({
   avisoConvite?: React.ReactNode;
   rotuloEnviar?: string | undefined;
 }) {
-  const opcoes: Opcao[] = mostrarOpcaoTerapeuta ? [...CAMINHOS, CARTAO_TERAPEUTA] : [...CAMINHOS];
+  const opcoes: Opcao[] = [...CAMINHOS];
 
   if (etapa === 1) {
     return (

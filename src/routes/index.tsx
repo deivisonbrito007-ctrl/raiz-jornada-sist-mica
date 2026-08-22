@@ -8,7 +8,6 @@ import {
   EixosSistemicos,
   FaixaConfianca,
   Fechamento,
-  ParaTerapeutas,
   Pilares,
 } from "@/components/landing/secoes-raiz";
 
@@ -75,7 +74,6 @@ function Landing() {
         <EixosSistemicos />
         <Pilares />
         <DoisCaminhos />
-        <ParaTerapeutas />
         <Fechamento />
       </main>
 
@@ -88,6 +86,9 @@ function Landing() {
             processo. A Raiz apoia o trabalho terapêutico e não substitui atendimento clínico ou
             médico.
           </p>
+          <Link to="/auth" className="underline underline-offset-4 hover:text-floresta">
+            Sou terapeuta — entrar no painel
+          </Link>
         </div>
       </footer>
     </div>

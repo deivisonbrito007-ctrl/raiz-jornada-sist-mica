@@ -3,10 +3,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  existeTerapeuta as consultarExisteTerapeuta,
-  convitePendente as consultarConvite,
-} from "@/lib/cadastro.functions";
+import { convitePendente as consultarConvite } from "@/lib/cadastro.functions";
 
 import { mensagemErroAuth } from "@/lib/erro-auth";
 import { MolduraEntrada } from "@/components/auth/moldura-entrada";
@@ -80,22 +77,14 @@ function AuthPage() {
   const [confirmeEmail, setConfirmeEmail] = useState(false);
   const [recuperar, setRecuperar] = useState(false);
   const [linkEnviado, setLinkEnviado] = useState(false);
-  const [existeTerapeuta, setExisteTerapeuta] = useState(true);
   const [convite, setConvite] = useState<EstadoConvite>({ estado: "inicial" });
 
-  const souTerapeuta = caminho === "terapeuta";
   const cadastro = aba === "cadastro";
 
   const trocarAba = (proxima: Aba) => {
     setEtapaCadastro(escolhaVeioDeFora ? 2 : 1);
     navigate({ to: "/auth", search: (anterior) => ({ ...anterior, modo: proxima }), replace: true });
   };
-
-  useEffect(() => {
-    consultarExisteTerapeuta()
-      .then((r: { existe: boolean }) => setExisteTerapeuta(r.existe))
-      .catch(() => setExisteTerapeuta(true));
-  }, []);
 
   // A escolha feita na página inicial vale mesmo se a pessoa recarregar a tela.
   useEffect(() => {
@@ -112,10 +101,10 @@ function AuthPage() {
     }
     gravarIntencaoLogin({
       destino: destinoSeguro,
-      caminho: souTerapeuta ? null : caminho === "convite" ? "acompanhado" : "autoguiado",
-      papel: souTerapeuta ? "terapeuta" : "cliente",
+      caminho: caminho === "convite" ? "acompanhado" : "autoguiado",
+      papel: "cliente",
     });
-  }, [cadastro, caminho, souTerapeuta, destinoSeguro]);
+  }, [cadastro, caminho, destinoSeguro]);
 
   // Trocar de caminho invalida a conferência de convite anterior.
   useEffect(() => {
@@ -187,8 +176,8 @@ function AuthPage() {
             : window.location.origin,
           data: {
             nome,
-            papel: souTerapeuta ? "terapeuta" : "cliente",
-            caminho_entrada: souTerapeuta ? "terapeuta" : caminho,
+            papel: "cliente",
+            caminho_entrada: caminho,
           },
         },
       });
@@ -373,7 +362,6 @@ function AuthPage() {
                     email={email}
                     senha={senha}
                     caminho={caminho}
-                    mostrarOpcaoTerapeuta={!existeTerapeuta}
                     escolhaVeioDeFora={escolhaVeioDeFora}
                     onNome={setNome}
                     onEmail={setEmail}
@@ -419,7 +407,7 @@ function AuthPage() {
                   <BotaoGoogle
                     destino={destinoSeguro}
                     caminho={caminho === "convite" ? "acompanhado" : "autoguiado"}
-                    papel={souTerapeuta ? "terapeuta" : "cliente"}
+                    papel="cliente"
                   />
                 </>
               )}

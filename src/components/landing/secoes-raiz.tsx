@@ -195,26 +195,6 @@ export function DoisCaminhos() {
   );
 }
 
-export function ParaTerapeutas() {
-  return (
-    <section className="bg-secondary/60 py-20 md:py-24">
-      <div className="mx-auto max-w-3xl px-6 text-center">
-        <h2 className="text-[1.6rem] leading-[1.3] text-floresta md:text-[2.1rem]">Para terapeutas sistêmicos</h2>
-        <p className="mx-auto mt-4 max-w-lg text-[0.95rem] leading-[1.75] text-muted-foreground md:text-base">
-          Organize sua biblioteca de práticas, monte planos de acompanhamento por cliente e veja o
-          progresso de cada processo em um só lugar.
-        </p>
-        <Link
-          to="/auth"
-          className="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-floresta px-8 text-sm font-semibold text-floresta-foreground transition-opacity hover:opacity-90"
-        >
-          Entrar no painel
-        </Link>
-      </div>
-    </section>
-  );
-}
-
 export function Fechamento() {
   return (
     <section className="mx-auto max-w-2xl px-6 py-20 text-center md:py-28">
