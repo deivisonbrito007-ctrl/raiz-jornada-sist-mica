@@ -118,14 +118,14 @@ export function EditarNome({ nome, email }: Props) {
         </form>
       ) : (
         <dl className="mt-4 space-y-4 text-sm">
-          <div>
+          <div className="min-w-0">
             <dt className="text-xs uppercase tracking-wider text-salvia">Nome</dt>
-            <dd className="mt-0.5 text-base text-floresta">{nome || "—"}</dd>
+            <dd className="mt-0.5 break-words text-base text-floresta">{nome || "—"}</dd>
           </div>
-          <div>
+          <div className="min-w-0">
             <dt className="text-xs uppercase tracking-wider text-salvia">E-mail</dt>
-            <dd className="mt-0.5 text-base text-floresta">{email || "—"}</dd>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <dd className="mt-0.5 break-all text-base text-floresta">{email || "—"}</dd>
+            <p className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">
               O e-mail é a chave da sua conta e do seu acesso às trilhas. Para trocá-lo, fale com
               quem acompanha você.
             </p>
