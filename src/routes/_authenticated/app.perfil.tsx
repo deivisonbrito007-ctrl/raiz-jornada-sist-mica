@@ -1,104 +1,193 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { History, Sparkles } from "lucide-react";
-
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getMeuContexto } from "@/lib/raiz.functions";
+import { LogOut } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
+import { limparCachePersistido } from "@/lib/cache-persistente";
+import { useMeuContexto } from "@/hooks/use-meu-contexto";
+import { getMinhaBiblioteca, listarDiario } from "@/lib/raiz.functions";
+import { CHAVES } from "@/lib/cache-chaves";
+import { calcularStreak } from "@/lib/raiz-format";
+import { cicloAtual } from "@/lib/inicio-cliente";
+import { normalizarModo } from "@/lib/modo-uso";
 import { Button } from "@/components/ui/button";
-import { formatarData } from "@/lib/raiz-format";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { PreferenciasLembretes } from "@/components/preferencias-lembretes";
+import { AvisoReinstalarApp } from "@/components/aviso-reinstalar-app";
+import { VERSAO_APP } from "@/lib/versao-app";
+import { CabecalhoPerfil } from "@/components/app-perfil/cabecalho-perfil";
+import { RetratoCaminho } from "@/components/app-perfil/retrato-caminho";
+import { CartaoModoUso } from "@/components/app-perfil/cartao-modo-uso";
+import { EditarNome } from "@/components/app-perfil/editar-nome";
+import { MetaSemanal } from "@/components/app-perfil/meta-semanal";
+import { MeusCaminhos } from "@/components/app-perfil/meus-caminhos";
+import { BlocoPrivacidade } from "@/components/app-perfil/bloco-privacidade";
+import { BlocoRelatorio } from "@/components/app-perfil/bloco-relatorio";
 
 export const Route = createFileRoute("/_authenticated/app/perfil")({
+  head: () => ({
+    meta: [
+      { title: "Meu perfil — Raiz" },
+      {
+        name: "description",
+        content:
+          "Seus dados, seu ritmo semanal, lembretes, privacidade e relatório do processo no Raiz.",
+      },
+      { property: "og:title", content: "Meu perfil — Raiz" },
+      {
+        property: "og:description",
+        content: "Ajuste seu ritmo, seus lembretes e o que você compartilha no Raiz.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Perfil,
 });
 
 function Perfil() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const fetchContexto = useServerFn(getMeuContexto);
-  const { data } = useQuery({ queryKey: ["contexto"], queryFn: () => fetchContexto() });
+  const { data: contexto, isLoading } = useMeuContexto();
+  const fetchBiblioteca = useServerFn(getMinhaBiblioteca);
+  const fetchDiario = useServerFn(listarDiario);
+
+  const { data: biblioteca } = useQuery({
+    queryKey: CHAVES.biblioteca,
+    queryFn: () => fetchBiblioteca(),
+  });
+  const { data: diario } = useQuery({ queryKey: CHAVES.diario, queryFn: () => fetchDiario() });
+
+  const [saindo, setSaindo] = useState(false);
+
+  const perfil = contexto?.perfil;
+  const modo = normalizarModo(contexto?.modo);
+  const datasConclusao = biblioteca?.resumo.datasConclusao ?? [];
+  const streak = calcularStreak(datasConclusao);
+  const ciclo = cicloAtual({
+    inicioEm: perfil?.created_at ?? null,
+    concluidos: biblioteca?.resumo.totalConcluidos ?? 0,
+    total: biblioteca?.resumo.totalItens ?? 0,
+  });
+
+  async function gerarRelatorio() {
+    const [entradas, { gerarRelatorioPdf }] = await Promise.all([
+      fetchDiario(),
+      import("@/lib/raiz-relatorio"),
+    ]);
+    gerarRelatorioPdf({
+      nome: perfil?.nome ?? "",
+      email: perfil?.email ?? "",
+      metaSemanal: perfil?.meta_semanal ?? 3,
+      eixos: biblioteca?.eixos ?? [],
+      datasConclusao,
+      diario: entradas ?? [],
+    });
+  }
 
   async function sair() {
+    setSaindo(true);
     await queryClient.cancelQueries();
     queryClient.clear();
+    limparCachePersistido();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
 
-  return (
-    <div>
-      <h1 className="text-3xl text-floresta">Perfil</h1>
-
-      <div className="mt-7 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
-        <dl className="space-y-4 text-sm">
-          <div>
-            <dt className="text-xs uppercase tracking-wider text-salvia">Nome</dt>
-            <dd className="mt-0.5 text-base text-floresta">{data?.perfil?.nome ?? "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wider text-salvia">E-mail</dt>
-            <dd className="mt-0.5 text-base text-floresta">{data?.perfil?.email ?? "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wider text-salvia">No Raiz desde</dt>
-            <dd className="mt-0.5 text-base text-floresta">
-              {data?.perfil?.created_at ? formatarData(data.perfil.created_at) : "—"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wider text-salvia">Papel</dt>
-            <dd className="mt-0.5 text-base text-floresta">
-              {data?.papel === "terapeuta" ? "Terapeuta" : "Cliente"}
-            </dd>
-          </div>
-        </dl>
+  if (isLoading && !perfil) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-44 rounded-[2rem]" />
+        <Skeleton className="h-28 rounded-3xl" />
+        <Skeleton className="h-40 rounded-3xl" />
       </div>
+    );
+  }
 
-      <Link
-        to="/app/historico"
-        className="mt-6 flex min-h-11 items-center justify-between rounded-3xl bg-card px-6 py-4 text-sm text-floresta shadow-[var(--shadow-organico)]"
-      >
-        <span>
-          Meu histórico
-          <span className="mt-0.5 block text-xs text-muted-foreground">
-            Práticas liberadas, concluídas e suas reflexões por trilha
-          </span>
-        </span>
-        <History className="h-5 w-5 shrink-0 text-salvia" aria-hidden="true" />
-      </Link>
+  return (
+    <div className="pb-4">
+      <CabecalhoPerfil
+        nome={perfil?.nome}
+        email={perfil?.email}
+        desde={perfil?.created_at}
+        cicloRotulo={ciclo.rotulo}
+        cicloFrase={ciclo.frase}
+        streakSemanas={streak}
+      />
 
-      <Link
-        to="/app/eixos-preferidos"
-        className="mt-4 flex min-h-11 items-center justify-between rounded-3xl bg-card px-6 py-4 text-sm text-floresta shadow-[var(--shadow-organico)]"
-      >
-        <span>
-          Meus eixos preferidos
-          <span className="mt-0.5 block text-xs text-muted-foreground">
-            Escolha seus temas e qual eixo fica em destaque no Início
-          </span>
-        </span>
-        <Sparkles className="h-5 w-5 shrink-0 text-salvia" aria-hidden="true" />
-      </Link>
+      <RetratoCaminho
+        praticasConcluidas={biblioteca?.resumo.totalConcluidos ?? 0}
+        streakSemanas={streak}
+        reflexoes={(diario ?? []).length}
+      />
+
+      <CartaoModoUso
+        modo={modo}
+        temTerapeuta={Boolean(contexto?.temTerapeuta)}
+        modoDesde={contexto?.modoDesde ?? null}
+      />
+
+      <EditarNome nome={perfil?.nome} email={perfil?.email} />
+
+      <MetaSemanal meta={perfil?.meta_semanal ?? 3} />
 
       <PreferenciasLembretes />
 
-      <div className="mt-6 rounded-3xl bg-secondary p-6">
-        <h2 className="text-lg text-floresta">Privacidade</h2>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Suas reflexões do diário são visíveis apenas para você e para o terapeuta que acompanha o
-          seu processo. As mídias são servidas por links temporários e não podem ser acessadas por
-          terceiros.
-        </p>
-      </div>
+      <MeusCaminhos />
 
-      <Button
-        variant="outline"
-        onClick={sair}
-        className="mt-6 w-full rounded-full border-floresta/20 py-6 text-floresta"
-      >
-        Sair da conta
-      </Button>
+      <BlocoPrivacidade modo={modo} />
+
+      <BlocoRelatorio aoGerar={gerarRelatorio} pronto={Boolean(biblioteca)} />
+
+      <section aria-labelledby="titulo-app" className="mt-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
+        <h2 id="titulo-app" className="font-display text-xl text-floresta">
+          Este aplicativo
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">Versão instalada {VERSAO_APP}.</p>
+        <AvisoReinstalarApp />
+      </section>
+
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="outline" className="mt-6 min-h-11 w-full rounded-full border-floresta/20 text-floresta">
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+            <span>Sair da conta</span>
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display text-floresta">
+              Sair da sua conta?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Seu processo fica guardado. Você entra de novo quando quiser, com o mesmo e-mail.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="min-h-11 rounded-full">Ficar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={sair}
+              disabled={saindo}
+              className="min-h-11 rounded-full bg-floresta text-floresta-foreground"
+            >
+              {saindo ? "Saindo..." : "Sair"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
