@@ -88,7 +88,7 @@ export function LembretesClienteAdmin({ clienteId }: { clienteId: string }) {
       <div className="mt-5 space-y-5">
         <label className="flex min-h-11 items-center justify-between gap-4 text-sm text-floresta">
           <span>Lembretes ativos</span>
-          <ControlePermitido permissao="gerenciar_liberacoes">
+          <ControlePermitido permissao="criar_planos">
             <Switch
               checked={form.ativo}
               onCheckedChange={(v) => aplicar({ ativo: v })}
@@ -105,7 +105,7 @@ export function LembretesClienteAdmin({ clienteId }: { clienteId: string }) {
             >
               Dia da semana
             </label>
-            <ControlePermitido permissao="gerenciar_liberacoes">
+            <ControlePermitido permissao="criar_planos">
               <Select
                 value={String(form.dia_semana)}
                 onValueChange={(v) => aplicar({ dia_semana: Number(v) })}
@@ -131,7 +131,7 @@ export function LembretesClienteAdmin({ clienteId }: { clienteId: string }) {
             >
               Horário
             </label>
-            <ControlePermitido permissao="gerenciar_liberacoes">
+            <ControlePermitido permissao="criar_planos">
               <Select
                 value={String(form.hora_local)}
                 onValueChange={(v) => aplicar({ hora_local: Number(v) })}
@@ -158,7 +158,7 @@ export function LembretesClienteAdmin({ clienteId }: { clienteId: string }) {
           >
             Avisar após dias sem praticar
           </label>
-          <ControlePermitido permissao="gerenciar_liberacoes">
+          <ControlePermitido permissao="criar_planos">
             <Select
               value={String(form.dias_inatividade)}
               onValueChange={(v) => aplicar({ dias_inatividade: Number(v) })}

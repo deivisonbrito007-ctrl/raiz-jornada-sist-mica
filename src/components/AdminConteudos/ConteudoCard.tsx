@@ -213,7 +213,7 @@ export function ConteudoCard({
           </Button>
         )}
 
-        <SePode permissao="gerenciar_conteudos">
+        <SePode permissao="criar_conteudos">
           <Button
             type="button"
             variant="ghost"
@@ -226,7 +226,7 @@ export function ConteudoCard({
         </SePode>
 
         {onDuplicar && (
-          <SePode permissao="gerenciar_conteudos">
+          <SePode permissao="criar_conteudos">
             <Button
               type="button"
               variant="ghost"
@@ -241,7 +241,7 @@ export function ConteudoCard({
         )}
 
         {onStatus && status !== "publicado" && (
-          <SePode permissao="gerenciar_conteudos">
+          <SePode permissao="criar_conteudos">
             <Button
               type="button"
               variant="ghost"
@@ -264,7 +264,7 @@ export function ConteudoCard({
         )}
 
         {onStatus && (
-          <SePode permissao="gerenciar_conteudos">
+          <SePode permissao="criar_conteudos">
             <Button
               type="button"
               variant="ghost"
@@ -282,7 +282,7 @@ export function ConteudoCard({
           </SePode>
         )}
 
-        <SePode permissao="gerenciar_conteudos">
+        <SePode permissao="criar_conteudos">
           <Button
             type="button"
             variant="ghost"

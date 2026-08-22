@@ -691,7 +691,7 @@ export const adminGetCliente = createServerFn({ method: "GET" })
       clienteAlvo: data.clienteId,
       tabela: "profiles",
     });
-    const podeVerDiario = await temPermissao(supabase, "ver_diario");
+    const podeVerDiario = await temPermissao(supabase, "ver_registros");
 
     const [perfil, eixos, conteudos, liberacoes, progresso, diario, vinculos, pacotes] =
       await Promise.all([
@@ -751,7 +751,7 @@ export const adminDefinirLiberacao = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_liberacoes", "adminDefinirLiberacao", {
+    await garantirPermissao(supabase, userId, "criar_planos", "adminDefinirLiberacao", {
       clienteAlvo: data.clienteId,
       tabela: "liberacoes",
     });
@@ -880,7 +880,7 @@ export const adminSalvarConteudo = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminSalvarConteudo", {
+    await garantirPermissao(supabase, userId, "criar_conteudos", "adminSalvarConteudo", {
       tabela: "conteudos",
     });
     const payload = {
@@ -929,7 +929,7 @@ export const adminApagarConteudo = createServerFn({ method: "POST" })
     await garantirPermissao(
       supabase,
       context.userId,
-      "gerenciar_conteudos",
+      "criar_conteudos",
       "adminApagarConteudo",
       { tabela: "conteudos" },
     );
@@ -993,7 +993,7 @@ export const adminSalvarEixo = createServerFn({ method: "POST" })
     await garantirPermissao(
       context.supabase,
       context.userId,
-      "gerenciar_conteudos",
+      "criar_conteudos",
       "adminSalvarEixo",
       { tabela: "eixos" },
     );
@@ -1017,7 +1017,7 @@ export const adminListarConteudos = createServerFn({ method: "GET" })
     await garantirPermissao(
       context.supabase,
       context.userId,
-      "gerenciar_conteudos",
+      "criar_conteudos",
       "adminListarConteudos",
       { tabela: "conteudos" },
     );
@@ -1046,7 +1046,7 @@ export const adminTrilhasDoConteudo = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminTrilhasDoConteudo", {
+    await garantirPermissao(supabase, userId, "criar_conteudos", "adminTrilhasDoConteudo", {
       tabela: "conteudos",
     });
 
@@ -1081,7 +1081,7 @@ export const adminDuplicarConteudo = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminDuplicarConteudo", {
+    await garantirPermissao(supabase, userId, "criar_conteudos", "adminDuplicarConteudo", {
       tabela: "conteudos",
     });
 
@@ -1141,7 +1141,7 @@ export const adminMudarStatusConteudo = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminMudarStatusConteudo", {
+    await garantirPermissao(supabase, userId, "criar_conteudos", "adminMudarStatusConteudo", {
       tabela: "conteudos",
     });
 
@@ -1176,7 +1176,7 @@ export const adminPreviaConteudo = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ caminho: z.string().min(1).max(500) }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminPreviaConteudo", {
+    await garantirPermissao(supabase, userId, "criar_conteudos", "adminPreviaConteudo", {
       tabela: "conteudos",
     });
     const { data: assinado, error } = await supabase.storage

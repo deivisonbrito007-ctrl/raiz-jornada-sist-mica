@@ -97,7 +97,7 @@ function montar() {
 
 beforeEach(() => {
   fetchInicio.mockReset();
-  permissoes.conjunto = new Set(["ver_clientes", "gerenciar_liberacoes", "gerenciar_conteudos"]);
+  permissoes.conjunto = new Set(["ver_clientes", "criar_planos", "criar_conteudos"]);
   permissoes.carregando = false;
 });
 
@@ -149,7 +149,7 @@ describe("aba Início do painel", () => {
   });
 
   it("sem permissão de clientes, explica o bloqueio e não busca dados", async () => {
-    permissoes.conjunto = new Set(["gerenciar_conteudos"]);
+    permissoes.conjunto = new Set(["criar_conteudos"]);
     fetchInicio.mockResolvedValue(VAZIO);
     montar();
     expect(await screen.findByText(/indicadores de clientes restritos/i)).toBeInTheDocument();

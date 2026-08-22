@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
  * RLS de `conteudos` na biblioteca do terapeuta.
  *
  * O cliente só enxerga práticas liberadas para ele (política que usa
- * `conteudo_liberado`); o terapeuta/equipe com `gerenciar_conteudos` enxerga
+ * `conteudo_liberado`); o terapeuta/equipe com `criar_conteudos` enxerga
  * a biblioteca inteira. Aqui simulamos o PostgREST aplicando essas regras
  * para garantir que a tela nunca depende de filtro no frontend.
  */

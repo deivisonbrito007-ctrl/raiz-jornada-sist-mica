@@ -23,7 +23,7 @@ export function EmptyState({ filtrando, onNova, podeCriar }: Props) {
           : "Crie a primeira prática de um eixo: um áudio guiado, um texto de apoio ou uma tarefa da semana. Nada fica visível ao cliente antes de você liberar."}
       </p>
       {!filtrando && podeCriar && (
-        <ControlePermitido permissao="gerenciar_conteudos">
+        <ControlePermitido permissao="criar_conteudos">
           <Button
             onClick={onNova}
             className="mt-6 min-h-11 rounded-full bg-terracota px-6 text-terracota-foreground hover:bg-terracota/90 focus-visible:ring-2 focus-visible:ring-floresta"

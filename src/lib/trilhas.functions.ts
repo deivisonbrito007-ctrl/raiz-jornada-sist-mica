@@ -12,7 +12,7 @@ export const adminListarTrilhas = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminListarTrilhas", {
+    await garantirPermissao(supabase, userId, "criar_conteudos", "adminListarTrilhas", {
       tabela: "trilhas",
       rota: "/admin/trilhas",
     });
@@ -63,7 +63,7 @@ export const adminSalvarTrilha = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminSalvarTrilha", {
+    await garantirPermissao(supabase, userId, "criar_conteudos", "adminSalvarTrilha", {
       tabela: "trilhas",
       rota: "/admin/trilhas",
     });
@@ -113,7 +113,7 @@ export const adminDuplicarTrilha = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ trilhaId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminDuplicarTrilha", {
+    await garantirPermissao(supabase, userId, "criar_conteudos", "adminDuplicarTrilha", {
       tabela: "trilhas",
       rota: "/admin/trilhas",
     });
@@ -220,7 +220,7 @@ export const adminSalvarEtapa = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminSalvarEtapa", {
+    await garantirPermissao(supabase, userId, "criar_conteudos", "adminSalvarEtapa", {
       tabela: "conteudos",
       rota: "/admin/trilhas",
     });
@@ -272,7 +272,7 @@ export const adminReordenarEtapas = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminReordenarEtapas", {
+    await garantirPermissao(supabase, userId, "criar_conteudos", "adminReordenarEtapas", {
       tabela: "conteudos",
       rota: "/admin/trilhas",
     });
@@ -293,7 +293,7 @@ export const adminApagarEtapa = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ etapaId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_conteudos", "adminApagarEtapa", {
+    await garantirPermissao(supabase, userId, "criar_conteudos", "adminApagarEtapa", {
       tabela: "conteudos",
       rota: "/admin/trilhas",
     });
@@ -491,7 +491,7 @@ export const adminSalvarPlano = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await garantirPermissao(supabase, userId, "gerenciar_liberacoes", "adminSalvarPlano", {
+    await garantirPermissao(supabase, userId, "criar_planos", "adminSalvarPlano", {
       clienteAlvo: data.clienteId,
       tabela: "atribuicoes",
       rota: "/admin/clientes",
@@ -697,7 +697,7 @@ export const adminDefinirStatusAtribuicao = createServerFn({ method: "POST" })
     await garantirPermissao(
       supabase,
       userId,
-      "gerenciar_liberacoes",
+      "criar_planos",
       "adminDefinirStatusAtribuicao",
       { tabela: "atribuicoes", rota: "/admin/clientes" },
     );

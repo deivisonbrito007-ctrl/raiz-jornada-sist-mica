@@ -175,7 +175,7 @@ function Cartao({
           >
             <GitBranch className="h-4 w-4" aria-hidden="true" />
           </Button>
-          <SePode permissao="gerenciar_conteudos">
+          <SePode permissao="criar_conteudos">
             <Button
               type="button"
               variant="ghost"
@@ -187,7 +187,7 @@ function Cartao({
               <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
           </SePode>
-          <SePode permissao="gerenciar_conteudos">
+          <SePode permissao="criar_conteudos">
             <Button
               type="button"
               variant="ghost"
@@ -199,7 +199,7 @@ function Cartao({
               <Copy className="h-4 w-4" aria-hidden="true" />
             </Button>
           </SePode>
-          <SePode permissao="gerenciar_conteudos">
+          <SePode permissao="criar_conteudos">
             <Button
               type="button"
               variant="ghost"

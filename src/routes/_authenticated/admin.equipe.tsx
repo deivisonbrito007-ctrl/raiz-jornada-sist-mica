@@ -6,125 +6,71 @@ import { SecaoSemPermissao } from "@/components/permissao-ui";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Mail, ShieldCheck, ShieldOff, Trash2, UserPlus } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Mail, RefreshCw, UserPlus } from "lucide-react";
 
 import {
+  equipeAlterarStatus,
   equipeAtualizarConvite,
   equipeAuditoria,
   equipeCancelarConvite,
   equipeConvidar,
-  equipeDefinirPermissoes,
+  equipeDefinirFuncao,
   equipeListar,
+  equipeReenviarConvite,
   equipeRemover,
+  equipeVincularClientes,
 } from "@/lib/equipe.functions";
 import {
-  PERFIS_PERMISSAO,
-  PERMISSAO_DESCRICAO,
-  PERMISSAO_LABEL,
-  PERMISSOES,
-  ehPermissao,
-  type Permissao,
-} from "@/lib/permissoes";
+  FUNCAO_LABEL,
+  FUNCAO_PERMISSOES,
+  FUNCAO_ESCOPO_PADRAO,
+  ESCOPO_LABEL,
+  type EscopoEquipe,
+  type FuncaoEquipe,
+} from "@/lib/equipe-funcoes";
+import { PERMISSAO_LABEL, filtrarPermissoes, type Permissao } from "@/lib/permissoes";
 import { formatarData } from "@/lib/raiz-format";
 import { avisarMudancaPermissoes } from "@/hooks/use-vigia-permissoes";
 import { MatrizPermissoes, type LinhaMatriz } from "@/components/matriz-permissoes";
 import { HistoricoAuditoria } from "@/components/historico-auditoria";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  SeletorEscopo,
+  SeletorFuncao,
+  SeletorPermissoes,
+} from "@/components/painel/equipe/seletor-permissoes";
+import { ListaMembros } from "@/components/painel/equipe/lista-membros";
+import { DialogoFuncao } from "@/components/painel/equipe/dialogo-funcao";
+import { DialogoVinculos } from "@/components/painel/equipe/dialogo-vinculos";
+import type { MembroEquipe } from "@/components/painel/equipe/tipos";
 
 export const Route = createFileRoute("/_authenticated/admin/equipe")({
   component: AdminEquipe,
+  head: () => ({
+    meta: [
+      { title: "Equipe e permissões | Raiz" },
+      {
+        name: "description",
+        content:
+          "Convide integrantes, defina funções, abrangência de clientes e permissões do painel Raiz.",
+      },
+    ],
+  }),
 });
-
-function SeletorPermissoes({
-  valor,
-  onChange,
-  idPrefixo,
-  comPerfis = false,
-}: {
-  valor: Permissao[];
-  onChange: (p: Permissao[]) => void;
-  idPrefixo: string;
-  comPerfis?: boolean;
-}) {
-  function alternar(p: Permissao, marcado: boolean) {
-    onChange(marcado ? [...valor, p] : valor.filter((x) => x !== p));
-  }
-  const perfilAtivo = PERFIS_PERMISSAO.find(
-    (perfil) =>
-      perfil.permissoes.length === valor.length &&
-      perfil.permissoes.every((p) => valor.includes(p)),
-  );
-  return (
-    <div className="space-y-3">
-      {comPerfis && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs uppercase tracking-wider text-salvia">Perfis prontos</span>
-          {PERFIS_PERMISSAO.map((perfil) => (
-            <button
-              key={perfil.id}
-              type="button"
-              onClick={() => onChange([...perfil.permissoes])}
-              className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                perfilAtivo?.id === perfil.id
-                  ? "border-salvia bg-salvia text-salvia-foreground"
-                  : "border-border text-muted-foreground hover:border-salvia hover:text-floresta"
-              }`}
-            >
-              {perfil.nome}
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="grid gap-2 sm:grid-cols-2">
-
-      {PERMISSOES.map((p) => (
-        <label
-          key={p}
-          htmlFor={`${idPrefixo}-${p}`}
-          className="flex items-start gap-3 rounded-2xl bg-secondary p-3 text-sm"
-        >
-          <Checkbox
-            id={`${idPrefixo}-${p}`}
-            checked={valor.includes(p)}
-            onCheckedChange={(v) => alternar(p, v === true)}
-            className="mt-0.5"
-          />
-          <span>
-            <span className="font-medium text-floresta">{PERMISSAO_LABEL[p]}</span>
-            <span className="mt-0.5 block text-xs text-muted-foreground">
-              {PERMISSAO_DESCRICAO[p]}
-            </span>
-          </span>
-        </label>
-      ))}
-      </div>
-    </div>
-
-  );
-}
 
 function AdminEquipe() {
   const queryClient = useQueryClient();
   const listar = useServerFn(equipeListar);
   const convidar = useServerFn(equipeConvidar);
   const cancelar = useServerFn(equipeCancelarConvite);
+  const reenviar = useServerFn(equipeReenviarConvite);
   const atualizarConvite = useServerFn(equipeAtualizarConvite);
-  const definir = useServerFn(equipeDefinirPermissoes);
+  const definirFuncao = useServerFn(equipeDefinirFuncao);
+  const vincular = useServerFn(equipeVincularClientes);
+  const alterarStatus = useServerFn(equipeAlterarStatus);
   const remover = useServerFn(equipeRemover);
   const auditoria = useServerFn(equipeAuditoria);
 
@@ -142,14 +88,33 @@ function AdminEquipe() {
     enabled: podeGerenciar,
   });
 
+  const membros = (data?.membros ?? []) as MembroEquipe[];
+
+  // Convite novo
   const [emailConvite, setEmailConvite] = useState("");
-  const [permsConvite, setPermsConvite] = useState<Permissao[]>(["ver_clientes"]);
-  const [emailPromover, setEmailPromover] = useState("");
-  const [permsPromover, setPermsPromover] = useState<Permissao[]>(["ver_clientes"]);
-  const [editando, setEditando] = useState<string | null>(null);
+  const [funcaoConvite, setFuncaoConvite] = useState<FuncaoEquipe>("terapeuta");
+  const [escopoConvite, setEscopoConvite] = useState<EscopoEquipe>("vinculados");
+  const [permsConvite, setPermsConvite] = useState<Permissao[]>([
+    ...FUNCAO_PERMISSOES.terapeuta,
+  ]);
+
+  // Diálogos
+  const [alvoFuncao, setAlvoFuncao] = useState<MembroEquipe | null>(null);
+  const [alvoVinculos, setAlvoVinculos] = useState<MembroEquipe | null>(null);
+
+  // Convite em edição
   const [conviteEditando, setConviteEditando] = useState<string | null>(null);
+  const [funcaoConviteEdicao, setFuncaoConviteEdicao] = useState<FuncaoEquipe>("terapeuta");
+  const [escopoConviteEdicao, setEscopoConviteEdicao] = useState<EscopoEquipe>("vinculados");
   const [permsConviteEdicao, setPermsConviteEdicao] = useState<Permissao[]>([]);
-  const [permsEdicao, setPermsEdicao] = useState<Permissao[]>([]);
+
+  // Promover conta existente
+  const [emailPromover, setEmailPromover] = useState("");
+  const [funcaoPromover, setFuncaoPromover] = useState<FuncaoEquipe>("terapeuta");
+  const [escopoPromover, setEscopoPromover] = useState<EscopoEquipe>("vinculados");
+  const [permsPromover, setPermsPromover] = useState<Permissao[]>([
+    ...FUNCAO_PERMISSOES.terapeuta,
+  ]);
 
   function recarregar() {
     queryClient.invalidateQueries({ queryKey: ["equipe"] });
@@ -157,57 +122,70 @@ function AdminEquipe() {
   }
 
   const mConvidar = useMutation({
-    mutationFn: () => convidar({ data: { email: emailConvite, permissoes: permsConvite } }),
+    mutationFn: () =>
+      convidar({
+        data: {
+          email: emailConvite,
+          funcao: funcaoConvite,
+          escopo: escopoConvite,
+          permissoes: permsConvite,
+        },
+      }),
     onSuccess: (r) => {
       if (r.ok) {
-        toast.success("Convite criado. Ao criar a conta, a pessoa já entra como admin.");
+        toast.success("Convite criado. Ao criar a conta, a pessoa já entra com essa função.");
         setEmailConvite("");
         recarregar();
       } else {
-        toast.error("Esse e-mail já tem conta. Use o bloco “Promover conta existente”.");
+        toast.error("Esse e-mail já tem conta. Use o bloco “Adicionar conta existente”.");
       }
     },
     onError: (e: Error) => toast.error(mensagemPainel(e)),
   });
 
-  const mPromover = useMutation({
-    mutationFn: (alvoId: string) => definir({ data: { alvoId, permissoes: permsPromover } }),
+  const mDefinirFuncao = useMutation({
+    mutationFn: (dados: {
+      alvoId: string;
+      funcao: FuncaoEquipe;
+      escopo: EscopoEquipe;
+      permissoes: Permissao[];
+    }) => definirFuncao({ data: dados }),
     onSuccess: () => {
       avisarMudancaPermissoes();
-      toast.success("Admin adicionado.");
+      toast.success("Função e permissões salvas.");
+      setAlvoFuncao(null);
       setEmailPromover("");
       recarregar();
     },
     onError: (e: Error) => toast.error(mensagemPainel(e)),
   });
 
-  const mAtualizar = useMutation({
-    mutationFn: (alvoId: string) => definir({ data: { alvoId, permissoes: permsEdicao } }),
+  const mVincular = useMutation({
+    mutationFn: (dados: { alvoId: string; clientes: string[] }) => vincular({ data: dados }),
     onSuccess: () => {
+      toast.success("Vínculos atualizados.");
+      setAlvoVinculos(null);
+      recarregar();
+    },
+    onError: (e: Error) => toast.error(mensagemPainel(e)),
+  });
+
+  const mStatus = useMutation({
+    mutationFn: (dados: { alvoId: string; status: "ativo" | "suspenso" }) =>
+      alterarStatus({ data: dados }),
+    onSuccess: (_r, v) => {
       avisarMudancaPermissoes();
-      toast.success("Permissões atualizadas.");
-      setEditando(null);
+      toast.success(v.status === "suspenso" ? "Acesso suspenso." : "Acesso reativado.");
       recarregar();
     },
     onError: (e: Error) => toast.error(mensagemPainel(e)),
   });
-
-  const mRevogar = useMutation({
-    mutationFn: (alvoId: string) => definir({ data: { alvoId, permissoes: [] } }),
-    onSuccess: () => {
-      toast.success("Permissões revogadas. O painel dessa pessoa é bloqueado na hora.");
-      setEditando(null);
-      recarregar();
-    },
-    onError: (e: Error) => toast.error(mensagemPainel(e)),
-  });
-
 
   const mRemover = useMutation({
     mutationFn: (alvoId: string) => remover({ data: { alvoId } }),
     onSuccess: () => {
       avisarMudancaPermissoes();
-      toast.success("Acesso removido.");
+      toast.success("Integrante removido da equipe.");
       recarregar();
     },
     onError: (e: Error) => toast.error(mensagemPainel(e)),
@@ -215,10 +193,17 @@ function AdminEquipe() {
 
   const mAtualizarConvite = useMutation({
     mutationFn: (conviteId: string) =>
-      atualizarConvite({ data: { conviteId, permissoes: permsConviteEdicao } }),
+      atualizarConvite({
+        data: {
+          conviteId,
+          funcao: funcaoConviteEdicao,
+          escopo: escopoConviteEdicao,
+          permissoes: permsConviteEdicao,
+        },
+      }),
     onSuccess: (r) => {
       if (r.ok) {
-        toast.success("Permissões do convite atualizadas.");
+        toast.success("Convite atualizado.");
         setConviteEditando(null);
         recarregar();
       } else {
@@ -228,10 +213,18 @@ function AdminEquipe() {
     onError: (e: Error) => toast.error(mensagemPainel(e)),
   });
 
+  const mReenviar = useMutation({
+    mutationFn: (conviteId: string) => reenviar({ data: { conviteId } }),
+    onSuccess: (r) =>
+      r.ok
+        ? (toast.success("Convite reenviado com novo prazo."), recarregar())
+        : toast.error("Esse convite já não está pendente."),
+    onError: (e: Error) => toast.error(mensagemPainel(e)),
+  });
+
   const mCancelar = useMutation({
     mutationFn: (conviteId: string) => cancelar({ data: { conviteId } }),
     onSuccess: () => {
-      avisarMudancaPermissoes();
       toast.success("Convite cancelado.");
       recarregar();
     },
@@ -239,20 +232,13 @@ function AdminEquipe() {
   });
 
   const linhasMatriz: LinhaMatriz[] = [
-    ...(data?.terapeutas ?? []).map((t) => ({
-      id: t.userId,
-      nome: t.nome,
-      email: t.email,
-      papel: "terapeuta" as const,
-      permissoes: [],
-      total: true,
-    })),
-    ...(data?.membros ?? []).map((m) => ({
+    ...membros.map((m) => ({
       id: m.userId,
       nome: m.nome,
       email: m.email,
-      papel: "admin" as const,
+      papel: (m.funcao === "terapeuta" ? "terapeuta" : "admin") as LinhaMatriz["papel"],
       permissoes: m.permissoes,
+      total: m.principal,
     })),
     ...(data?.convites ?? []).map((c) => ({
       id: c.id,
@@ -281,8 +267,8 @@ function AdminEquipe() {
       <div>
         <h1 className="text-3xl text-floresta">Equipe</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Convide pessoas para ajudar a administrar o espaço e escolha exatamente o que cada uma
-          pode ver e fazer.
+          Cada pessoa recebe uma função, uma abrangência de clientes e apenas as permissões que
+          precisa — o menor acesso possível para fazer o trabalho dela.
         </p>
       </div>
 
@@ -290,127 +276,24 @@ function AdminEquipe() {
 
       {!isLoading && <MatrizPermissoes linhas={linhasMatriz} />}
 
-      <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
-        <h2 className="flex items-center gap-2 text-xl text-floresta">
-          <ShieldCheck className="h-5 w-5 text-salvia" /> Membros
-        </h2>
-
-        <div className="mt-4 space-y-3">
-          {(data?.terapeutas ?? []).map((t) => (
-            <div key={t.userId} className="rounded-2xl bg-secondary p-4">
-              <p className="font-medium text-floresta">{t.nome || t.email}</p>
-              <p className="text-xs text-muted-foreground">
-                {t.email} · terapeuta responsável (acesso total)
-              </p>
-            </div>
-          ))}
-
-          {(data?.membros ?? []).map((m) => (
-            <div key={m.userId} className="rounded-2xl border border-border p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-medium text-floresta">{m.nome || m.email}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {m.email} · admin desde {formatarData(m.desde)}
-                  </p>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {m.permissoes.length === 0
-                      ? "Sem permissões — não vê nada do painel."
-                      : m.permissoes
-                          .map((p) => PERMISSAO_LABEL[p as Permissao] ?? p)
-                          .join(" · ")}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="rounded-full border-floresta/20 text-floresta"
-                    onClick={() => {
-                      setEditando(editando === m.userId ? null : m.userId);
-                      setPermsEdicao(m.permissoes as Permissao[]);
-                    }}
-                  >
-                    {editando === m.userId ? "Fechar" : "Editar permissões"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="rounded-full border-terracota/30 text-terracota"
-                    onClick={() => mRevogar.mutate(m.userId)}
-                    disabled={m.permissoes.length === 0 || mRevogar.isPending}
-                    aria-label={`Revogar permissões de ${m.email}`}
-                  >
-                    <ShieldOff className="mr-2 h-4 w-4" /> Revogar permissões
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="rounded-full text-terracota"
-                        aria-label={`Remover acesso de ${m.email}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-3xl">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="text-floresta">
-                          Remover o acesso de {m.nome || m.email}?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Todas as permissões são apagadas na hora e a pessoa deixa de ser admin.
-                          O painel dela é bloqueado imediatamente. Ela continua com a conta de
-                          cliente.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel className="rounded-full">Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          className="rounded-full bg-terracota text-terracota-foreground hover:bg-terracota/90"
-                          onClick={() => mRemover.mutate(m.userId)}
-                        >
-                          Remover acesso
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-
-                </div>
-              </div>
-
-              {editando === m.userId && (
-                <div className="mt-4 space-y-4">
-                  <SeletorPermissoes
-                    valor={permsEdicao}
-                    onChange={setPermsEdicao}
-                    idPrefixo={`edit-${m.userId}`}
-                  />
-                  <Button
-                    onClick={() => mAtualizar.mutate(m.userId)}
-                    disabled={mAtualizar.isPending}
-                    className="rounded-full bg-salvia px-6 text-salvia-foreground hover:bg-salvia/90"
-                  >
-                    Salvar permissões
-                  </Button>
-                </div>
-              )}
-            </div>
-          ))}
-
-          {!isLoading && (data?.membros ?? []).length === 0 && (
-            <p className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-              Nenhum admin ainda. Convide alguém abaixo.
-            </p>
-          )}
-        </div>
-      </section>
+      {!isLoading && (
+        <ListaMembros
+          membros={membros}
+          meuId={data?.meuId ?? ""}
+          onEditarFuncao={setAlvoFuncao}
+          onVincular={setAlvoVinculos}
+          onAlterarStatus={(m, status) => mStatus.mutate({ alvoId: m.userId, status })}
+          onRemover={(m) => mRemover.mutate(m.userId)}
+        />
+      )}
 
       <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
         <h2 className="flex items-center gap-2 text-xl text-floresta">
           <Mail className="h-5 w-5 text-salvia" /> Convidar por e-mail
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Ao criar a conta com este e-mail, a pessoa já entra como admin com as permissões
-          marcadas.
+          Ao criar a conta com este e-mail, a pessoa já entra com a função e as permissões
+          escolhidas aqui.
         </p>
         <div className="mt-4 space-y-4">
           <div className="space-y-2">
@@ -423,11 +306,21 @@ function AdminEquipe() {
               className="max-w-sm rounded-full"
             />
           </div>
+          <SeletorFuncao
+            funcao={funcaoConvite}
+            idPrefixo="convite"
+            onEscolher={(f) => {
+              setFuncaoConvite(f);
+              setPermsConvite([...FUNCAO_PERMISSOES[f]]);
+              setEscopoConvite(FUNCAO_ESCOPO_PADRAO[f]);
+            }}
+          />
+          <SeletorEscopo escopo={escopoConvite} onChange={setEscopoConvite} idPrefixo="convite" />
           <SeletorPermissoes
             valor={permsConvite}
             onChange={setPermsConvite}
-            idPrefixo="convite"
-            comPerfis
+            idPrefixo="convite-perm"
+            funcao={funcaoConvite}
           />
           <Button
             onClick={() => mConvidar.mutate()}
@@ -447,6 +340,12 @@ function AdminEquipe() {
                   <div>
                     <p className="text-sm font-medium text-floresta">{c.email}</p>
                     <p className="text-xs text-muted-foreground">
+                      {FUNCAO_LABEL[c.funcao as FuncaoEquipe] ?? c.funcao} ·{" "}
+                      {ESCOPO_LABEL[c.escopo as EscopoEquipe] ?? c.escopo} · criado em{" "}
+                      {formatarData(c.created_at)}
+                      {c.reenviado_em ? ` · reenviado em ${formatarData(c.reenviado_em)}` : ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
                       {c.permissoes.map((p) => PERMISSAO_LABEL[p as Permissao] ?? p).join(" · ")}
                     </p>
                   </div>
@@ -456,12 +355,20 @@ function AdminEquipe() {
                       className="rounded-full border-salvia text-salvia"
                       onClick={() => {
                         setConviteEditando(conviteEditando === c.id ? null : c.id);
-                        setPermsConviteEdicao(
-                          c.permissoes.filter((p): p is Permissao => ehPermissao(p)),
-                        );
+                        setFuncaoConviteEdicao(c.funcao as FuncaoEquipe);
+                        setEscopoConviteEdicao(c.escopo as EscopoEquipe);
+                        setPermsConviteEdicao(filtrarPermissoes(c.permissoes));
                       }}
                     >
-                      {conviteEditando === c.id ? "Fechar" : "Ajustar permissões"}
+                      {conviteEditando === c.id ? "Fechar" : "Ajustar acesso"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="rounded-full border-floresta/20 text-floresta"
+                      onClick={() => mReenviar.mutate(c.id)}
+                      disabled={mReenviar.isPending}
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" /> Reenviar
                     </Button>
                     <Button
                       variant="ghost"
@@ -475,18 +382,32 @@ function AdminEquipe() {
 
                 {conviteEditando === c.id && (
                   <div className="mt-4 space-y-4">
+                    <SeletorFuncao
+                      funcao={funcaoConviteEdicao}
+                      idPrefixo={`conv-${c.id}`}
+                      onEscolher={(f) => {
+                        setFuncaoConviteEdicao(f);
+                        setPermsConviteEdicao([...FUNCAO_PERMISSOES[f]]);
+                        setEscopoConviteEdicao(FUNCAO_ESCOPO_PADRAO[f]);
+                      }}
+                    />
+                    <SeletorEscopo
+                      escopo={escopoConviteEdicao}
+                      onChange={setEscopoConviteEdicao}
+                      idPrefixo={`conv-${c.id}`}
+                    />
                     <SeletorPermissoes
                       valor={permsConviteEdicao}
                       onChange={setPermsConviteEdicao}
-                      idPrefixo={`convite-${c.id}`}
-                      comPerfis
+                      idPrefixo={`conv-perm-${c.id}`}
+                      funcao={funcaoConviteEdicao}
                     />
                     <Button
                       onClick={() => mAtualizarConvite.mutate(c.id)}
                       disabled={permsConviteEdicao.length === 0 || mAtualizarConvite.isPending}
                       className="rounded-full bg-salvia px-6 text-salvia-foreground hover:bg-salvia/90"
                     >
-                      Salvar permissões do convite
+                      Salvar convite
                     </Button>
                   </div>
                 )}
@@ -498,7 +419,7 @@ function AdminEquipe() {
 
       <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-organico)]">
         <h2 className="flex items-center gap-2 text-xl text-floresta">
-          <UserPlus className="h-5 w-5 text-salvia" /> Promover conta existente
+          <UserPlus className="h-5 w-5 text-salvia" /> Adicionar conta existente
         </h2>
         <div className="mt-4 space-y-4">
           <div className="space-y-2">
@@ -512,7 +433,7 @@ function AdminEquipe() {
             />
             {emailPromover && !candidato && (
               <p className="text-xs text-terracota">
-                Nenhuma conta com esse e-mail disponível para promover.
+                Nenhuma conta com esse e-mail disponível para adicionar.
               </p>
             )}
             {candidato && (
@@ -521,18 +442,40 @@ function AdminEquipe() {
               </p>
             )}
           </div>
+          <SeletorFuncao
+            funcao={funcaoPromover}
+            idPrefixo="promover"
+            onEscolher={(f) => {
+              setFuncaoPromover(f);
+              setPermsPromover([...FUNCAO_PERMISSOES[f]]);
+              setEscopoPromover(FUNCAO_ESCOPO_PADRAO[f]);
+            }}
+          />
+          <SeletorEscopo
+            escopo={escopoPromover}
+            onChange={setEscopoPromover}
+            idPrefixo="promover"
+          />
           <SeletorPermissoes
             valor={permsPromover}
             onChange={setPermsPromover}
-            idPrefixo="promover"
-            comPerfis
+            idPrefixo="promover-perm"
+            funcao={funcaoPromover}
           />
           <Button
-            onClick={() => candidato && mPromover.mutate(candidato.userId)}
-            disabled={!candidato || mPromover.isPending}
+            onClick={() =>
+              candidato &&
+              mDefinirFuncao.mutate({
+                alvoId: candidato.userId,
+                funcao: funcaoPromover,
+                escopo: escopoPromover,
+                permissoes: permsPromover,
+              })
+            }
+            disabled={!candidato || mDefinirFuncao.isPending}
             className="rounded-full bg-floresta px-6 text-floresta-foreground hover:bg-floresta/90"
           >
-            Tornar admin
+            Adicionar à equipe
           </Button>
         </div>
       </section>
@@ -542,6 +485,35 @@ function AdminEquipe() {
         carregando={auditoriaQuery.isLoading}
       />
 
+      {alvoFuncao && (
+        <DialogoFuncao
+          aberto={Boolean(alvoFuncao)}
+          onAberto={(v) => !v && setAlvoFuncao(null)}
+          titulo={`Acesso de ${alvoFuncao.nome || alvoFuncao.email}`}
+          descricao="Escolha a função, a abrangência de clientes e ajuste permissão por permissão."
+          bloqueado={alvoFuncao.principal}
+          salvando={mDefinirFuncao.isPending}
+          inicial={{
+            funcao: alvoFuncao.funcao,
+            escopo: alvoFuncao.escopo,
+            permissoes: filtrarPermissoes(alvoFuncao.permissoes),
+          }}
+          onSalvar={(dados) =>
+            mDefinirFuncao.mutate({ alvoId: alvoFuncao.userId, ...dados })
+          }
+        />
+      )}
+
+      <DialogoVinculos
+        aberto={Boolean(alvoVinculos)}
+        onAberto={(v) => !v && setAlvoVinculos(null)}
+        membro={alvoVinculos}
+        clientes={data?.clientes ?? []}
+        salvando={mVincular.isPending}
+        onSalvar={(clientes) =>
+          alvoVinculos && mVincular.mutate({ alvoId: alvoVinculos.userId, clientes })
+        }
+      />
     </div>
   );
 }

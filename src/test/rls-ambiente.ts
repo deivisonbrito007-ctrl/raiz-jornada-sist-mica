@@ -62,7 +62,7 @@ export async function removerUsuario(admin: SupabaseClient, id: string) {
   await admin.from("clientes_pacotes").delete().eq("cliente_id", id);
   await admin.from("user_roles").delete().eq("user_id", id);
   await admin.from("equipe_permissoes").delete().eq("user_id", id);
-  await admin.from("equipe_admins").delete().eq("user_id", id);
+  await admin.from("equipe_membros").delete().eq("user_id", id);
   await admin.from("profiles").delete().eq("id", id);
   await admin.auth.admin.deleteUser(id);
 }

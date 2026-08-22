@@ -68,7 +68,7 @@ function MonitoramentoPlano() {
   const { atribuicaoId } = Route.useParams();
   const queryClient = useQueryClient();
   const { pode } = useMinhasPermissoes();
-  const podeAgir = pode("gerenciar_liberacoes");
+  const podeAgir = pode("criar_planos");
 
   const carregar = useServerFn(adminMonitoramentoPlano);
   const enviarOrientacao = useServerFn(adminEnviarOrientacao);
