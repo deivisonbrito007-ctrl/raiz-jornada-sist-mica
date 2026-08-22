@@ -2,7 +2,8 @@
 
 ## Como fica a estrutura de pessoas
 
-- Sua conta atual continua a mesma, com acesso irrestrito, agora chamada **Proprietário** (nome de exibição "Brito", editável no perfil).
+- Sua conta atual continua a mesma, com acesso irrestrito, com o perfil **Administrador** (nome de exibição "Brito", editável no perfil). Concordo com a unificação: Proprietário e Administrador viram um perfil só — dois níveis de "tudo liberado" só criariam confusão sem ganho de segurança.
+- A sua conta fica marcada internamente como conta principal: pode ter outros administradores no futuro, mas o sistema nunca deixa remover ou suspender o último administrador, e ninguém pode remover ou suspender você.
 - A terapeuta convidada recebe o perfil **Terapeuta** e vê apenas os clientes vinculados a ela — como só existe uma terapeuta, o vínculo usa o campo "terapeuta responsável" que já existe no cadastro de cada cliente, com a possibilidade de você marcar exceções (autorização específica) por integrante.
 - Os outros perfis existem para quando a equipe crescer, todos com o mínimo de acesso.
 
@@ -10,8 +11,8 @@
 
 | Perfil | Acesso padrão |
 | --- | --- |
-| Proprietário | Tudo, inclusive equipe e auditoria. Nunca pode ser removido nem suspenso. |
-| Administrador | Tudo, exceto gerenciar equipe (opcional por marcação). |
+| Administrador | Tudo, inclusive equipe e auditoria. O último administrador não pode ser removido nem suspenso. |
+
 | Terapeuta | Ver e editar clientes vinculados, criar planos, monitorar trilhas, ver registros compartilhados desses clientes. |
 | Editor de conteúdo | Criar e publicar conteúdos. Nenhum dado de cliente. |
 | Assistente administrativo | Ver clientes (dados cadastrais), gerenciar pacotes. Sem diário, sem check-ins. |
@@ -43,7 +44,7 @@ Passam a ser registrados com autor, alvo e antes/depois: convite criado, reenvia
 
 ## Detalhes técnicos
 
-- Migração: nova tabela `equipe_membros` (user_id, funcao enum `equipe_funcao`, status enum `equipe_status`, escopo enum `equipe_escopo` = `todos`/`vinculados`, convidado_em, criado_por, timestamps) substituindo o papel implícito de `equipe_admins`; `convites_equipe` ganha `funcao`, `escopo` e `reenviado_em`; nova `equipe_clientes` (user_id, cliente_id) para exceções de vínculo. GRANTs + RLS restritas a `gerenciar_equipe` em todas.
+- Migração: nova tabela `equipe_membros` (user_id, funcao enum `equipe_funcao` = `administrador`/`terapeuta`/`editor`/`assistente`/`suporte`, status enum `equipe_status`, escopo enum `equipe_escopo` = `todos`/`vinculados`, `principal boolean`, convidado_em, criado_por, timestamps) substituindo o papel implícito de `equipe_admins`; `convites_equipe` ganha `funcao`, `escopo` e `reenviado_em`; nova `equipe_clientes` (user_id, cliente_id) para exceções de vínculo. GRANTs + RLS restritas a `gerenciar_equipe` em todas, e trigger que impede remover/suspender o último administrador.
 - Ampliar `PERMISSOES` para as 10 permissões (`ver_clientes`, `editar_clientes`, `criar_planos`, `monitorar_trilhas`, `ver_registros`, `criar_conteudos`, `publicar_conteudos`, `gerenciar_pacotes`, `gerenciar_equipe`, `ver_auditoria`) com mapa de migração das antigas (`ver_diario`→`ver_registros`, `gerenciar_conteudos`→`criar_conteudos`+`publicar_conteudos`, `gerenciar_liberacoes`→`criar_planos`+`monitorar_trilhas`).
 - Funções security definer atualizadas: `tem_permissao` passa a exigir status `ativo`; `pode_administrar` idem; nova `escopo_cliente(_user_id, _cliente)` usada em `acompanha_cliente` para restringir por `clientes_acesso.terapeuta_id` ou `equipe_clientes`. RLS de `diario`, `checkins`, `revisoes`, `progresso`, `atribuicoes`, `conteudos` e `pacotes` reescritas sobre as novas permissões.
 - `src/lib/equipe-funcoes.ts` novo: enum de funções, rótulos, descrições e matriz função→permissões padrão. `src/lib/permissoes.ts` atualizado.
