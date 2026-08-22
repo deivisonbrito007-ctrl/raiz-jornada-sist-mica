@@ -12,9 +12,9 @@ export function SelosPlano({
 }: {
   nivel: string | null;
   frequencia: string | null;
-  somenteEmSessao?: boolean | null;
-  exigeAcompanhamento?: boolean | null;
-  dataRevisao?: string | null;
+  somenteEmSessao?: boolean | null | undefined;
+  exigeAcompanhamento?: boolean | null | undefined;
+  dataRevisao?: string | null | undefined;
 }) {
   return (
     <ul className="mt-4 flex flex-wrap gap-2 text-xs">

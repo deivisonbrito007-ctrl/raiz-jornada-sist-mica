@@ -9,9 +9,9 @@ export function AvisoCuidado({
   orientacoesPausa,
   orientacoesEspeciais,
 }: {
-  alertas?: string | null;
-  orientacoesPausa?: string | null;
-  orientacoesEspeciais?: string | null;
+  alertas?: string | null | undefined;
+  orientacoesPausa?: string | null | undefined;
+  orientacoesEspeciais?: string | null | undefined;
 }) {
   if (!alertas && !orientacoesPausa && !orientacoesEspeciais) return null;
 
