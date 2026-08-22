@@ -185,7 +185,7 @@ function CentralLembretes() {
         </h2>
 
         <div className="mt-5 space-y-5">
-          <div className="flex items-center justify-between gap-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
             <Label htmlFor="lembretes-ativo" className="text-sm">
               Receber lembretes
             </Label>
@@ -240,7 +240,7 @@ function CentralLembretes() {
             />
           </div>
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
             <Label htmlFor="lembretes-push" className="text-sm">
               No celular (push)
             </Label>
@@ -251,7 +251,7 @@ function CentralLembretes() {
             />
           </div>
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
             <Label htmlFor="lembretes-email" className="text-sm">
               Por e-mail
             </Label>

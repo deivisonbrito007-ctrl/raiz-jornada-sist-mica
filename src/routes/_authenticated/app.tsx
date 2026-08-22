@@ -17,7 +17,7 @@ function AppLayout() {
     <div className="min-h-screen bg-background pb-28">
       <CabecalhoApp mostrarPainel={contexto?.papel === "terapeuta"} />
 
-      <main className="mx-auto max-w-2xl px-5 pb-6 pt-5">
+      <main className="mx-auto max-w-2xl overflow-x-hidden px-5 pb-6 pt-5">
         <AvisoRemocaoRealtime />
         <TransicaoRota>
           <Outlet />
