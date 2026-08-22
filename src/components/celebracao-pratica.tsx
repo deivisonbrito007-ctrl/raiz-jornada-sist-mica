@@ -1,10 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Leaf, MessageCircleHeart, NotebookPen, Sparkles } from "lucide-react";
 
 import { getMeuContexto, getMinhaBiblioteca } from "@/lib/raiz.functions";
-import { getMinhaJornada } from "@/lib/trilhas.functions";
 import { CHAVES } from "@/lib/cache-chaves";
 import { calcularStreak } from "@/lib/raiz-format";
 import { praticasNaSemana, recompensaDaConclusao } from "@/lib/inicio-cliente";
@@ -28,7 +27,7 @@ export function CelebracaoPratica({
 }) {
   const buscarBiblioteca = useServerFn(getMinhaBiblioteca);
   const buscarContexto = useServerFn(getMeuContexto);
-  const buscarJornada = useServerFn(getMinhaJornada);
+  const queryClient = useQueryClient();
 
   const { data: biblioteca } = useQuery({
     queryKey: CHAVES.biblioteca,
@@ -42,11 +41,15 @@ export function CelebracaoPratica({
   });
   const modo = normalizarModo(contexto?.modo);
   const blocos = blocosDoModo(modo);
-  const { data: jornada } = useQuery({
-    queryKey: CHAVES.jornada,
-    queryFn: () => buscarJornada(),
-    enabled: aberto && blocos.planoDaTerapeuta,
-  });
+  /**
+   * O recado da terapeuta vem do que a Jornada já carregou. Ler do cache evita
+   * puxar o módulo de trilhas para dentro do player só para mostrar um texto.
+   */
+  const jornada = blocos.planoDaTerapeuta
+    ? queryClient.getQueryData<{
+        trilhas?: Array<{ status?: string | null; mensagem?: string | null }>;
+      }>(CHAVES.jornada)
+    : null;
 
   const datas = biblioteca?.resumo.datasConclusao ?? [];
   const primeiroNome = (contexto?.perfil?.nome || "").split(" ")[0] ?? "";
