@@ -50,33 +50,27 @@ export function CabecalhoDiario({
       <dl className="mt-7 flex flex-wrap items-center gap-3">
         <div className="flex min-h-11 items-center gap-3 rounded-2xl bg-floresta-foreground/10 px-4 py-2.5 backdrop-blur">
           <BookHeart className="h-4 w-4 text-ocre" aria-hidden="true" />
-          <div>
-            <dt className="text-[0.65rem] uppercase tracking-wider text-floresta-foreground/70">
-              Reflexões
-            </dt>
-            <dd className="text-sm font-medium">{resumo.total}</dd>
-          </div>
+          <dt className="text-[0.65rem] uppercase tracking-wider text-floresta-foreground/70">
+            Reflexões
+          </dt>
+          <dd className="text-sm font-medium">{resumo.total}</dd>
         </div>
 
         <div className="flex min-h-11 items-center gap-3 rounded-2xl bg-floresta-foreground/10 px-4 py-2.5 backdrop-blur">
           <CalendarHeart className="h-4 w-4 text-ocre" aria-hidden="true" />
-          <div>
-            <dt className="text-[0.65rem] uppercase tracking-wider text-floresta-foreground/70">
-              Dias de escuta
-            </dt>
-            <dd className="text-sm font-medium">{resumo.diasEscrevendo}</dd>
-          </div>
+          <dt className="text-[0.65rem] uppercase tracking-wider text-floresta-foreground/70">
+            Dias de escuta
+          </dt>
+          <dd className="text-sm font-medium">{resumo.diasEscrevendo}</dd>
         </div>
 
         {mostrarCompartilhadas && (
           <div className="flex min-h-11 items-center gap-3 rounded-2xl bg-floresta-foreground/10 px-4 py-2.5 backdrop-blur">
             <Share2 className="h-4 w-4 text-ocre" aria-hidden="true" />
-            <div>
-              <dt className="text-[0.65rem] uppercase tracking-wider text-floresta-foreground/70">
-                Compartilhadas
-              </dt>
-              <dd className="text-sm font-medium">{resumo.compartilhadas}</dd>
-            </div>
+          <dt className="text-[0.65rem] uppercase tracking-wider text-floresta-foreground/70">
+            Compartilhadas
+          </dt>
+          <dd className="text-sm font-medium">{resumo.compartilhadas}</dd>
           </div>
         )}
       </dl>
