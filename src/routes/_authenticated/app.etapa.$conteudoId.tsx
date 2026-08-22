@@ -15,6 +15,7 @@ import { marcarProgresso } from "@/lib/raiz.functions";
 import { EMOCOES, ETAPA_LABEL, LOCAIS_CORPO, type TipoEtapa } from "@/lib/etapas";
 import { formatarDuracao } from "@/lib/raiz-format";
 import { PedirApoio } from "@/components/pedir-apoio";
+import { AnotacoesEtapa } from "@/components/app-jornada/anotacoes-etapa";
 import { usePreCarregarProximas } from "@/hooks/use-pre-carregar-proximas";
 
 export const Route = createFileRoute("/_authenticated/app/etapa/$conteudoId")({
