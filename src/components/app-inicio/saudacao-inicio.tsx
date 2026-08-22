@@ -31,7 +31,7 @@ export function SaudacaoInicio({
 
 
   return (
-    <section className="relative isolate overflow-hidden rounded-[2rem] bg-floresta px-6 py-8 text-floresta-foreground shadow-organico">
+    <section className="relative isolate overflow-hidden rounded-[2.25rem] bg-capa px-6 py-10 text-floresta-foreground shadow-capa sm:px-8 sm:py-12">
       <img
         src={textura}
         alt=""
@@ -41,20 +41,20 @@ export function SaudacaoInicio({
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-10"
-        style={{ backgroundImage: "var(--gradiente-aura)", opacity: 0.85 }}
+        style={{ backgroundImage: "var(--gradiente-capa)", opacity: 0.92 }}
       />
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-10 animate-respirar"
-        style={{ backgroundImage: "var(--halo-entrada)" }}
+        style={{ backgroundImage: "var(--halo-capa)" }}
       />
       <RaizLogo className="pointer-events-none absolute -right-6 -top-6 -z-10 h-32 w-auto opacity-10" />
 
       <p className="text-[0.68rem] font-medium uppercase tracking-[0.22em] text-ocre">
         {dataLonga(agora)}
       </p>
-      <h1 className="mt-3 font-display text-3xl leading-tight">{titulo}</h1>
-      <p className="mt-3 max-w-sm text-sm leading-relaxed text-floresta-foreground/85">{frase}</p>
+      <h1 className="mt-4 font-display text-[2.5rem] leading-[1.05] sm:text-5xl">{titulo}</h1>
+      <p className="mt-4 max-w-sm text-[0.95rem] leading-[1.75] text-floresta-foreground/85">{frase}</p>
 
       {(ciclo || eixoFoco) && (
         <div className="mt-4 flex flex-wrap items-center gap-2">
