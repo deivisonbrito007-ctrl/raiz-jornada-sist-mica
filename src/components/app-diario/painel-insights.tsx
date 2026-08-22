@@ -235,6 +235,8 @@ export function PainelInsights({
                 ))}
               </ul>
             </div>
+              </>
+            )}
           </div>
         )}
       </div>
