@@ -260,7 +260,10 @@ function CentralLembretes() {
               onCheckedChange={(v) => setForm({ ...form, canalEmail: v })}
             />
           </div>
+
+          <PushDispositivo />
         </div>
+
 
         <Button
           className="mt-6 min-h-12 w-full rounded-full bg-terracota text-terracota-foreground hover:bg-terracota/90"
