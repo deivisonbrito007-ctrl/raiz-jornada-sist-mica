@@ -357,6 +357,32 @@
   color: var(--color-salvia);
 }
 
+/* Escala tipográfica do Perfil: mesma leitura em 320px e 384px. */
+@utility perfil-titulo {
+  font-family: var(--font-display);
+  font-size: 1.1875rem;
+  line-height: 1.3;
+  color: var(--color-floresta);
+}
+
+@utility perfil-texto {
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+@utility perfil-nota {
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
+
+@utility perfil-rotulo {
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-salvia);
+}
+
 @keyframes raiz-surgir {
   0% {
     opacity: 0;

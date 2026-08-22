@@ -22,7 +22,7 @@ export function PushDispositivo() {
         <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-salvia" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <p className="text-sm text-floresta">Notificações neste dispositivo</p>
-          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{texto}</p>
+          <p className="mt-0.5 perfil-nota text-muted-foreground">{texto}</p>
           {push.erro ? <p className="mt-1 text-xs text-destructive">{push.erro}</p> : null}
         </div>
       </div>

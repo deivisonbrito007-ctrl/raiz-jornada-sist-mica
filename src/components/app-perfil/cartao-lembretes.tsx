@@ -73,12 +73,12 @@ export function CartaoLembretes() {
             <BellRing className="h-5 w-5" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <h2 id="titulo-lembretes" className="font-display text-xl text-floresta">
+            <h2 id="titulo-lembretes" className="perfil-titulo">
               Lembretes
             </h2>
             <p
               aria-live="polite"
-              className="mt-1 break-words text-sm leading-relaxed text-muted-foreground"
+              className="mt-1 perfil-texto break-words text-muted-foreground"
             >
               {frase}
             </p>
@@ -99,7 +99,7 @@ export function CartaoLembretes() {
       >
         <span className="min-w-0 break-words">
           Ajustar lembretes
-          <span className="mt-0.5 block break-words text-xs leading-snug text-muted-foreground">
+          <span className="mt-0.5 block break-words perfil-nota text-muted-foreground">
             dia, hora, canais, pausa e histórico
           </span>
         </span>

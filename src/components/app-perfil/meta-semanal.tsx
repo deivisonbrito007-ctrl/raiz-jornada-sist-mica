@@ -34,10 +34,10 @@ export function MetaSemanal({ meta }: Props) {
           <Target className="h-5 w-5" aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <h2 id="titulo-meu-ritmo" className="font-display text-xl text-floresta">
+          <h2 id="titulo-meu-ritmo" className="perfil-titulo">
             Meu ritmo
           </h2>
-          <p className="mt-1 break-words text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-1 perfil-texto break-words text-muted-foreground">
             Quantas práticas por semana fazem sentido para você agora.
           </p>
         </div>
@@ -73,7 +73,7 @@ export function MetaSemanal({ meta }: Props) {
         </button>
       </div>
 
-      <p className="mt-4 break-words text-sm leading-relaxed text-muted-foreground">
+      <p className="mt-4 perfil-texto break-words text-muted-foreground">
         {rotuloMeta(atual)}
       </p>
     </section>

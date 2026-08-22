@@ -6,7 +6,7 @@
  */
 export function RotuloSecao({ texto }: { texto: string }) {
   return (
-    <div aria-hidden="true" className="mt-12 flex items-center gap-3 first:mt-0">
+    <div aria-hidden="true" className="mt-10 flex items-center gap-3 first:mt-0 sm:mt-12">
       <span className="rotulo-secao whitespace-nowrap">{texto}</span>
       <span className="h-px flex-1 bg-border" />
     </div>

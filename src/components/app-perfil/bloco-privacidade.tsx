@@ -20,10 +20,10 @@ export function BlocoPrivacidade({ modo }: Props) {
           <ShieldCheck className="h-5 w-5" aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <h2 id="titulo-privacidade" className="font-display text-xl text-floresta">
+          <h2 id="titulo-privacidade" className="perfil-titulo">
             Cuidado com o que é seu
           </h2>
-          <p className="mt-1 break-words text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-1 perfil-texto break-words text-muted-foreground">
             Privacidade aqui não é letra miúda: é parte do tratamento.
           </p>
         </div>
@@ -32,10 +32,10 @@ export function BlocoPrivacidade({ modo }: Props) {
       <dl className="mt-5 space-y-4">
         {itens.map((item) => (
           <div key={item.titulo} className="min-w-0">
-            <dt className="break-words text-xs uppercase tracking-wider text-salvia">
+            <dt className="break-words perfil-rotulo">
               {item.titulo}
             </dt>
-            <dd className="mt-0.5 break-words text-sm leading-relaxed text-muted-foreground">
+            <dd className="mt-0.5 perfil-texto break-words text-muted-foreground">
               {item.texto}
             </dd>
           </div>
