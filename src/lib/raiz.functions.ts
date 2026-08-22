@@ -15,7 +15,7 @@ export const getMeuContexto = createServerFn({ method: "GET" })
     const [perfil, papeis, pacotes, permissoes, acesso] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, nome, email, created_at, meta_semanal")
+        .select("id, nome, email, created_at, meta_semanal, eixos_preferidos, eixo_destaque")
         .eq("id", userId)
         .maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
@@ -495,6 +495,29 @@ export const definirMetaSemanal = createServerFn({ method: "POST" })
       .eq("id", userId);
     if (error) throw erroSeguro(error);
     return { ok: true, meta: data.meta };
+  });
+
+export const salvarPreferenciasEixos = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        preferidos: z.array(z.string().uuid()).max(40),
+        destaque: z.string().uuid().nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const preferidos = Array.from(new Set(data.preferidos));
+    const destaque =
+      data.destaque && preferidos.includes(data.destaque) ? data.destaque : null;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ eixos_preferidos: preferidos, eixo_destaque: destaque })
+      .eq("id", userId);
+    if (error) throw erroSeguro(error);
+    return { ok: true, preferidos, destaque };
   });
 
 export const salvarDiario = createServerFn({ method: "POST" })
