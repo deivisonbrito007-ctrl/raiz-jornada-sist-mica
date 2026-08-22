@@ -206,19 +206,27 @@ export const pausarLembretes = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const ate = data.dias === null ? null : fimDaPausa(data.dias);
-    const { error } = await supabase
+    const { data: existente } = await supabase
       .from("preferencias_lembretes")
-      .upsert(
-        {
-          user_id: userId,
-          ...PREFERENCIA_PADRAO,
-          silenciado_ate: ate,
-          definido_por: "cliente",
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id", ignoreDuplicates: false },
-      )
-      .select("user_id");
-    if (error) throw erroSeguro(error, "pausar lembretes");
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const erro = existente
+      ? (
+          await supabase
+            .from("preferencias_lembretes")
+            .update({ silenciado_ate: ate, updated_at: new Date().toISOString() })
+            .eq("user_id", userId)
+        ).error
+      : (
+          await supabase.from("preferencias_lembretes").insert({
+            user_id: userId,
+            ...PREFERENCIA_PADRAO,
+            silenciado_ate: ate,
+            updated_at: new Date().toISOString(),
+          })
+        ).error;
+    if (erro) throw erroSeguro(erro, "pausar lembretes");
     return { ok: true, silenciadoAte: ate };
   });
