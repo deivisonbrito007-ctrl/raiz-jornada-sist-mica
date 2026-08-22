@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { erroSeguro } from "./erro-permissao";
 import { atorAuditoria, registrarAuditoria } from "./auditoria-equipe";
 import { garantirPermissao } from "./permissao-guard";
-import { PREFERENCIA_PADRAO, type PreferenciaLembretes } from "./lembretes";
+import { PREFERENCIA_PADRAO, fimDaPausa, type PreferenciaLembretes } from "./lembretes";
 
 const preferenciaSchema = z.object({
   ativo: z.boolean(),
@@ -177,4 +177,48 @@ export const adminDefinirLembretesCliente = createServerFn({ method: "POST" })
     });
 
     return { ok: true };
+  });
+
+
+/**
+ * Central de lembretes: histórico do que foi enviado (mais longo que o resumo
+ * do perfil), para a pessoa entender o que o app já mandou e quando.
+ */
+export const getHistoricoLembretes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data } = await supabase
+      .from("lembretes_enviados")
+      .select("id, tipo, canal, status, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(60);
+    return data ?? [];
+  });
+
+/** Pausa temporária: nada é enviado até a data escolhida (7, 14 ou 30 dias). */
+export const pausarLembretes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ dias: z.number().int().min(1).max(90).nullable() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const ate = data.dias === null ? null : fimDaPausa(data.dias);
+    const { error } = await supabase
+      .from("preferencias_lembretes")
+      .upsert(
+        {
+          user_id: userId,
+          ...PREFERENCIA_PADRAO,
+          silenciado_ate: ate,
+          definido_por: "cliente",
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id", ignoreDuplicates: false },
+      )
+      .select("user_id");
+    if (error) throw erroSeguro(error, "pausar lembretes");
+    return { ok: true, silenciadoAte: ate };
   });
