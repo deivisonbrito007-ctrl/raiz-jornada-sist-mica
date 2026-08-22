@@ -41,7 +41,7 @@ export function CabecalhoPerfil({
         </div>
       </div>
 
-      <p className="mt-4 text-sm leading-relaxed text-floresta-foreground/80 sm:mt-5">
+      <p className="mt-4 perfil-texto text-floresta-foreground/80 sm:mt-5">
         {cicloFrase ??
           "Este é o seu espaço: o que você ajusta aqui muda como o Raiz caminha com você."}
       </p>
